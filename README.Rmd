@@ -70,7 +70,7 @@ export const app = {
   ),
   sample: z.function(
     z.tuple([z.character_vector(), z.integer()]),
-    z.promise(z.union([z.character(), z.character_vector()]))
+    z.promise(R.character())
   )
 };
 ```
@@ -78,9 +78,10 @@ export const app = {
 which will generate the following types:
 ```typescript
 type App = {
-  add: (x: number, y: number) => Promise<number>;
-  sample: (x: string[], n: number) => Promise<string | string[]>;
+  add: (x: number, y: number) => Promise<{ data: number }>;
+  sample: (x: string[], n: number) => Promise<{ data: string | string[] }>;
   // or, if possible, even better:
-  sample: <N extends number>(x: string[], n: N) => Promise<N extends 1 ? string : string[]>;
+  sample: <N extends number>(x: string[], n: N) =>
+    Promise<{ data: N extends 1 ? string : string[] }>;
 };
 ```
