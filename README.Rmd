@@ -31,32 +31,36 @@ devtools::install_github("tmelliott/ts")
 
 ## Example
 
-Writing functions is easy, just use the `ts::x()` functions to define formals and return types.
+Writing functions is easy, just use the `ts_*()` functions to define formals and return types.
 
-*Note: we recommend not importing the library, and instead using the fully qualified name `ts::x()` to avoid conflicts with other libraries.*
 
 ```r
-app <- ts::app(
-  add = ts::fun(
-    function(x = ts::number(), y = ts::number()) {
-      result <- x + y
-      ts::result(result, ts::number())
-    }
+library(ts)
+app <- ts_app(
+  add = ts_fun(
+    function(x, y) {
+      x + y
+    },
+    x = ts_number(),
+    y = ts_number(),
+    # ideally this will use a generic type where x OR y can be vectors
+    # and, if one is a vector, the return type will be a vector too...
+    result = ts_number()
   ),
-  sample = ts::fun(
-    function(x = ts::character_vector(), n = ts::integer()) {
-      result <- sample(x, n)
-      ts::result(result,
-        ts::condition(n,
-          1 = ts::character(),
-          ts::character_vector()
-        )
-      )
-    }
+  sample = ts_fun(
+    function(x, n) {
+      sample(x, n)
+    },
+    x = ts_character_vector(),
+    n = ts_integer(),
+    result = ts_condition(n,
+      1 = ts_character(),
+      ts_character_vector()
+    )
   )
 )
 
-ts::compile(app)
+ts_compile(app)
 ```
 
 This will generate the following rserve-ts function definitions:
@@ -84,4 +88,15 @@ type App = {
   sample: <N extends number>(x: string[], n: N) =>
     Promise<{ data: N extends 1 ? string : string[] }>;
 };
+```
+
+## State of the project
+
+Here's what's currently working:
+
+```{r}
+library(ts)
+
+myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric())
+ts_compile(myfun)
 ```
