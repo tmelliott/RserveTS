@@ -74,8 +74,10 @@ ts_numeric <- function(n = -1L) {
         n_type(n, "number"),
         n_type_fun(n, "Numeric"),
         check = function(x) {
-            if (!is.numeric(x)) stop("Expected a number")
-            if (n > 0 && length(x) != n) stop("Expected a number of length ", n)
+            if (!is.numeric(x)) stop("Expected a number", call. = FALSE)
+            if (n > 0 && length(x) != n) {
+                stop("Expected a number of length ", n, , call. = FALSE)
+            }
             x
         }
     )

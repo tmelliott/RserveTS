@@ -94,9 +94,13 @@ type App = {
 
 Here's what's currently working:
 
-```{r}
+```{r, error = TRUE}
 library(ts)
 
-myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric())
+myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
+myfun(1:5)
+
+myfun("hello world")
+
 ts_compile(myfun)
 ```

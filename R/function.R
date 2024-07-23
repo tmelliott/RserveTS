@@ -23,7 +23,7 @@ ts_function <- function(f, ..., result = NULL) {
     }
 
     fn <- function(...) {
-        mc <- match.call()
+        mc <- match.call(f)
         x <- parse_args(args, mc)
         result$check(do.call(f, x))
     }

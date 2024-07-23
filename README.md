@@ -90,7 +90,13 @@ Here’s what’s currently working:
 ``` r
 library(ts)
 
-myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric())
+myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
+myfun(1:5)
+#> [1] 3
+
+myfun("hello world")
+#> Error: Expected a number
+
 ts_compile(myfun)
-#> const myfun = (x: number | number[]) => Promise<Numeric>;
+#> const myfun = (x: number | number[]) => Promise<Numeric<1>)>;
 ```
