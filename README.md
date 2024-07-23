@@ -92,5 +92,5 @@ library(ts)
 
 myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric())
 ts_compile(myfun)
-#> const myfun = (x: number | number[]) => numeric();
+#> const myfun = (x: number | number[]) => Promise<Numeric>;
 ```
