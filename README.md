@@ -8,7 +8,8 @@
 <!-- badges: end -->
 
 The **ts** package makes it easy for users to write functions that can
-be used in **rserve-ts** applications.
+be used in [**rserve-ts**](https://www.npmjs.com/package/rserve-ts)
+applications.
 
 ## Installation
 
