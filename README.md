@@ -99,5 +99,5 @@ myfun("hello world")
 #> Error: Expected a number
 
 ts_compile(myfun)
-#> const myfun = (x: number | number[]) => Promise<Numeric<1>)>;
+#> const myfun = (x: number | number[]) => Promise<Robj.Numeric<1>)>;
 ```
