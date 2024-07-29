@@ -1,11 +1,58 @@
 #' @export
-ts_compile <- function(f) {
-    name <- deparse(substitute(f))
+ts_compile <- function(f, file = NULL, ...) {
+    UseMethod("ts_compile")
+}
+
+#' @export
+ts_compile.ts_function <- function(f, file = NULL, name = deparse(substitute(f))) {
     inputs <- attr(f, "args")
     result <- attr(f, "result")
 
     inputs <- sapply(inputs, \(x) x$type)
     fn_args <- paste(names(inputs), inputs, sep = ": ") |>
         paste(collapse = ", ")
-    cat(sprintf("const %s = (%s) => Promise<%s>;", name, fn_args, result$type_fn), "\n")
+    sprintf("const %s = (%s) => Promise<%s>;", name, fn_args, result$type_fn)
+}
+
+#' @export
+ts_compile.character <- function(
+    f,
+    file = sprintf("%s.ts", tools::file_path_sans_ext(f))) {
+    if (length(f) > 1) {
+        return(sapply(f, ts_compile))
+    }
+
+    if (!file.exists(f)) {
+        warning(sprintf("File not found: %s", f))
+        return()
+    }
+    e <- new.env()
+    source(f, local = e)
+
+    x <- sapply(ls(e), \(x) ts_compile(e[[x]], file = file, name = x))
+
+    # find any RTYPE.[type] and grab types
+    types <- unique(
+        gsub(
+            "RTYPE\\.(\\w+)", "\\1",
+            unlist(regmatches(x, gregexpr("RTYPE\\.\\w+", x)))
+        )
+    )
+    x <- gsub("RTYPE\\.", "", x)
+
+    cat(
+        sprintf(
+            "import type { %s } from 'rserve-ts';\n\n",
+            paste(types, collapse = ", ")
+        ),
+        file = file
+    )
+    cat(x, sep = "\n", file = file, append = TRUE)
+
+    invisible()
+}
+
+#' @export
+ts_compile.default <- function(f) {
+    warning("Not supported")
 }

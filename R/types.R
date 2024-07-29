@@ -56,7 +56,7 @@ n_type_fun <- function(n, type) {
 ts_logical <- function(n = -1L) {
     object(
         n_type(n, "boolean"),
-        n_type_fun(n, "Logical"),
+        n_type_fun(n, "RTYPE.Logical"),
         check = function(x) {
             if (!is.logical(x)) stop("Expected a boolean")
             if (n > 0 && length(x) != n) stop("Expected a boolean of length ", n)
@@ -69,7 +69,7 @@ ts_logical <- function(n = -1L) {
 ts_integer <- function(n = -1L) {
     object(
         n_type(n, "number"),
-        n_type_fun(n, "Integer"),
+        n_type_fun(n, "RTYPE.Integer"),
         check = function(x) {
             if (!is.integer(x)) stop("Expected an integer")
             if (n > 0 && length(x) != n) stop("Expected an integer of length ", n)
@@ -82,7 +82,7 @@ ts_integer <- function(n = -1L) {
 ts_numeric <- function(n = -1L) {
     object(
         n_type(n, "number"),
-        n_type_fun(n, "Numeric"),
+        n_type_fun(n, "RTYPE.Numeric"),
         check = function(x) {
             if (!is.numeric(x)) stop("Expected a number", call. = FALSE)
             if (n > 0 && length(x) != n) {
@@ -97,7 +97,7 @@ ts_numeric <- function(n = -1L) {
 ts_character <- function(n = -1L) {
     object(
         n_type(n, "string"),
-        n_type_fun(n, "Character"),
+        n_type_fun(n, "RTYPE.Character"),
         check = function(x) {
             if (!is.character(x)) stop("Expected a string")
             if (n > 0 && length(x) != n) stop("Expected a string of length ", n)

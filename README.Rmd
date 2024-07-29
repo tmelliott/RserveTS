@@ -102,5 +102,7 @@ myfun(1:5)
 
 myfun("hello world")
 
-ts_compile(myfun)
+cat(readLines("tests/testthat/app/app.R"), sep = "\n")
+
+ts_compile("tests/testthat/app/app.R", file = "")
 ```

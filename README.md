@@ -98,6 +98,17 @@ myfun(1:5)
 myfun("hello world")
 #> Error: Expected a number
 
-ts_compile(myfun)
-#> const myfun = (x: number | number[]) => Promise<Robj.Numeric<1>)>;
+cat(readLines("tests/testthat/app/app.R"), sep = "\n")
+#> library(ts)
+#> 
+#> fn_mean <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
+#> fn_first <- ts_function(function(x) x[1],
+#>     x = ts_character(-1), result = ts_character(1)
+#> )
+
+ts_compile("tests/testthat/app/app.R", file = "")
+#> import type { Character, Numeric } from 'rserve-ts';
+#> 
+#> const fn_first = (x: string | string[]) => Promise<Character<1>)>;
+#> const fn_mean = (x: number | number[]) => Promise<Numeric<1>)>;
 ```
