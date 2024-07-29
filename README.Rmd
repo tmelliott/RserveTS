@@ -106,3 +106,11 @@ cat(readLines("tests/testthat/app/app.R"), sep = "\n")
 
 ts_compile("tests/testthat/app/app.R", file = "")
 ```
+
+## TODO
+
+- [ ] Add support for more types
+- [ ] Allow generic types (e.g., `<T>(x: T) => T`)
+- [ ] Add support for conditional return types
+
+  e.g., `const sample = <T, N extends number>(x: T[], n: N) => N extends 1 ? T : T[]`

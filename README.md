@@ -112,3 +112,14 @@ ts_compile("tests/testthat/app/app.R", file = "")
 #> const fn_first = (x: string | string[]) => Promise<Character<1>)>;
 #> const fn_mean = (x: number | number[]) => Promise<Numeric<1>)>;
 ```
+
+## TODO
+
+  - [ ] Add support for more types
+
+  - [ ] Allow generic types (e.g., `<T>(x: T) => T`)
+
+  - [ ] Add support for conditional return types
+    
+    e.g., `const sample = <T, N extends number>(x: T[], n: N) => N
+    extends 1 ? T : T[]`
