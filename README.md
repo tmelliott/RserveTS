@@ -98,19 +98,35 @@ myfun(1:5)
 myfun("hello world")
 #> Error: Expected a number
 
-cat(readLines("tests/testthat/app/app.R"), sep = "\n")
+cat(readLines("tests/testthat/app.R"), sep = "\n")
 #> library(ts)
 #> 
 #> fn_mean <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
 #> fn_first <- ts_function(function(x) x[1],
 #>     x = ts_character(-1), result = ts_character(1)
 #> )
+#> 
+#> sample_one <- ts_function(
+#>     sample,
+#>     ts_overload(
+#>         x = ts_numeric(),
+#>         result = ts_numeric(1)
+#>     ),
+#>     ts_overload(
+#>         x = ts_character(),
+#>         result = ts_character(1)
+#>     )
+#> )
 
-ts_compile("tests/testthat/app/app.R", file = "")
+ts_compile("tests/testthat/app.R", file = "")
 #> import type { Character, Numeric } from 'rserve-ts';
 #> 
 #> const fn_first = (x: string | string[]) => Promise<Character<1>)>;
 #> const fn_mean = (x: number | number[]) => Promise<Numeric<1>)>;
+#> 
+#> // sample_one overloads
+#> const sample_one = (x: number | number[]) => Promise<Numeric<1>)>;
+#> const sample_one = (x: string | string[]) => Promise<Character<1>)>;
 ```
 
 ## TODO
@@ -123,3 +139,6 @@ ts_compile("tests/testthat/app/app.R", file = "")
     
     e.g., `const sample = <T, N extends number>(x: T[], n: N) => N
     extends 1 ? T : T[]`
+
+  - [ ] Function overloads? Perhaps just a wrapper around several
+    function definitions…

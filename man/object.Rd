@@ -8,7 +8,8 @@ object(
   type = "any",
   type_fn = "any",
   default = NULL,
-  check = function() stop("Not implemented")
+  check = function() stop("Not implemented"),
+  generic = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ object(
 \item{default}{The default value of the object.}
 
 \item{check}{A function that checks the object and returns it if it is valid. This operates on the R side and is mostly for development and debugging purposes. It is up to the developer to ensure that all functions return the correct type of object always.}
+
+\item{generic}{logical, if \code{TRUE} then the object is a generic type.}
 }
 \description{
 This is the base type for all typed objects. It is not meant to be used directly.

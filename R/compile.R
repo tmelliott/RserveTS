@@ -1,10 +1,10 @@
 #' @export
-ts_compile <- function(f, file = NULL, ...) {
+ts_compile <- function(f, ..., file = NULL) {
     UseMethod("ts_compile")
 }
 
 #' @export
-ts_compile.ts_function <- function(f, file = NULL, name = deparse(substitute(f))) {
+ts_compile.ts_function <- function(f, name = deparse(substitute(f)), ...) {
     inputs <- attr(f, "args")
     result <- attr(f, "result")
 
@@ -15,9 +15,16 @@ ts_compile.ts_function <- function(f, file = NULL, name = deparse(substitute(f))
 }
 
 #' @export
+ts_compile.ts_overload <- function(f, file = NULL, name = deparse(substitute(f))) {
+    cmt <- sprintf("\n// %s overloads", name)
+    oloads <- sapply(f, ts_compile, name = name)
+    paste(cmt, paste(oloads, collapse = "\n"), sep = "\n")
+}
+
+#' @export
 ts_compile.character <- function(
     f,
-    file = sprintf("%s.ts", tools::file_path_sans_ext(f))) {
+    file = sprintf("%s.d.ts", tools::file_path_sans_ext(f))) {
     if (length(f) > 1) {
         return(sapply(f, ts_compile))
     }
@@ -53,6 +60,6 @@ ts_compile.character <- function(
 }
 
 #' @export
-ts_compile.default <- function(f) {
+ts_compile.default <- function(f, ...) {
     warning("Not supported")
 }

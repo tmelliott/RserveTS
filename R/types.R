@@ -6,12 +6,14 @@
 #' @param type_fn The type of the object that Typescript expects to recieve from R.
 #' @param default The default value of the object.
 #' @param check A function that checks the object and returns it if it is valid. This operates on the R side and is mostly for development and debugging purposes. It is up to the developer to ensure that all functions return the correct type of object always.
+#' @param generic logical, if `TRUE` then the object is a generic type.
 #'
 #' @md
 object <- function(type = "any",
                    type_fn = "any",
                    default = NULL,
-                   check = function() stop("Not implemented")) {
+                   check = function() stop("Not implemented"),
+                   generic = FALSE) {
     e <- environment()
 
     e$attr <- function(name, value) {

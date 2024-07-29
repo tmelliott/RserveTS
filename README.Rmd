@@ -102,9 +102,9 @@ myfun(1:5)
 
 myfun("hello world")
 
-cat(readLines("tests/testthat/app/app.R"), sep = "\n")
+cat(readLines("tests/testthat/app.R"), sep = "\n")
 
-ts_compile("tests/testthat/app/app.R", file = "")
+ts_compile("tests/testthat/app.R", file = "")
 ```
 
 ## TODO
@@ -114,3 +114,5 @@ ts_compile("tests/testthat/app/app.R", file = "")
 - [ ] Add support for conditional return types
 
   e.g., `const sample = <T, N extends number>(x: T[], n: N) => N extends 1 ? T : T[]`
+
+- [ ] Function overloads? Perhaps just a wrapper around several function definitions...

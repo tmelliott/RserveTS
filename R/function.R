@@ -14,12 +14,26 @@ parse_args <- function(x, mc) {
     args
 }
 
-# TS function
+#' TS function definition
+#'
+#' @param f an R function
+#' @param ... argument definitions, OR function overloads
+#' @param result return type (ignored if overloads are provided)
 #' @export
 ts_function <- function(f, ..., result = NULL) {
     args <- list(...)
-    if (!is_object(result)) {
+    if (!is.null(result) && !is_object(result)) {
         stop("Invalid return type")
+    }
+    if (any(is_overload(args))) {
+        if (!all(is_overload(args))) {
+            stop("Cannot mix overloads with standard arguments")
+        }
+        z <- lapply(args, function(x) {
+            do.call(ts_function, c(list(f), x$args, list(result = x$result)))
+        })
+        class(z) <- "ts_overload"
+        return(z)
     }
 
     fn <- function(...) {
@@ -31,4 +45,16 @@ ts_function <- function(f, ..., result = NULL) {
     attr(fn, "result") <- result
     class(fn) <- c("ts_function", class(f))
     fn
+}
+
+#' @export
+is_overload <- function(x) {
+    sapply(x, inherits, what = "ts_overload")
+}
+
+#' @export
+ts_overload <- function(..., result = NULL) {
+    structure(list(args = list(...), result = result),
+        class = "ts_overload"
+    )
 }
