@@ -106,27 +106,14 @@ cat(readLines("tests/testthat/app.R"), sep = "\n")
 #>     x = ts_character(-1), result = ts_character(1)
 #> )
 #> 
-#> sample_one <- ts_function(
+#> sample_num <- ts_function(
 #>     sample,
-#>     ts_overload(
-#>         x = ts_numeric(),
-#>         result = ts_numeric(1)
-#>     ),
-#>     ts_overload(
-#>         x = ts_character(),
-#>         result = ts_character(1)
-#>     )
+#>     x = ts_numeric(0),
+#>     result = ts_numeric(1)
 #> )
 
 ts_compile("tests/testthat/app.R", file = "")
-#> import type { Character, Numeric } from 'rserve-ts';
-#> 
-#> const fn_first = (x: string | string[]) => Promise<Character<1>)>;
-#> const fn_mean = (x: number | number[]) => Promise<Numeric<1>)>;
-#> 
-#> // sample_one overloads
-#> const sample_one = (x: number | number[]) => Promise<Numeric<1>)>;
-#> const sample_one = (x: string | string[]) => Promise<Character<1>)>;
+#> Error in ts_compile.ts_function(e[[x]], file = file, name = x): unused argument (file = file)
 ```
 
 ## TODO

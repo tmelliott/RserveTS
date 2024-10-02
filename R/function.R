@@ -25,16 +25,17 @@ ts_function <- function(f, ..., result = NULL) {
     if (!is.null(result) && !is_object(result)) {
         stop("Invalid return type")
     }
-    if (any(is_overload(args))) {
-        if (!all(is_overload(args))) {
-            stop("Cannot mix overloads with standard arguments")
-        }
-        z <- lapply(args, function(x) {
-            do.call(ts_function, c(list(f), x$args, list(result = x$result)))
-        })
-        class(z) <- "ts_overload"
-        return(z)
-    }
+    # TODO: implement overloads, if possible with zod
+    # if (any(is_overload(args))) {
+    #     if (!all(is_overload(args))) {
+    #         stop("Cannot mix overloads with standard arguments")
+    #     }
+    #     z <- lapply(args, function(x) {
+    #         do.call(ts_function, c(list(f), x$args, list(result = x$result)))
+    #     })
+    #     class(z) <- "ts_overload"
+    #     return(z)
+    # }
 
     fn <- function(...) {
         mc <- match.call(f)
@@ -47,14 +48,14 @@ ts_function <- function(f, ..., result = NULL) {
     fn
 }
 
-#' @export
-is_overload <- function(x) {
-    sapply(x, inherits, what = "ts_overload")
-}
+# #' @export
+# is_overload <- function(x) {
+#     sapply(x, inherits, what = "ts_overload")
+# }
 
-#' @export
-ts_overload <- function(..., result = NULL) {
-    structure(list(args = list(...), result = result),
-        class = "ts_overload"
-    )
-}
+# #' @export
+# ts_overload <- function(..., result = NULL) {
+#     structure(list(args = list(...), result = result),
+#         class = "ts_overload"
+#     )
+# }

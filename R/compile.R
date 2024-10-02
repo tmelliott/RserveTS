@@ -1,6 +1,6 @@
 #' @export
 ts_compile <- function(f, ..., file = NULL) {
-    UseMethod("ts_compile")
+    o <- UseMethod("ts_compile")
 }
 
 #' @export
@@ -9,17 +9,17 @@ ts_compile.ts_function <- function(f, name = deparse(substitute(f)), ...) {
     result <- attr(f, "result")
 
     inputs <- sapply(inputs, \(x) x$type)
-    fn_args <- paste(names(inputs), inputs, sep = ": ") |>
+    fn_args <- paste(inputs) |>
         paste(collapse = ", ")
-    sprintf("const %s = (%s) => Promise<%s>;", name, fn_args, result$type_fn)
+    sprintf("const %s = R.ocap([%s], %s]);", name, fn_args, result$type_fn)
 }
 
-#' @export
-ts_compile.ts_overload <- function(f, file = NULL, name = deparse(substitute(f))) {
-    cmt <- sprintf("\n// %s overloads", name)
-    oloads <- sapply(f, ts_compile, name = name)
-    paste(cmt, paste(oloads, collapse = "\n"), sep = "\n")
-}
+# #' @export
+# ts_compile.ts_overload <- function(f, file = NULL, name = deparse(substitute(f))) {
+#     cmt <- sprintf("\n// %s overloads", name)
+#     oloads <- sapply(f, ts_compile, name = name)
+#     paste(cmt, paste(oloads, collapse = "\n"), sep = "\n")
+# }
 
 #' @export
 ts_compile.character <- function(
@@ -49,7 +49,7 @@ ts_compile.character <- function(
 
     cat(
         sprintf(
-            "import type { %s } from 'rserve-ts';\n\n",
+            "import { %s } from 'rserve-ts';\n\n",
             paste(types, collapse = ", ")
         ),
         file = file
