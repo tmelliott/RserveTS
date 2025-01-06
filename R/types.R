@@ -9,8 +9,8 @@
 #' @param generic logical, if `TRUE` then the object is a generic type.
 #'
 #' @md
-object <- function(type = "any",
-                   type_fn = "any",
+object <- function(zod_type = "any",
+                   r_type = "any",
                    default = NULL,
                    check = function() stop("Not implemented"),
                    generic = FALSE) {
@@ -27,21 +27,21 @@ object <- function(type = "any",
 #' @export
 print.ts_object <- function(x, ...) {
     # name <- deparse(substitute(x))
-    cat(sprintf("Input (ts) type: %s\n", x$type))
-    cat(sprintf("Output (R) type: %s\n", x$type_fn))
+    cat(sprintf("Zod type: %s\n", x$zod_type))
+    cat(sprintf("  R type: %s\n", x$r_type))
 }
 
 is_object <- function(x) {
     inherits(x, "ts_object")
 }
 
-ts_union <- function(...) paste(..., sep = " | ")
-ts_array <- function(type = c("number", "boolean", "string")) {
-    if (type == "number") {
-        return("Float64Array")
+ts_union <- function(...) sprintf("z.union([%s])", paste(..., sep = ", "))
+ts_array <- function(type = c("z.number()", "z.boolean()", "z.string()")) {
+    if (type == "z.number()") {
+        return("z.instanceof(Float64Array)")
     }
-    if (type == "boolean") {
-        return("Uint8Array")
+    if (type == "z.boolean()") {
+        return("z.instanceof(Uint8Array)")
     }
     return("RTYPE.stringArray")
 }
@@ -65,7 +65,7 @@ n_type_fun <- function(n, type) {
 #' @export
 ts_logical <- function(n = -1L) {
     object(
-        n_type(n, "boolean"),
+        n_type(n, "z.boolean()"),
         n_type_fun(n, "RTYPE.logical"),
         check = function(x) {
             if (!is.logical(x)) stop("Expected a boolean")
@@ -78,7 +78,7 @@ ts_logical <- function(n = -1L) {
 #' @export
 ts_integer <- function(n = -1L) {
     object(
-        n_type(n, "number"),
+        n_type(n, "z.number()"),
         n_type_fun(n, "RTYPE.integer"),
         check = function(x) {
             if (!is.integer(x)) stop("Expected an integer")
@@ -91,7 +91,7 @@ ts_integer <- function(n = -1L) {
 #' @export
 ts_numeric <- function(n = -1L) {
     object(
-        n_type(n, "number"),
+        n_type(n, "z.number()"),
         n_type_fun(n, "RTYPE.numeric"),
         check = function(x) {
             if (!is.numeric(x)) stop("Expected a number", call. = FALSE)
@@ -106,7 +106,7 @@ ts_numeric <- function(n = -1L) {
 #' @export
 ts_character <- function(n = -1L) {
     object(
-        n_type(n, "string"),
+        n_type(n, "z.string()"),
         n_type_fun(n, "RTYPE.character"),
         check = function(x) {
             if (!is.character(x)) stop("Expected a string")

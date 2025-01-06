@@ -28,27 +28,24 @@ formals and return types.
 
 ``` r
 library(ts)
-app <- ts_app(
+app <- ts_list(
   add = ts_fun(
     function(x, y) {
       x + y
     },
-    x = ts_number(),
-    y = ts_number(),
+    x = ts_number(1),
+    y = ts_number(1),
     # ideally this will use a generic type where x OR y can be vectors
     # and, if one is a vector, the return type will be a vector too...
-    result = ts_number()
+    result = r_numeric(1)
   ),
   sample = ts_fun(
     function(x, n) {
       sample(x, n)
     },
-    x = ts_character_vector(),
-    n = ts_integer(),
-    result = ts_condition(n,
-      1 = ts_character(),
-      ts_character_vector()
-    )
+    x = ts_string(),
+    n = ts_number(1),
+    result = r_character()
   )
 )
 
@@ -66,7 +63,7 @@ export const app = {
     z.promise(R.numeric(1))
   ),
   sample: z.function(
-    z.tuple([z.character_vector(), z.integer()]),
+    z.tuple([z.array(z.string()), z.integer()]),
     z.promise(R.character())
   )
 };
@@ -76,11 +73,8 @@ which will generate the following types:
 
 ``` typescript
 type App = {
-  add: (x: number, y: number) => Promise<{ data: number }>;
-  sample: (x: string[], n: number) => Promise<{ data: string | string[] }>;
-  // or, if possible, even better:
-  sample: <N extends number>(x: string[], n: N) =>
-    Promise<{ data: N extends 1 ? string : string[] }>;
+  add: (x: number, y: number) => Promise<Robj.Numeric<1>>;
+  sample: (x: string[], n: number) => Promise<Robj.Character>;
 };
 ```
 
@@ -113,7 +107,11 @@ cat(readLines("tests/testthat/app.R"), sep = "\n")
 #> )
 
 ts_compile("tests/testthat/app.R", file = "")
-#> Error in ts_compile.ts_function(e[[x]], file = file, name = x): unused argument (file = file)
+#> import { stringArray, character, numeric } from 'rserve-ts';
+#> 
+#> const fn_first = R.ocap([z.union([z.string(), stringArray])], character(1)]);
+#> const fn_mean = R.ocap([z.union([z.number(), z.instanceof(Float64Array)])], numeric(1)]);
+#> const sample_num = R.ocap([z.instanceof(Float64Array)], numeric(1)]);
 ```
 
 ## TODO

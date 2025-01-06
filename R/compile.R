@@ -8,10 +8,10 @@ ts_compile.ts_function <- function(f, name = deparse(substitute(f)), ...) {
     inputs <- attr(f, "args")
     result <- attr(f, "result")
 
-    inputs <- sapply(inputs, \(x) x$type)
+    inputs <- sapply(inputs, \(x) x$zod_type)
     fn_args <- paste(inputs) |>
         paste(collapse = ", ")
-    sprintf("const %s = R.ocap([%s], %s]);", name, fn_args, result$type_fn)
+    sprintf("const %s = R.ocap([%s], %s]);", name, fn_args, result$r_type)
 }
 
 # #' @export
