@@ -139,7 +139,10 @@ ts_factor <- function(levels = NULL) {
         check = function(x) {
             if (!is.factor(x)) stop("Expected a factor")
             if (!is.null(levels) && !identical(levels, levels(x))) {
-                stop("Expected a factor with levels ", levels)
+                stop(
+                    "Expected a factor with levels: ",
+                    paste(levels, collapse = ", ")
+                )
             }
             x
         }
@@ -155,11 +158,11 @@ ts_factor <- function(levels = NULL) {
 #' @export
 #' @md
 ts_list <- function(values = NULL) {
-    type <- "[]"
+    type <- "z.union([z.object({}), z.array(z.any())])"
     type_fn <- ""
     if (!is.null(values)) {
-        types <- sapply(values, function(x) x$type)
-        type_funs <- sapply(values, function(x) x$type_fn)
+        types <- sapply(values, function(x) x$zod_type)
+        type_funs <- sapply(values, function(x) x$r_type)
         if (!is.null(names(values))) {
             type <- sprintf(
                 "{%s}",
@@ -177,7 +180,9 @@ ts_list <- function(values = NULL) {
 
     object(
         type,
-        sprintf("List<%s>", type_fn),
+        ifelse(type_fn == "", "RTYPE.List",
+            sprintf("RTYPE.List<%s>", type_fn)
+        ),
         check = function(x) {
             if (!is.list(x)) stop("Expected a list")
             x

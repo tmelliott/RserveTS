@@ -38,14 +38,8 @@ Writing functions is easy, just use the `ts_*()` functions to define formals and
 library(ts)
 app <- ts_list(
   add = ts_fun(
-    function(x, y) {
-      x + y
-    },
-    x = ts_number(1),
-    y = ts_number(1),
-    # ideally this will use a generic type where x OR y can be vectors
-    # and, if one is a vector, the return type will be a vector too...
-    result = r_numeric(1)
+    function(x = ts_number(1), y = ts_number(1)) a + b,
+    ts_numeric(1)
   ),
   sample = ts_fun(
     function(x, n) {
