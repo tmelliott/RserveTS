@@ -9,7 +9,7 @@ ts_function(f, ..., result = NULL)
 \arguments{
 \item{f}{an R function}
 
-\item{...}{argument definitions, OR function overloads}
+\item{...}{argument definitions (only required if f does not specify these in its formals)}
 
 \item{result}{return type (ignored if overloads are provided)}
 }

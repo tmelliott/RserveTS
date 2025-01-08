@@ -5,23 +5,23 @@
 \title{Typed object}
 \usage{
 object(
-  zod_type = "any",
-  r_type = "any",
+  input_type = "any",
+  return_type = "any",
   default = NULL,
   check = function() stop("Not implemented"),
   generic = FALSE
 )
 }
 \arguments{
+\item{input_type}{The type of the object that Typescript expect to send to R.}
+
+\item{return_type}{The type of the object that Typescript expects to recieve from R.}
+
 \item{default}{The default value of the object.}
 
 \item{check}{A function that checks the object and returns it if it is valid. This operates on the R side and is mostly for development and debugging purposes. It is up to the developer to ensure that all functions return the correct type of object always.}
 
 \item{generic}{logical, if \code{TRUE} then the object is a generic type.}
-
-\item{type}{The type of the object that Typescript expect to send to R.}
-
-\item{type_fn}{The type of the object that Typescript expects to recieve from R.}
 }
 \description{
 This is the base type for all typed objects. It is not meant to be used directly.

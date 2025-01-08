@@ -2,15 +2,15 @@
 #'
 #' This is the base type for all typed objects. It is not meant to be used directly.
 #'
-#' @param type The type of the object that Typescript expect to send to R.
-#' @param type_fn The type of the object that Typescript expects to recieve from R.
+#' @param input_type The type of the object that Typescript expect to send to R.
+#' @param return_type The type of the object that Typescript expects to recieve from R.
 #' @param default The default value of the object.
 #' @param check A function that checks the object and returns it if it is valid. This operates on the R side and is mostly for development and debugging purposes. It is up to the developer to ensure that all functions return the correct type of object always.
 #' @param generic logical, if `TRUE` then the object is a generic type.
 #'
 #' @md
-object <- function(zod_type = "any",
-                   r_type = "any",
+object <- function(input_type = "any",
+                   return_type = "any",
                    default = NULL,
                    check = function() stop("Not implemented"),
                    generic = FALSE) {
@@ -27,8 +27,20 @@ object <- function(zod_type = "any",
 #' @export
 print.ts_object <- function(x, ...) {
     # name <- deparse(substitute(x))
-    cat(sprintf("Zod type: %s\n", x$zod_type))
-    cat(sprintf("  R type: %s\n", x$r_type))
+    cli::cli_ul()
+    cli::cli_h3("Input type: ")
+    if (nchar(x$input_type) > 50) {
+        cat(js::uglify_reformat(x$input_type, beautify = TRUE), "\n")
+    } else {
+        cat(x$input_type, "\n")
+    }
+    cli::cli_h3("Return type: ")
+    if (nchar(x$return_type) > 50) {
+        cat(js::uglify_reformat(x$return_type, beautify = TRUE), "\n")
+    } else {
+        cat(x$return_type, "\n")
+    }
+    cli::cli_end()
 }
 
 is_object <- function(x) {
@@ -43,7 +55,7 @@ ts_array <- function(type = c("z.number()", "z.boolean()", "z.string()")) {
     if (type == "z.boolean()") {
         return("z.instanceof(Uint8Array)")
     }
-    return("RTYPE.stringArray")
+    return("Robj.character(0)")
 }
 
 n_type <- function(n, type, pl = ts_array(type)) {
@@ -56,20 +68,19 @@ n_type <- function(n, type, pl = ts_array(type)) {
     pl
 }
 n_type_fun <- function(n, type) {
-    if (n < 0) {
-        return(type)
-    }
-    sprintf("%s(%s)", type, n)
+    sprintf("%s(%s)", type, ifelse(n < 0, "", n))
 }
 
 #' @export
 ts_logical <- function(n = -1L) {
     object(
         n_type(n, "z.boolean()"),
-        n_type_fun(n, "RTYPE.logical"),
+        n_type_fun(n, "Robj.logical"),
         check = function(x) {
             if (!is.logical(x)) stop("Expected a boolean")
-            if (n > 0 && length(x) != n) stop("Expected a boolean of length ", n)
+            if (n > 0 && length(x) != n) {
+                stop("Expected a boolean of length ", n)
+            }
             x
         }
     )
@@ -79,10 +90,12 @@ ts_logical <- function(n = -1L) {
 ts_integer <- function(n = -1L) {
     object(
         n_type(n, "z.number()"),
-        n_type_fun(n, "RTYPE.integer"),
+        n_type_fun(n, "Robj.integer"),
         check = function(x) {
             if (!is.integer(x)) stop("Expected an integer")
-            if (n > 0 && length(x) != n) stop("Expected an integer of length ", n)
+            if (n > 0 && length(x) != n) {
+                stop("Expected an integer of length ", n)
+            }
             x
         }
     )
@@ -92,7 +105,7 @@ ts_integer <- function(n = -1L) {
 ts_numeric <- function(n = -1L) {
     object(
         n_type(n, "z.number()"),
-        n_type_fun(n, "RTYPE.numeric"),
+        n_type_fun(n, "Robj.numeric"),
         check = function(x) {
             if (!is.numeric(x)) stop("Expected a number", call. = FALSE)
             if (n > 0 && length(x) != n) {
@@ -107,7 +120,7 @@ ts_numeric <- function(n = -1L) {
 ts_character <- function(n = -1L) {
     object(
         n_type(n, "z.string()"),
-        n_type_fun(n, "RTYPE.character"),
+        n_type_fun(n, "Robj.character"),
         check = function(x) {
             if (!is.character(x)) stop("Expected a string")
             if (n > 0 && length(x) != n) stop("Expected a string of length ", n)
@@ -130,11 +143,14 @@ vector_as_ts_array <- function(x) {
 #' @md
 ts_factor <- function(levels = NULL) {
     object(
-        sprintf("(%s)[]", paste(levels, collapse = " | ")),
+        ifelse(is.null(levels),
+            ts_array("z.string()"),
+            sprintf("(%s)[]", paste(levels, collapse = " | "))
+        ),
         if (is.null(levels)) {
-            "Factor"
+            "Robj.factor()"
         } else {
-            sprintf("Factor<%s>", vector_as_ts_array(levels))
+            sprintf("Robj.factor(%s)", vector_as_ts_array(levels))
         },
         check = function(x) {
             if (!is.factor(x)) stop("Expected a factor")
@@ -161,30 +177,43 @@ ts_list <- function(values = NULL) {
     type <- "z.union([z.object({}), z.array(z.any())])"
     type_fn <- ""
     if (!is.null(values)) {
-        types <- sapply(values, function(x) x$zod_type)
-        type_funs <- sapply(values, function(x) x$r_type)
+        types <- sapply(values, function(x) x$input_type)
+        type_funs <- sapply(values, function(x) x$return_type)
         if (!is.null(names(values))) {
             type <- sprintf(
-                "{%s}",
+                "{ %s }",
                 paste(names(values), types, sep = ": ", collapse = ", ")
             )
             type_fn <- sprintf(
-                "{%s}",
+                "{ %s }",
                 paste(names(values), type_funs, sep = ": ", collapse = ", ")
             )
         } else {
-            type <- sprintf("[%s]", paste(values, collapse = ", "))
+            type <- sprintf("[%s]", paste(types, collapse = ", "))
             type_fn <- sprintf("[%s]", paste(type_funs, collapse = ", "))
         }
     }
 
     object(
         type,
-        ifelse(type_fn == "", "RTYPE.List",
-            sprintf("RTYPE.List<%s>", type_fn)
+        ifelse(type_fn == "", "Robj.list()",
+            sprintf("Robj.list(%s)", type_fn)
         ),
         check = function(x) {
             if (!is.list(x)) stop("Expected a list")
+            if (!is.null(values)) {
+                if (!is.null(names(values))) {
+                    if (!identical(names(x), names(values))) {
+                        stop(
+                            "Expected a list with names: ",
+                            paste(names(values), collapse = ", ")
+                        )
+                    }
+                }
+                for (i in seq_along(values)) {
+                    values[[i]]$check(x[[i]])
+                }
+            }
             x
         }
     )
@@ -199,15 +228,15 @@ ts_list <- function(values = NULL) {
 #' @md
 ts_dataframe <- function(...) {
     values <- list(...)
-    type <- "{}"
+    type <- "z.record(z.string(), z.any())"
     type_fn <- ""
     if (length(values)) {
-        types <- sapply(values, function(x) x$type)
-        type_funs <- sapply(values, function(x) x$type_fn)
+        types <- sapply(values, function(x) x$input_type)
+        type_funs <- sapply(values, function(x) x$return_type)
         if (is.null(names(values))) stop("Expected named elements")
 
         type <- sprintf(
-            "{\n  %s\n}",
+            "z.object({\n  %s\n})",
             paste(names(values), types, sep = ": ", collapse = ",\n  ")
         )
         type_fn <- sprintf(
@@ -218,7 +247,7 @@ ts_dataframe <- function(...) {
 
     object(
         type,
-        sprintf("List<%s>", type),
+        sprintf("R.dataframe(%s)", type_fn),
         check = function(x) {
             if (!is.data.frame(x)) stop("Expected a data frame")
             x
