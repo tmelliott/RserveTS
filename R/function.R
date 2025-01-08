@@ -8,7 +8,14 @@ parse_args <- function(x, mc) {
         )
     }
     args <- lapply(names(fmls), function(n) {
-        fmls[[n]]$check(eval(mc[[n]]))
+        tryCatch(
+            {
+                fmls[[n]]$check(eval(mc[[n]]))
+            },
+            error = function(e) {
+                stop("Invalid argument '", n, "': ", e$message, call. = FALSE)
+            }
+        )
     })
     names(args) <- names(fmls)
     args
@@ -46,6 +53,10 @@ ts_function <- function(f, ..., result = NULL) {
     args <- list(...)
     if (!is.null(result) && !is_object(result)) {
         stop("Invalid return type")
+    }
+
+    if (length(args) == 0) {
+        args <- lapply(formals(f), eval)
     }
 
     fn <- function(...) {
