@@ -9,11 +9,11 @@
 #' @param generic logical, if `TRUE` then the object is a generic type.
 #'
 #' @md
-object <- function(input_type = "any",
-                   return_type = "any",
-                   default = NULL,
-                   check = function() stop("Not implemented"),
-                   generic = FALSE) {
+ts_object <- function(input_type = "any",
+                      return_type = "any",
+                      default = NULL,
+                      check = function() stop("Not implemented"),
+                      generic = FALSE) {
     e <- environment()
 
     e$attr <- function(name, value) {
@@ -43,7 +43,9 @@ print.ts_object <- function(x, ...) {
     cli::cli_end()
 }
 
-is_object <- function(x) {
+#' @describeIn object Check if an object is a ts object
+#' @export
+is_ts_object <- function(x) {
     inherits(x, "ts_object")
 }
 
@@ -73,7 +75,7 @@ n_type_fun <- function(n, type) {
 
 #' @export
 ts_logical <- function(n = -1L) {
-    object(
+    ts_object(
         n_type(n, "z.boolean()"),
         n_type_fun(n, "Robj.logical"),
         check = function(x) {
@@ -88,7 +90,7 @@ ts_logical <- function(n = -1L) {
 
 #' @export
 ts_integer <- function(n = -1L) {
-    object(
+    ts_object(
         n_type(n, "z.number()"),
         n_type_fun(n, "Robj.integer"),
         check = function(x) {
@@ -103,7 +105,7 @@ ts_integer <- function(n = -1L) {
 
 #' @export
 ts_numeric <- function(n = -1L) {
-    object(
+    ts_object(
         n_type(n, "z.number()"),
         n_type_fun(n, "Robj.numeric"),
         check = function(x) {
@@ -118,7 +120,7 @@ ts_numeric <- function(n = -1L) {
 
 #' @export
 ts_character <- function(n = -1L) {
-    object(
+    ts_object(
         n_type(n, "z.string()"),
         n_type_fun(n, "Robj.character"),
         check = function(x) {
@@ -142,7 +144,7 @@ vector_as_ts_array <- function(x) {
 #' @export
 #' @md
 ts_factor <- function(levels = NULL) {
-    object(
+    ts_object(
         ifelse(is.null(levels),
             ts_array("z.string()"),
             sprintf("(%s)[]", paste(levels, collapse = " | "))
@@ -170,13 +172,16 @@ ts_factor <- function(levels = NULL) {
 #' Typed list
 #'
 #' A list is a vector of other robjects, which may or may not be named.
+#' @param ... A list of types, named or unnamed.
 #'
 #' @export
 #' @md
-ts_list <- function(values = NULL) {
+ts_list <- function(...) {
+    values <- list(...)
+
     type <- "z.union([z.object({}), z.array(z.any())])"
     type_fn <- ""
-    if (!is.null(values)) {
+    if (length(values)) {
         types <- sapply(values, function(x) x$input_type)
         type_funs <- sapply(values, function(x) x$return_type)
         if (!is.null(names(values))) {
@@ -194,7 +199,7 @@ ts_list <- function(values = NULL) {
         }
     }
 
-    object(
+    ts_object(
         type,
         ifelse(type_fn == "", "Robj.list()",
             sprintf("Robj.list(%s)", type_fn)
@@ -245,7 +250,7 @@ ts_dataframe <- function(...) {
         )
     }
 
-    object(
+    ts_object(
         type,
         sprintf("R.dataframe(%s)", type_fn),
         check = function(x) {

@@ -84,17 +84,17 @@ test_that("list type - default", {
 })
 
 test_that("list type - named", {
-  x <- ts_list(list(a = ts_integer(1), b = ts_numeric(1)))
+  x <- ts_list(a = ts_integer(1), b = ts_numeric(1))
   expect_equal(x$check(list(a = 1L, b = 2)), list(a = 1L, b = 2))
   expect_error(x$check(1))
   expect_error(x$check(list()))
 })
 
 test_that("list type - unnamed", {
-  x <- ts_list(list(
+  x <- ts_list(
     ts_integer(1), ts_character(1),
-    ts_list(list(a = ts_integer(1)))
-  ))
+    ts_list(a = ts_integer(1))
+  )
   expect_equal(x$check(list(
     1L, "a",
     list(a = 1L)

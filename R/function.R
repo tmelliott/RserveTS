@@ -51,7 +51,7 @@ ts_result <- function(type, value) {
 #' @export
 ts_function <- function(f, ..., result = NULL) {
     args <- list(...)
-    if (!is.null(result) && !is_object(result)) {
+    if (!is.null(result) && !is_ts_object(result)) {
         stop("Invalid return type")
     }
 
