@@ -7,8 +7,8 @@ test_that("anonomous function definitions", {
         result = ts_numeric(1)
     )
 
-    expect_equal(add(1, 2), 3)
-    expect_error(add("a", 2))
+    expect_equal(add$call(1, 2), 3)
+    expect_error(add$call("a", 2))
 })
 
 test_that("named function definitions", {
@@ -18,26 +18,51 @@ test_that("named function definitions", {
         result = ts_numeric()
     )
 
-    x <- sample_num(1:10)
+    x <- sample_num$call(1:10)
     expect_true(all(x %in% 1:10))
     expect_error(sample_num("a"))
 })
 
-test_that("function with complex return types", {
-    sampler <- ts_function(
+test_that("void return types", {
+    print_x <- ts_function(
         function(x = ts_numeric()) {
+            print(x)
+            return(NULL)
+        }
+    )
+
+    expect_output(z <- print_x$call(1:10))
+    expect_null(z)
+})
+
+test_that("function with complex return types", {
+    get_sample <- ts_function(
+        function(n = ts_numeric(1)) {
+            sample(values, n)
+        },
+        result = ts_numeric()
+    )
+
+    sampler <- ts_function(
+        function(values = ts_numeric()) {
             list(
-                get = function(n) sample(x, n)
+                get = get_sample$copy(),
+                set = ts_function(
+                    function(value = ts_numeric()) {
+                        values <<- value
+                    }
+                )
             )
         },
         result = ts_list(
-            get = ts_function(
-                NULL,
-                n = ts_integer(1),
-                result = ts_numeric(1)
-            )
+            get = get_sample,
+            set = ts_function(NULL, value = ts_numeric())
         )
     )
 
-    s <- sampler(1:10)
+    s <- sampler$call(1:10)
+    expect_type(s$get$call(2), "integer")
+
+    expect_silent(s$set$call(100:200))
+    expect_gte(s$get$call(1), 100)
 })

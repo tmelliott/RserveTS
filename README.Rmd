@@ -36,18 +36,24 @@ Writing functions is easy, just use the `ts_*()` functions to define formals and
 
 ```r
 library(ts)
-app <- ts_list(
-  add = ts_fun(
-    function(x = ts_number(1), y = ts_number(1)) a + b,
-    ts_numeric(1)
-  ),
-  sample = ts_fun(
-    function(x, n) {
-      sample(x, n)
-    },
-    x = ts_string(),
-    n = ts_number(1),
-    result = r_character()
+addFn <- ts_function(
+  function(a = ts_numeric(1), b = ts_numeric(1)) a + b,
+  result = ts_numeric(1)
+)
+sampleFn <- ts_function(
+  function(x = ts_character(), n = ts_integer(1)) sample(x, n),
+  result = ts_character()
+)
+app <- ts_function(
+  function() {
+    list(
+      add = addFn,
+      sample = sampleFn
+    )
+  },
+  result = ts_list(
+    add = appFn,
+    sample = sampleFn
   )
 )
 

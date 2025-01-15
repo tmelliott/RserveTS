@@ -4,7 +4,10 @@
 \alias{ts_list}
 \title{Typed list}
 \usage{
-ts_list(values = NULL)
+ts_list(...)
+}
+\arguments{
+\item{...}{A list of types, named or unnamed.}
 }
 \description{
 A list is a vector of other robjects, which may or may not be named.

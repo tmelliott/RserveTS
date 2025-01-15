@@ -1,6 +1,5 @@
 parse_args <- function(x, mc) {
     fmls <- lapply(x, eval)
-    mc <- mc[-1]
     if (!all(names(mc) %in% names(fmls))) {
         stop(
             "Invalid argument(s): ",
@@ -49,7 +48,7 @@ ts_result <- function(type, value) {
 #' @param ... argument definitions (only required if f does not specify these in its formals)
 #' @param result return type (ignored if overloads are provided)
 #' @export
-ts_function <- function(f, ..., result = NULL) {
+ts_function <- function(f, ..., result = ts_void()) {
     args <- list(...)
     if (!is.null(result) && !is_ts_object(result)) {
         stop("Invalid return type")
@@ -59,13 +58,42 @@ ts_function <- function(f, ..., result = NULL) {
         args <- lapply(formals(f), eval)
     }
 
-    fn <- function(...) {
-        mc <- match.call(f)
-        x <- parse_args(args, mc)
-        result$check(do.call(f, x))
+    e <- new.env()
+    e$f <- f
+    # e$env <- env
+    e$args <- args
+    e$result <- result
+
+    e$call <- function(...) {
+        mc <- match.call(e$f)
+        .args <- parse_args(args, mc[-1])
+        .res <- do.call(e$f, .args)
+        check_type(result, .res)
     }
-    attr(fn, "args") <- args
-    attr(fn, "result") <- result
-    class(fn) <- c("ts_function", class(f))
-    fn
+
+    e$copy <- function(env = parent.frame()) {
+        e2 <- e
+        environment(e2$f) <- rlang::env_clone(environment(e$f), env)
+        e2
+    }
+
+    class(e) <- "ts_function"
+    e
+}
+
+
+
+#' @export
+print.ts_function <- function(x, ...) {
+    cli::cli_h3("Ocap function")
+
+    cli::cli_text("Arguments:")
+    args <- lapply(x$args, \(z) z$input_type)
+    lapply(names(args), \(n) {
+        cat("- ", n, ": ", args[[n]], "\n", sep = "")
+    })
+    cli::cli_text("\n\n")
+
+    cli::cli_text("Return type:")
+    cat(x$result$return_type)
 }

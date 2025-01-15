@@ -36,6 +36,7 @@ print.ts_object <- function(x, ...) {
     }
     cli::cli_h3("Return type: ")
     if (nchar(x$return_type) > 50) {
+        print(x$return_type)
         cat(js::uglify_reformat(x$return_type, beautify = TRUE), "\n")
     } else {
         cat(x$return_type, "\n")
@@ -43,10 +44,72 @@ print.ts_object <- function(x, ...) {
     cli::cli_end()
 }
 
-#' @describeIn object Check if an object is a ts object
+#' @describeIn ts_object Check if an object is a ts object
 #' @export
 is_ts_object <- function(x) {
     inherits(x, "ts_object")
+}
+
+#' @describeIn ts_object Get the input type of a ts object
+#' @param x A ts object
+#' @param which Which type to get, either "input" or "return"
+#' @export
+get_type <- function(x, which = c("input", "return")) {
+    UseMethod("get_type")
+}
+
+#' @export
+get_type.ts_object <- function(x, which = c("input", "return")) {
+    which <- match.arg(which)
+    if (which == "input") {
+        return(x$input_type)
+    }
+    x$return_type
+}
+
+#' @export
+get_type.ts_function <- function(x, which = c("input", "return")) {
+    which <- match.arg(which)
+    if (which == "input") {
+        return("z.function()")
+    }
+    "Robj.ocap()"
+}
+
+#' @export
+get_type.default <- function(x, which) {
+    stop("Invalid object")
+}
+
+#' @describeIn ts_object Check if an object has the correct type
+#' @param type A ts object
+#' @param x An object
+#' @export
+check_type <- function(type, x) UseMethod("check_type")
+
+#' @export
+check_type.default <- function(type, x) {
+    stop("Invalid object")
+}
+
+#' @export
+check_type.ts_object <- function(type, x) {
+    type$check(x)
+}
+
+#' @export
+check_type.ts_function <- function(type, x) {
+    if ("ts_function" %in% class(x)) {
+        return(x)
+    }
+    if (!is.function(x)) stop("Expected a function")
+    do.call(
+        ts_function,
+        c(
+            list(x), attr(type, "args"),
+            list(result = attr(type, "result"))
+        )
+    )
 }
 
 ts_union <- function(...) sprintf("z.union([%s])", paste(..., sep = ", "))
@@ -182,8 +245,8 @@ ts_list <- function(...) {
     type <- "z.union([z.object({}), z.array(z.any())])"
     type_fn <- ""
     if (length(values)) {
-        types <- sapply(values, function(x) x$input_type)
-        type_funs <- sapply(values, function(x) x$return_type)
+        types <- sapply(values, get_type, which = "input")
+        type_funs <- sapply(values, get_type, which = "return")
         if (!is.null(names(values))) {
             type <- sprintf(
                 "{ %s }",
@@ -216,7 +279,7 @@ ts_list <- function(...) {
                     }
                 }
                 for (i in seq_along(values)) {
-                    values[[i]]$check(x[[i]])
+                    x[[i]] <- check_type(values[[i]], x[[i]])
                 }
             }
             x
@@ -236,8 +299,8 @@ ts_dataframe <- function(...) {
     type <- "z.record(z.string(), z.any())"
     type_fn <- ""
     if (length(values)) {
-        types <- sapply(values, function(x) x$input_type)
-        type_funs <- sapply(values, function(x) x$return_type)
+        types <- sapply(values, get_type, which = "input")
+        type_funs <- sapply(values, get_type, which = "return")
         if (is.null(names(values))) stop("Expected named elements")
 
         type <- sprintf(
@@ -256,6 +319,29 @@ ts_dataframe <- function(...) {
         check = function(x) {
             if (!is.data.frame(x)) stop("Expected a data frame")
             x
+        }
+    )
+}
+
+#' @export
+ts_null <- function() {
+    ts_object(
+        "z.null()",
+        "Robj.null()",
+        check = function(x) {
+            if (!is.null(x)) stop("Expected NULL")
+            x
+        }
+    )
+}
+
+#' @export
+ts_void <- function() {
+    ts_object(
+        "z.void()",
+        "null",
+        check = function(x) {
+            return(NULL)
         }
     )
 }

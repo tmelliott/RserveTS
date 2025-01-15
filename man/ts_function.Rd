@@ -4,7 +4,7 @@
 \alias{ts_function}
 \title{TS function definition}
 \usage{
-ts_function(f, ..., result = NULL)
+ts_function(f, ..., result = ts_void())
 }
 \arguments{
 \item{f}{an R function}
