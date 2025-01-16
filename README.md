@@ -28,24 +28,24 @@ formals and return types.
 
 ``` r
 library(ts)
-app <- ts_list(
-  add = ts_fun(
-    function(x, y) {
-      x + y
-    },
-    x = ts_number(1),
-    y = ts_number(1),
-    # ideally this will use a generic type where x OR y can be vectors
-    # and, if one is a vector, the return type will be a vector too...
-    result = r_numeric(1)
-  ),
-  sample = ts_fun(
-    function(x, n) {
-      sample(x, n)
-    },
-    x = ts_string(),
-    n = ts_number(1),
-    result = r_character()
+addFn <- ts_function(
+  function(a = ts_numeric(1), b = ts_numeric(1)) a + b,
+  result = ts_numeric(1)
+)
+sampleFn <- ts_function(
+  function(x = ts_character(), n = ts_integer(1)) sample(x, n),
+  result = ts_character()
+)
+app <- ts_function(
+  function() {
+    list(
+      add = addFn,
+      sample = sampleFn
+    )
+  },
+  result = ts_list(
+    add = appFn,
+    sample = sampleFn
   )
 )
 
@@ -87,10 +87,10 @@ library(ts)
 
 myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
 myfun(1:5)
-#> [1] 3
+#> Error in myfun(1:5): could not find function "myfun"
 
 myfun("hello world")
-#> Error: Expected a number
+#> Error in myfun("hello world"): could not find function "myfun"
 
 cat(readLines("tests/testthat/app.R"), sep = "\n")
 #> library(ts)
@@ -107,11 +107,11 @@ cat(readLines("tests/testthat/app.R"), sep = "\n")
 #> )
 
 ts_compile("tests/testthat/app.R", file = "")
-#> import { stringArray, character, numeric } from 'rserve-ts';
+#> import {  } from 'rserve-ts';
 #> 
-#> const fn_first = R.ocap([z.union([z.string(), stringArray])], character(1)]);
-#> const fn_mean = R.ocap([z.union([z.number(), z.instanceof(Float64Array)])], numeric(1)]);
-#> const sample_num = R.ocap([z.instanceof(Float64Array)], numeric(1)]);
+#> character(0)
+#> character(0)
+#> character(0)
 ```
 
 ## TODO
