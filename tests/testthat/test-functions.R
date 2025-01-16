@@ -65,4 +65,8 @@ test_that("function with complex return types", {
 
     expect_silent(s$set$call(100:200))
     expect_gte(s$get$call(1), 100)
+
+    # you would then 'deploy' this as an App that
+    # doesn't require the $call methods
+    # e.g., sampler(1:10)$get(5)
 })

@@ -14,13 +14,6 @@ ts_compile.ts_function <- function(f, name = deparse(substitute(f)), ...) {
     sprintf("const %s = R.ocap([%s], %s]);", name, fn_args, result$r_type)
 }
 
-# #' @export
-# ts_compile.ts_overload <- function(f, file = NULL, name = deparse(substitute(f))) {
-#     cmt <- sprintf("\n// %s overloads", name)
-#     oloads <- sapply(f, ts_compile, name = name)
-#     paste(cmt, paste(oloads, collapse = "\n"), sep = "\n")
-# }
-
 #' @export
 ts_compile.character <- function(
     f,

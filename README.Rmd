@@ -84,6 +84,13 @@ type App = {
 };
 ```
 
+Besides generating the schema as shown above, the app object can also  be 'deployed' using Rserve:
+
+```r
+ts_deploy(app, port = 6311, daemon = FALSE)
+# listening on port 6311
+```
+
 ## State of the project
 
 Here's what's currently working:
