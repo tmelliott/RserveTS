@@ -136,7 +136,15 @@ n_type_fun <- function(n, type) {
     sprintf("%s(%s)", type, ifelse(n < 0, "", n))
 }
 
+#' Logical or boolean type
+#'
+#' Booleans are represented in Zod schema as either a boolean (`z.boolean()`),
+#' or a typed Uint8Array (`z.instanceof(Uint8Array)`).
+#'
+#' @param n The length of the boolean vector. If `n = 1` then a single boolean is expected. If `n = 0` then any length is expected. If `n > 1` then a boolean vector of length `n` is expected.
+#' @return A ts object that accepts logical scalars or vectors of length `n`.
 #' @export
+#' @md
 ts_logical <- function(n = -1L) {
     ts_object(
         n_type(n, "z.boolean()"),
@@ -151,10 +159,18 @@ ts_logical <- function(n = -1L) {
     )
 }
 
+#' Integer type
+#'
+#' Integers are represented in Zod schema as either a number (`z.number()`),
+#' or a Int32Array (`z.instanceof(Int32Array)`).
+#'
+#' @param n The length of the integer vector. If `n = 1` then a single integer is expected. If `n = 0` then any length is expected. If `n > 1` then an integer vector of length `n` is expected.
+#' @return A ts object that accepts integer scalars or vectors of length `n`.
 #' @export
+#' @md
 ts_integer <- function(n = -1L) {
     ts_object(
-        n_type(n, "z.number()"),
+        n_type(n, "z.number()", "z.instanceof(Int32Array)"),
         n_type_fun(n, "Robj.integer"),
         check = function(x) {
             if (!is.integer(x)) stop("Expected an integer")
@@ -166,7 +182,15 @@ ts_integer <- function(n = -1L) {
     )
 }
 
+#' Numeric type
+#'
+#' Numbers are represented in Zod schema as either a number (`z.number()`),
+#' or a Float64Array (`z.instanceof(Float64Array)`).
+#'
+#' @param n The length of the numeric vector. If `n = 1` then a single number is expected. If `n = 0` then any length is expected. If `n > 1` then a numeric vector of length `n` is expected.
+#' @return A ts object that accepts numeric scalars or vectors of length `n`.
 #' @export
+#' @md
 ts_numeric <- function(n = -1L) {
     ts_object(
         n_type(n, "z.number()"),
@@ -181,7 +205,14 @@ ts_numeric <- function(n = -1L) {
     )
 }
 
+#' Character or string type
+#'
+#' Strings are represented in Zod schema as either a string (`z.string()`),
+#' or a string array (`z.array(z.string())`).
+#' @param n The length of the string vector. If `n = 1` then a single string is expected. If `n = 0` then any length is expected. If `n > 1` then a string vector of length `n` is expected.
+#' @return A ts object that accepts strings or string vectors of length `n`.
 #' @export
+#' @md
 ts_character <- function(n = -1L) {
     ts_object(
         n_type(n, "z.string()"),
@@ -203,6 +234,7 @@ vector_as_ts_array <- function(x) {
 #' Factors are integers with labels. On the JS side, these are *always* represented as a string array (even if only one value - yay!).
 #'
 #' @param levels A character vector of levels (optional).
+#' @return A ts object that accepts factors with the specified levels.
 #'
 #' @export
 #' @md
@@ -236,6 +268,7 @@ ts_factor <- function(levels = NULL) {
 #'
 #' A list is a vector of other robjects, which may or may not be named.
 #' @param ... A list of types, named or unnamed.
+#' @return A ts object that accepts lists with the specified types.
 #'
 #' @export
 #' @md
@@ -292,6 +325,9 @@ ts_list <- function(...) {
 #'
 #' This is essentially a list, but the elements must have names and are all the same length.
 #'
+#' @param ... Named types.
+#' @return A ts object that accepts data frames with the specified types.
+#'
 #' @export
 #' @md
 ts_dataframe <- function(...) {
@@ -323,7 +359,13 @@ ts_dataframe <- function(...) {
     )
 }
 
+#' Null type
+#'
+#' This is a type that only accepts `NULL`.
+#'
+#' @return A ts object that only accepts `NULL`.
 #' @export
+#'
 ts_null <- function() {
     ts_object(
         "z.null()",
@@ -335,7 +377,13 @@ ts_null <- function() {
     )
 }
 
+#' Void type
+#'
+#' This is a type that accepts null values (this would typically be used for
+#' functions that return nothing).
+#' @return A ts object that accepts `NULL`.
 #' @export
+#' @md
 ts_void <- function() {
     ts_object(
         "z.void()",

@@ -6,6 +6,12 @@
 \usage{
 ts_dataframe(...)
 }
+\arguments{
+\item{...}{Named types.}
+}
+\value{
+A ts object that accepts data frames with the specified types.
+}
 \description{
 This is essentially a list, but the elements must have names and are all the same length.
 }

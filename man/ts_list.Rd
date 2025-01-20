@@ -9,6 +9,9 @@ ts_list(...)
 \arguments{
 \item{...}{A list of types, named or unnamed.}
 }
+\value{
+A ts object that accepts lists with the specified types.
+}
 \description{
 A list is a vector of other robjects, which may or may not be named.
 }
