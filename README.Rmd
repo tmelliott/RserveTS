@@ -99,9 +99,9 @@ Here's what's currently working:
 library(ts)
 
 myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
-myfun(1:5)
+myfun$call(1:5)
 
-myfun("hello world")
+myfun$call("hello world")
 
 cat(readLines("tests/testthat/app.R"), sep = "\n")
 

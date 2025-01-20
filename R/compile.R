@@ -57,7 +57,7 @@ ts_compile.character <- function(
         x
     )
 
-    writeLines(src, file)
+    cat(src, file = file, sep = "\n")
 
     invisible()
 }

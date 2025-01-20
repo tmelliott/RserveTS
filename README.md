@@ -78,6 +78,14 @@ type App = {
 };
 ```
 
+Besides generating the schema as shown above, the app object can also be
+‘deployed’ using Rserve:
+
+``` r
+ts_deploy(app, port = 6311, daemon = FALSE)
+# listening on port 6311
+```
+
 ## State of the project
 
 Here’s what’s currently working:
@@ -86,18 +94,18 @@ Here’s what’s currently working:
 library(ts)
 
 myfun <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
-myfun(1:5)
-#> Error in myfun(1:5): could not find function "myfun"
+myfun$call(1:5)
+#> [1] 3
 
-myfun("hello world")
-#> Error in myfun("hello world"): could not find function "myfun"
+myfun$call("hello world")
+#> Error: Invalid argument 'x': Expected a number
 
 cat(readLines("tests/testthat/app.R"), sep = "\n")
 #> library(ts)
 #> 
 #> fn_mean <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
-#> fn_first <- ts_function(function(x) x[1],
-#>     x = ts_character(-1), result = ts_character(1)
+#> fn_first <- ts_function(function(x = ts_character(-1)) x[1],
+#>     result = ts_character(1)
 #> )
 #> 
 #> sample_num <- ts_function(
@@ -107,23 +115,11 @@ cat(readLines("tests/testthat/app.R"), sep = "\n")
 #> )
 
 ts_compile("tests/testthat/app.R", file = "")
-#> import {  } from 'rserve-ts';
+#> import { Robj } from 'rserve-ts';
+#> import { z } from 'zod';
 #> 
-#> character(0)
-#> character(0)
-#> character(0)
+#> 
+#> const fn_first = Robj.ocap([z.union([z.string(), Robj.character(0)])], Robj.character(1));
+#> const fn_mean = Robj.ocap([z.union([z.number(), z.instanceof(Float64Array)])], Robj.numeric(1));
+#> const sample_num = Robj.ocap([z.instanceof(Float64Array)], Robj.numeric(1));
 ```
-
-## TODO
-
-  - [ ] Add support for more types
-
-  - [ ] Allow generic types (e.g., `<T>(x: T) => T`)
-
-  - [ ] Add support for conditional return types
-    
-    e.g., `const sample = <T, N extends number>(x: T[], n: N) => N
-    extends 1 ? T : T[]`
-
-  - [ ] Function overloads? Perhaps just a wrapper around several
-    function definitions…
