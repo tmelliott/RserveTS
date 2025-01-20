@@ -97,3 +97,28 @@ print.ts_function <- function(x, ...) {
     cli::cli_text("Return type:")
     cat(x$result$return_type)
 }
+
+#' Generate an Rserve app from a ts function
+#'
+#' Anything that is not a function simply returns itself.
+#' However, functions are wrapped with `Rserve::ocap()`,
+#' and the result is subsequently wrapped with `ts_app()`.
+#' @param x A ts function object (`ts_function()`)
+#' @export
+#' @md
+ts_app <- function(x) UseMethod("ts_app")
+
+#' @export
+ts_app.default <- function(x) {
+    x
+}
+
+#' @export
+ts_app.list <- function(x) {
+    lapply(x, ts_app)
+}
+
+#' @export
+ts_app.ts_function <- function(x) {
+    Rserve::ocap(function(...) ts_app(x$call(...)))
+}
