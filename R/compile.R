@@ -45,9 +45,15 @@ ts_compile.character <- function(
         "import { Robj } from 'rserve-ts';",
         "import { z } from 'zod';",
         "\n",
-        x
+        x,
+        "\n",
+        sprintf("export default {\n  %s\n};", paste(ls(e), collapse = ",\n  "))
     )
 
+    # if (file != "" && file.exists(file)) {
+    #     stop(sprintf("File exists: %s", file))
+    #     return()
+    # }
     cat(src, file = file, sep = "\n")
 
     invisible()

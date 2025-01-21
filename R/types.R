@@ -120,7 +120,7 @@ ts_array <- function(type = c("z.number()", "z.boolean()", "z.string()")) {
     if (type == "z.boolean()") {
         return("z.instanceof(Uint8Array)")
     }
-    return("Robj.character(0)")
+    return("z.array(z.string())")
 }
 
 n_type <- function(n, type, pl = ts_array(type)) {
@@ -173,7 +173,11 @@ ts_integer <- function(n = -1L) {
         n_type(n, "z.number()", "z.instanceof(Int32Array)"),
         n_type_fun(n, "Robj.integer"),
         check = function(x) {
-            if (!is.integer(x)) stop("Expected an integer")
+            if (!is.numeric(x)) stop("Expected a number")
+            if (!all.equal(x, as.integer(x))) {
+                # javascript only has one number type
+                stop("Expected an integer")
+            }
             if (n > 0 && length(x) != n) {
                 stop("Expected an integer of length ", n)
             }
