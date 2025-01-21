@@ -1,6 +1,5 @@
 parse_args <- function(x, mc) {
     fmls <- lapply(x, eval)
-    mc <- mc[-1]
     if (!all(names(mc) %in% names(fmls))) {
         stop(
             "Invalid argument(s): ",
@@ -8,54 +7,118 @@ parse_args <- function(x, mc) {
         )
     }
     args <- lapply(names(fmls), function(n) {
-        fmls[[n]]$check(eval(mc[[n]]))
+        tryCatch(
+            {
+                fmls[[n]]$check(eval(mc[[n]]))
+            },
+            error = function(e) {
+                stop("Invalid argument '", n, "': ", e$message, call. = FALSE)
+            }
+        )
     })
     names(args) <- names(fmls)
     args
 }
 
+check_args <- function(args, fmls) {
+    args <- as.list(args)[-1]
+    fmls <- lapply(fmls, eval)
+    lapply(names(fmls), function(n) {
+        tryCatch(
+            {
+                fmls[[n]]$check(args[[n]])
+            },
+            error = function(e) {
+                stop("Invalid argument '", n, "': ", e$message, call. = FALSE)
+            }
+        )
+    })
+}
+
+ts_result <- function(type, value) {
+    if (type$check(value)) {
+        return(value)
+    }
+    stop("Expected a value of type ", type$type)
+}
+
 #' TS function definition
 #'
 #' @param f an R function
-#' @param ... argument definitions, OR function overloads
+#' @param ... argument definitions (only required if f does not specify these in its formals)
 #' @param result return type (ignored if overloads are provided)
 #' @export
-ts_function <- function(f, ..., result = NULL) {
+ts_function <- function(f, ..., result = ts_void()) {
     args <- list(...)
-    if (!is.null(result) && !is_object(result)) {
+    if (!is.null(result) && !is_ts_object(result)) {
         stop("Invalid return type")
     }
-    # TODO: implement overloads, if possible with zod
-    # if (any(is_overload(args))) {
-    #     if (!all(is_overload(args))) {
-    #         stop("Cannot mix overloads with standard arguments")
-    #     }
-    #     z <- lapply(args, function(x) {
-    #         do.call(ts_function, c(list(f), x$args, list(result = x$result)))
-    #     })
-    #     class(z) <- "ts_overload"
-    #     return(z)
-    # }
 
-    fn <- function(...) {
-        mc <- match.call(f)
-        x <- parse_args(args, mc)
-        result$check(do.call(f, x))
+    if (length(args) == 0) {
+        args <- lapply(formals(f), eval)
     }
-    attr(fn, "args") <- args
-    attr(fn, "result") <- result
-    class(fn) <- c("ts_function", class(f))
-    fn
+
+    e <- new.env()
+    e$f <- f
+    # e$env <- env
+    e$args <- args
+    e$result <- result
+
+    e$call <- function(...) {
+        mc <- match.call(e$f)
+        .args <- parse_args(args, mc[-1])
+        .res <- do.call(e$f, .args)
+        check_type(result, .res)
+    }
+
+    e$copy <- function(env = parent.frame()) {
+        e2 <- e
+        environment(e2$f) <- rlang::env_clone(environment(e$f), env)
+        e2
+    }
+
+    class(e) <- "ts_function"
+    e
 }
 
-# #' @export
-# is_overload <- function(x) {
-#     sapply(x, inherits, what = "ts_overload")
-# }
 
-# #' @export
-# ts_overload <- function(..., result = NULL) {
-#     structure(list(args = list(...), result = result),
-#         class = "ts_overload"
-#     )
-# }
+
+#' @export
+print.ts_function <- function(x, ...) {
+    cli::cli_h3("Ocap function")
+
+    cli::cli_text("Arguments:")
+    args <- lapply(x$args, \(z) z$input_type)
+    lapply(names(args), \(n) {
+        cat("- ", n, ": ", args[[n]], "\n", sep = "")
+    })
+    cli::cli_text("\n\n")
+
+    cli::cli_text("Return type:")
+    cat(x$result$return_type)
+}
+
+#' Generate an Rserve app from a ts function
+#'
+#' Anything that is not a function simply returns itself.
+#' However, functions are wrapped with `Rserve::ocap()`,
+#' and the result is subsequently wrapped with `ts_app()`.
+#' @param x A ts function object (`ts_function()`)
+#' @export
+#' @md
+ts_app <- function(x) UseMethod("ts_app")
+
+#' @export
+ts_app.default <- function(x) {
+    x
+}
+
+#' @export
+ts_app.list <- function(x) {
+    lapply(x, ts_app)
+}
+
+#' @export
+ts_app.ts_function <- function(x) {
+    Rserve::ocap(function(...) ts_app(x$call(...)))
+}

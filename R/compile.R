@@ -1,30 +1,33 @@
+#' Compile R functions to TypeScript schemas
+#' @param f A function or file path
+#' @param name The name of the function
+#' @param ... Additional arguments
+#' @param file The file path to write the TypeScript schema (optional). If `""`, the output is printed to the standard output console (see `cat`).
+#' @return Character vector of TypeScript schema, or NULL if writing to file
+#' @md
 #' @export
-ts_compile <- function(f, ..., file = NULL) {
+ts_compile <- function(f, ..., name, file) {
     o <- UseMethod("ts_compile")
 }
 
 #' @export
-ts_compile.ts_function <- function(f, name = deparse(substitute(f)), ...) {
-    inputs <- attr(f, "args")
-    result <- attr(f, "result")
+ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
+    inputs <- f$args
+    result <- f$result
 
-    inputs <- sapply(inputs, \(x) x$type)
-    fn_args <- paste(inputs) |>
-        paste(collapse = ", ")
-    sprintf("const %s = R.ocap([%s], %s]);", name, fn_args, result$type_fn)
+    inputs <- sapply(inputs, \(x) x$input_type)
+    fn_args <- paste(paste(inputs), collapse = ", ")
+
+    sprintf(
+        "const %s = Robj.ocap([%s], %s);", name, fn_args,
+        result$return_type
+    )
 }
-
-# #' @export
-# ts_compile.ts_overload <- function(f, file = NULL, name = deparse(substitute(f))) {
-#     cmt <- sprintf("\n// %s overloads", name)
-#     oloads <- sapply(f, ts_compile, name = name)
-#     paste(cmt, paste(oloads, collapse = "\n"), sep = "\n")
-# }
 
 #' @export
 ts_compile.character <- function(
     f,
-    file = sprintf("%s.d.ts", tools::file_path_sans_ext(f))) {
+    file = sprintf("%s.rserve.ts", tools::file_path_sans_ext(f))) {
     if (length(f) > 1) {
         return(sapply(f, ts_compile))
     }
@@ -38,23 +41,20 @@ ts_compile.character <- function(
 
     x <- sapply(ls(e), \(x) ts_compile(e[[x]], file = file, name = x))
 
-    # find any RTYPE.[type] and grab types
-    types <- unique(
-        gsub(
-            "RTYPE\\.(\\w+)", "\\1",
-            unlist(regmatches(x, gregexpr("RTYPE\\.\\w+", x)))
-        )
+    src <- c(
+        "import { Robj } from 'rserve-ts';",
+        "import { z } from 'zod';",
+        "\n",
+        x,
+        "\n",
+        sprintf("export default {\n  %s\n};", paste(ls(e), collapse = ",\n  "))
     )
-    x <- gsub("RTYPE\\.", "", x)
 
-    cat(
-        sprintf(
-            "import { %s } from 'rserve-ts';\n\n",
-            paste(types, collapse = ", ")
-        ),
-        file = file
-    )
-    cat(x, sep = "\n", file = file, append = TRUE)
+    # if (file != "" && file.exists(file)) {
+    #     stop(sprintf("File exists: %s", file))
+    #     return()
+    # }
+    cat(src, file = file, sep = "\n")
 
     invisible()
 }

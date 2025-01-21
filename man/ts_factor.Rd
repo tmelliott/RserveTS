@@ -9,6 +9,9 @@ ts_factor(levels = NULL)
 \arguments{
 \item{levels}{A character vector of levels (optional).}
 }
+\value{
+A ts object that accepts factors with the specified levels.
+}
 \description{
 Factors are integers with labels. On the JS side, these are \emph{always} represented as a string array (even if only one value - yay!).
 }

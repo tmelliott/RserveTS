@@ -11,3 +11,6 @@ install: document
 README.md: README.Rmd install
 	Rscript -e "rmarkdown::render('README.Rmd')"
 	@rm README.html
+
+test:
+	Rscript -e "devtools::test()"
