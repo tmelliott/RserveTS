@@ -27,7 +27,7 @@ ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
 #' @export
 ts_compile.character <- function(
     f,
-    file = sprintf("%s.d.ts", tools::file_path_sans_ext(f))) {
+    file = sprintf("%s.rserve.ts", tools::file_path_sans_ext(f))) {
     if (length(f) > 1) {
         return(sapply(f, ts_compile))
     }
