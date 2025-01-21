@@ -10,7 +10,7 @@ interface global {
 
 global.WebSocket = WebSocket as any;
 
-import appFuns from "./app.schema";
+import appFuns from "./app.rserve";
 
 async function main() {
   const con = await RserveClient.create({

@@ -1,3 +1,2 @@
 node_modules
-*.rserve.R
-*.schema.ts
+app.rserve.*
