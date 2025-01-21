@@ -41,6 +41,6 @@ test_that("anonomous functions", {
 test_that("Compile files", {
     f <- tempfile(fileext = ".rserve.ts")
     on.exit(unlink(f))
-    res <- ts_compile("app.R", file = f)
+    res <- ts_compile("sampler/app.R", file = f)
     expect_true(file.exists(f))
 })
