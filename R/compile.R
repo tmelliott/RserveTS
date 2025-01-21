@@ -41,15 +41,6 @@ ts_compile.character <- function(
 
     x <- sapply(ls(e), \(x) ts_compile(e[[x]], file = file, name = x))
 
-    # find any RTYPE.[type] and grab types
-    # types <- unique(
-    #     gsub(
-    #         "RTYPE\\.(\\w+)", "\\1",
-    #         unlist(regmatches(x, gregexpr("RTYPE\\.\\w+", x)))
-    #     )
-    # )
-    # x <- gsub("RTYPE\\.", "", x)
-
     src <- c(
         "import { Robj } from 'rserve-ts';",
         "import { z } from 'zod';",
