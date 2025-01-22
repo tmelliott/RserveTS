@@ -27,21 +27,20 @@ ts_object <- function(input_type = "any",
 #' @export
 print.ts_object <- function(x, ...) {
     # name <- deparse(substitute(x))
-    cli::cli_ul()
-    cli::cli_h3("Input type: ")
+    h3("Input type: ")
     if (nchar(x$input_type) > 50) {
         cat(format_js(x$input_type), "\n")
     } else {
         cat(x$input_type, "\n")
     }
-    cli::cli_h3("Return type: ")
+    h3("Return type: ")
     if (nchar(x$return_type) > 50) {
         print(x$return_type)
         cat(format_js(x$return_type), "\n")
     } else {
         cat(x$return_type, "\n")
     }
-    cli::cli_end()
+    cat("\n")
 }
 
 #' @describeIn ts_object Check if an object is a ts object
@@ -396,11 +395,4 @@ ts_void <- function() {
             return(NULL)
         }
     )
-}
-
-format_js <- function(x) {
-    if (!requireNamespace("js", quietly = TRUE)) {
-        return(x)
-    }
-    js::uglify_reformat(x, beautify = TRUE)
 }
