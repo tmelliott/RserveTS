@@ -34,5 +34,8 @@ jobs:
       - run: pnpm build
         working-directory: tests/testthat/sampler
 
+      - name: Start Rserve
+        run: pnpm rserve &
+
       - run: pnpm start
         working-directory: tests/testthat/sampler
