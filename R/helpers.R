@@ -3,10 +3,7 @@ h3 <- function(x) {
 }
 
 
-
+# TODO: figure out how to format (modern) JS code from R?
 format_js <- function(x) {
-    if (!requireNamespace("js", quietly = TRUE)) {
-        return(x)
-    }
-    js::uglify_reformat(x, beautify = TRUE)
+    x
 }

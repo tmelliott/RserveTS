@@ -15,5 +15,4 @@ Imports:
     rlang,
     Rserve
 Suggests:
-    testthat (>= 3.0.0),
-    js
+    testthat (>= 3.0.0)
