@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ts
+# ts: Write apps with R, Rserve, and TypeScript
 
 <!-- badges: start -->
 
