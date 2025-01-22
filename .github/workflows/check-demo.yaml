@@ -6,7 +6,7 @@ name: Check demo
 permissions: read-all
 
 jobs:
-  R-CMD-check:
+  run-sampler:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
