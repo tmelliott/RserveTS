@@ -30,14 +30,14 @@ print.ts_object <- function(x, ...) {
     cli::cli_ul()
     cli::cli_h3("Input type: ")
     if (nchar(x$input_type) > 50) {
-        cat(js::uglify_reformat(x$input_type, beautify = TRUE), "\n")
+        cat(format_js(x$input_type), "\n")
     } else {
         cat(x$input_type, "\n")
     }
     cli::cli_h3("Return type: ")
     if (nchar(x$return_type) > 50) {
         print(x$return_type)
-        cat(js::uglify_reformat(x$return_type, beautify = TRUE), "\n")
+        cat(format_js(x$return_type), "\n")
     } else {
         cat(x$return_type, "\n")
     }
@@ -396,4 +396,11 @@ ts_void <- function() {
             return(NULL)
         }
     )
+}
+
+format_js <- function(x) {
+    if (!requireNamespace("js", quietly = TRUE)) {
+        return(x)
+    }
+    js::uglify_reformat(x, beautify = TRUE)
 }
