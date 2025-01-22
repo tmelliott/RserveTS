@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/tmelliott/ts/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tmelliott/ts/actions/workflows/R-CMD-check.yaml)
+[![Demo](https://github.com/tmelliott/ts/actions/workflows/check-demo.yaml/badge.svg)](https://github.com/tmelliott/ts/actions/workflows/check-demo.yaml)
 <!-- badges: end -->
 
 The **ts** package makes it easy for users to write functions that can

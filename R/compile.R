@@ -50,10 +50,6 @@ ts_compile.character <- function(
         sprintf("export default {\n  %s\n};", paste(ls(e), collapse = ",\n  "))
     )
 
-    # if (file != "" && file.exists(file)) {
-    #     stop(sprintf("File exists: %s", file))
-    #     return()
-    # }
     cat(src, file = file, sep = "\n")
 
     invisible()

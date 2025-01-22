@@ -8,6 +8,9 @@ document:
 install: document
 	R CMD INSTALL .
 
+check:
+	Rscript -e "devtools::check()"
+
 README.md: README.Rmd install
 	Rscript -e "rmarkdown::render('README.Rmd')"
 	@rm README.html

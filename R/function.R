@@ -82,19 +82,18 @@ ts_function <- function(f, ..., result = ts_void()) {
 }
 
 
-
 #' @export
 print.ts_function <- function(x, ...) {
-    cli::cli_h3("Ocap function")
+    h3("Ocap function")
 
-    cli::cli_text("Arguments:")
+    cat("Arguments:\n")
     args <- lapply(x$args, \(z) z$input_type)
     lapply(names(args), \(n) {
         cat("- ", n, ": ", args[[n]], "\n", sep = "")
     })
-    cli::cli_text("\n\n")
+    cat("\n\n")
 
-    cli::cli_text("Return type:")
+    cat("Return type:\n")
     cat(x$result$return_type)
 }
 

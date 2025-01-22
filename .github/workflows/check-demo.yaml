@@ -1,0 +1,42 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on: [push, pull_request]
+name: Check demo
+
+permissions: read-all
+
+jobs:
+  run-sampler:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, local::.
+          needs: check
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12
+
+      # the rest of this must run from tests/testthat/sampler
+      - run: pnpm install --frozen-lockfile
+        working-directory: tests/testthat/sampler
+
+      - run: pnpm build
+        working-directory: tests/testthat/sampler
+
+      - name: Start Rserve
+        run: pnpm rserve &
+        working-directory: tests/testthat/sampler
+
+      - run: pnpm start
+        working-directory: tests/testthat/sampler
