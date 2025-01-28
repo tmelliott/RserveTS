@@ -17,3 +17,6 @@ README.md: README.Rmd install
 
 test:
 	Rscript -e "devtools::test()"
+
+site: install
+	Rscript -e "pkgdown::build_site()"

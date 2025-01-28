@@ -1,0 +1,79 @@
+---
+title: "Build a simple ReactJS app"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{simple-react-app}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+We will create a simple [ReactJS](https://reactjs.org/) application that implements our favourite *Old Faithful* dataset. Of course, this is not a great use-case for Rserve as it would be more appropriate to use a REST API, but it is a simple example to demonstrate how to use Rserve with a front-end application.
+
+## Install the ts package
+
+```r
+devtools::install_github('tmelliott/ts')
+```
+
+## Write the R code
+
+The code is saved in a file called `faithful-app.R`, and we can preview the results by calling the functions:
+
+```{r setup}
+cat(readLines('faithful-app.R'), sep = '\n')
+
+source('faithful-app.R')
+
+get_hist$call(10)
+```
+
+That's it! We'll use `ts_deploy()` later to create the server code and Typescript schema for the app.
+
+TODO: call ts_compile() from ts_deploy()?
+
+## Create the React app
+
+```bash
+pnpm create vite faithful-demo --template vanilla-ts
+cd faithful-demo
+pnpm install
+pnpm run dev
+```
+
+You should now be able to see the default Vite app running at `http://localhost:5173` (or similar, see the console output).
+
+Now install the `rserve-ts` and `zod` packages:
+
+```bash
+pnpm install rserve-ts zod
+```
+
+### Create the server code
+
+We now use the `ts_deploy()` function to create two files:
+
+- `faithful-app.rserve.R` is the file that will start the Rserve instance with your apps functions available.
+- `faithful-app.rserve.ts` contains the TypeScript schema (using [zod](https://zod.dev)) that will let you use the R functions directly in the app like any other typescript function!
+
+We'll send these straight to the `faithful-demo/src` directory.
+
+```r
+ts_compile('faithful-app.R', file = 'faithful-demo/src/faithful-app.rserve.ts')
+ts_deploy('faithful-app.R', file = 'faithful-demo/src/faithful-app.rserve.R')
+```
+
+### Write the app
+
+The rest of the process simply requires writing TypeScript code. I won't go into detail since that's not the focus of this vignette, but below you can see the code written with some basic comments. Copy and paste these to get the app running.
+
+```typescript
+// main.ts
+
+```

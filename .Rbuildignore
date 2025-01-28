@@ -3,3 +3,6 @@
 ^Makefile$
 node_modules
 ^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

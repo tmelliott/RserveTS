@@ -1,0 +1,26 @@
+url: http://tomelliott.co.nz/ts/
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+
+reference:
+  - title: Building apps
+    desc: Writing and compiling functions into Rserve apps.
+  - contents:
+      - ts_function
+      - ts_app
+      - ts_compile
+      - ts_deploy
+  - title: Types
+    desc: Type helper functions for defining argument and return types.
+  - contents:
+      - ts_logical
+      - ts_integer
+      - ts_numeric
+      - ts_character
+      - ts_factor
+      - ts_list
+      - ts_dataframe
+      - ts_null
+      - ts_void
+      - ts_object

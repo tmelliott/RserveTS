@@ -15,4 +15,8 @@ Imports:
     rlang,
     Rserve
 Suggests:
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
+URL: http://tomelliott.co.nz/ts/
