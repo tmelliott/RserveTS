@@ -2,7 +2,7 @@
 title: "Build a simple ReactJS app"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{simple-react-app}
+  %\VignetteIndexEntry{Build a simple ReactJS app}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
