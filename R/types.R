@@ -354,7 +354,7 @@ ts_dataframe <- function(...) {
 
     ts_object(
         type,
-        sprintf("R.dataframe(%s)", type_fn),
+        sprintf("Robj.dataframe(%s)", type_fn),
         check = function(x) {
             if (!is.data.frame(x)) stop("Expected a data frame")
             x
