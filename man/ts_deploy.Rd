@@ -9,7 +9,8 @@ ts_deploy(
   file = sprintf("\%s.rserve.R", tools::file_path_sans_ext(f)),
   init = NULL,
   port = 6311,
-  run = c("no", "here", "background")
+  run = c("no", "here", "background"),
+  silent = FALSE
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ the initialisation function}
 
 \item{run}{Whether to run the deployment script,
 takes values "no", "here", "background"}
+
+\item{silent}{Whether to print the deployment script}
 }
 \value{
 NULL, called to open an Rserve instance

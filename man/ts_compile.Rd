@@ -2,22 +2,22 @@
 % Please edit documentation in R/compile.R
 \name{ts_compile}
 \alias{ts_compile}
-\title{Compile R functions to TypeScript schemas}
+\title{Compile R functions}
 \usage{
-ts_compile(f, ..., name, file)
+ts_compile(f, ..., name, filename)
 }
 \arguments{
 \item{f}{A function or file path}
 
-\item{...}{Additional arguments}
+\item{...}{Additional arguments (passed to ts_deploy)}
 
 \item{name}{The name of the function}
 
-\item{file}{The file path to write the TypeScript schema (optional). If \code{""}, the output is printed to the standard output console (see \code{cat}).}
+\item{filename}{The base file path to write the TypeScript schema and R app to (optional, uses \verb{[path of f].rserve} by default). \code{.R} and \code{.ts} file extensions are appended automatically. If \code{""}, the output is printed to the standard output console (see \code{cat}).}
 }
 \value{
 Character vector of TypeScript schema, or NULL if writing to file
 }
 \description{
-Compile R functions to TypeScript schemas
+Generates TypeScript schema for the given R function or file path. If a path, the R app is also generated.
 }
