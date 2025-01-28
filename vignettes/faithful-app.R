@@ -5,12 +5,12 @@ get_hist <- ts_function(
         h <- hist(faithful$waiting, breaks = bins, plot = FALSE)
         data.frame(x = h$mids, y = h$density)
     },
-    result = ts_dataframe(eruptions = ts_numeric(), waiting = ts_numeric())
+    result = ts_dataframe(x = ts_numeric(0), y = ts_numeric(0))
 )
 get_smoother <- ts_function(
     function(bandwidth = ts_numeric(1)) {
         d <- density(faithful$waiting, bw = bandwidth)
         data.frame(x = d$x, y = d$y)
     },
-    result = ts_dataframe(x = ts_numeric(), y = ts_numeric())
+    result = ts_dataframe(x = ts_numeric(0), y = ts_numeric(0))
 )

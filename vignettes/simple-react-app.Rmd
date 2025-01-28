@@ -34,9 +34,7 @@ source('faithful-app.R')
 get_hist$call(10)
 ```
 
-That's it! We'll use `ts_deploy()` later to create the server code and Typescript schema for the app.
-
-TODO: call ts_compile() from ts_deploy()?
+That's it! We'll use `ts_compile()` later to create the server code and Typescript schema for the app.
 
 ## Create the React app
 
@@ -57,7 +55,7 @@ pnpm install rserve-ts zod
 
 ### Create the server code
 
-We now use the `ts_deploy()` function to create two files:
+We now use the `ts_compile()` function to create two files:
 
 - `faithful-app.rserve.R` is the file that will start the Rserve instance with your apps functions available.
 - `faithful-app.rserve.ts` contains the TypeScript schema (using [zod](https://zod.dev)) that will let you use the R functions directly in the app like any other typescript function!
@@ -65,8 +63,7 @@ We now use the `ts_deploy()` function to create two files:
 We'll send these straight to the `faithful-demo/src` directory.
 
 ```r
-ts_compile('faithful-app.R', file = 'faithful-demo/src/faithful-app.rserve.ts')
-ts_deploy('faithful-app.R', file = 'faithful-demo/src/faithful-app.rserve.R')
+ts_compile('faithful-app.R', filename = 'faithful-demo/src/faithful-app.rserve')
 ```
 
 ### Write the app
