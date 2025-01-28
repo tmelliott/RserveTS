@@ -7,6 +7,7 @@
 #' @param port The port to deploy the app on
 #' @param run Whether to run the deployment script,
 #'            takes values "no", "here", "background"
+#' @param silent Whether to print the deployment script
 #' @return NULL, called to open an Rserve instance
 #' @export
 #' @md
@@ -14,7 +15,8 @@ ts_deploy <- function(f,
                       file = sprintf("%s.rserve.R", tools::file_path_sans_ext(f)),
                       init = NULL,
                       port = 6311,
-                      run = c("no", "here", "background")) {
+                      run = c("no", "here", "background"),
+                      silent = FALSE) {
     if (length(f) != 1) stop("Expected a single path")
     if (!file.exists(f)) stop("File not found")
 
@@ -57,8 +59,10 @@ ts_deploy <- function(f,
     run <- match.arg(run)
     switch(run,
         "no" = {
-            cat("Run the following command to deploy the app:\n")
-            cat(sprintf("Rscript %s", file), "\n")
+            if (!silent) {
+                cat("Run the following command to deploy the app:\n")
+                cat(sprintf("Rscript %s", file), "\n")
+            }
         },
         "here" = source(file),
         "background" = system(sprintf("Rscript %s", file))

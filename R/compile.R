@@ -1,12 +1,15 @@
-#' Compile R functions to TypeScript schemas
+#' Compile R functions
+#'
+#' Generates TypeScript schema for the given R function or file path. If a path, the R app is also generated.
+#'
 #' @param f A function or file path
 #' @param name The name of the function
-#' @param ... Additional arguments
-#' @param file The file path to write the TypeScript schema (optional). If `""`, the output is printed to the standard output console (see `cat`).
+#' @param ... Additional arguments (passed to ts_deploy)
+#' @param filename The base file path to write the TypeScript schema and R app to (optional, uses `[path of f].rserve` by default). `.R` and `.ts` file extensions are appended automatically. If `""`, the output is printed to the standard output console (see `cat`).
 #' @return Character vector of TypeScript schema, or NULL if writing to file
 #' @md
 #' @export
-ts_compile <- function(f, ..., name, file) {
+ts_compile <- function(f, ..., name, filename) {
     o <- UseMethod("ts_compile")
 }
 
@@ -27,7 +30,8 @@ ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
 #' @export
 ts_compile.character <- function(
     f,
-    file = sprintf("%s.rserve.ts", tools::file_path_sans_ext(f))) {
+    ...,
+    filename = sprintf("%s.rserve", tools::file_path_sans_ext(f))) {
     if (length(f) > 1) {
         return(sapply(f, ts_compile))
     }
@@ -39,7 +43,7 @@ ts_compile.character <- function(
     e <- new.env()
     source(f, local = e)
 
-    x <- sapply(ls(e), \(x) ts_compile(e[[x]], file = file, name = x))
+    x <- sapply(ls(e), \(x) ts_compile(e[[x]], filename = "", name = x))
 
     src <- c(
         "import { Robj } from 'rserve-ts';",
@@ -50,7 +54,10 @@ ts_compile.character <- function(
         sprintf("export default {\n  %s\n};", paste(ls(e), collapse = ",\n  "))
     )
 
-    cat(src, file = file, sep = "\n")
+    cat(src, file = sprintf("%s.ts", filename), sep = "\n")
+
+    # R file
+    ts_deploy(f, file = sprintf("%s.R", filename), silent = TRUE, ...)
 
     invisible()
 }
