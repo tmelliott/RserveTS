@@ -120,6 +120,9 @@ server code and Typescript schema for the app.</p>
 <div class="section level2">
 <h2 id="create-the-react-app">Create the React app<a class="anchor" aria-label="anchor" href="#create-the-react-app"></a>
 </h2>
+<p>I’m using <a href="https://vitejs.dev/" class="external-link">Vite</a> to create the app,
+but you could use any framework. Whatever you use, you’ll need to be
+able to bundle the code (including libraries such as <a href="https://zod.dev" class="external-link">zod</a>).</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">pnpm</span> create vite faithful-demo <span class="at">--template</span> vanilla-ts</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="bu">cd</span> faithful-demo</span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="ex">pnpm</span> install</span>
@@ -156,8 +159,191 @@ directory.</p>
 won’t go into detail since that’s not the focus of this vignette, but
 below you can see the code written with some basic comments. Copy and
 paste these to get the app running.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co">// main.ts</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co">// main.ts</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="im">import</span> <span class="st">"./style.css"</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="im">import</span> RserveClient <span class="im">from</span> <span class="st">"rserve-ts"</span><span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="im">import</span> faithfulApp <span class="im">from</span> <span class="st">"./faithful-app.rserve"</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="im">import</span> { z } <span class="im">from</span> <span class="st">"zod"</span><span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span><span class="op">&lt;</span><span class="bu">HTMLDivElement</span><span class="op">&gt;</span>(<span class="st">"#app"</span>)<span class="op">!.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="vs">  &lt;div&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="vs">    &lt;h1&gt;Rserve and TypeScript&lt;/h1&gt;</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="vs">    &lt;div class="card"&gt;</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="vs">      Number of bins:</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="vs">      &lt;input type="number" id="n" value="10" size="5" /&gt;</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="vs">      &lt;button id="counter" type="button"&gt;Make histogram&lt;/button&gt;</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="vs">    &lt;/div&gt;</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="vs">    &lt;div id="hist" style="display: flex; align-items: flex-end; gap: 2px;"&gt;&lt;/div&gt;</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="vs">  &lt;/div&gt;</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="kw">type</span> FaithfulApp <span class="op">=</span> z<span class="op">.</span><span class="at">infer</span><span class="op">&lt;</span>z<span class="op">.</span><span class="at">ZodObject</span><span class="op">&lt;</span><span class="kw">typeof</span> faithfulApp<span class="op">&gt;&gt;;</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="kw">let</span> getHist<span class="op">:</span> FaithfulApp[<span class="st">"get_hist"</span>] <span class="op">|</span> <span class="dt">undefined</span> <span class="op">=</span> <span class="kw">undefined</span><span class="op">;</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">connectToRserve</span>() {</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>  <span class="kw">const</span> client <span class="op">=</span> <span class="cf">await</span> RserveClient<span class="op">.</span><span class="fu">create</span>({ host<span class="op">:</span> <span class="st">"ws://localhost:6311"</span> })<span class="op">;</span></span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>  <span class="kw">const</span> app <span class="op">=</span> <span class="cf">await</span> client<span class="op">.</span><span class="fu">ocap</span>(faithfulApp)<span class="op">;</span></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">"Connected to Rserve: "</span><span class="op">,</span> app)<span class="op">;</span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>  getHist <span class="op">=</span> app<span class="op">.</span><span class="at">get_hist</span><span class="op">;</span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>}</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="fu">connectToRserve</span>()<span class="op">;</span></span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a><span class="bu">document</span></span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>  <span class="op">.</span><span class="fu">querySelector</span><span class="op">&lt;</span><span class="bu">HTMLButtonElement</span><span class="op">&gt;</span>(<span class="st">"#counter"</span>)<span class="op">!</span></span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>  <span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">"click"</span><span class="op">,</span> <span class="kw">async</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>getHist) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>    <span class="kw">const</span> Nbin <span class="op">=</span> <span class="pp">parseInt</span>(</span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>      <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span><span class="op">&lt;</span><span class="bu">HTMLInputElement</span><span class="op">&gt;</span>(<span class="st">"#n"</span>)<span class="op">!.</span><span class="at">value</span></span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>    <span class="kw">const</span> hist <span class="op">=</span> <span class="cf">await</span> <span class="fu">getHist</span>(Nbin)<span class="op">;</span></span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>    <span class="kw">const</span> maxY <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="op">...</span>hist<span class="op">.</span><span class="at">y</span>)<span class="op">;</span></span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a></span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>    <span class="kw">const</span> histDiv <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span><span class="op">&lt;</span><span class="bu">HTMLDivElement</span><span class="op">&gt;</span>(<span class="st">"#hist"</span>)<span class="op">!;</span></span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>    histDiv<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> <span class="vs">`</span></span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a><span class="vs">      </span><span class="sc">${</span><span class="bu">Array</span><span class="op">.</span><span class="fu">from</span>(hist<span class="op">.</span><span class="at">y</span>)</span>
+<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>        <span class="op">.</span><span class="fu">map</span>(</span>
+<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a>          (yi) <span class="kw">=&gt;</span></span>
+<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>            <span class="vs">`&lt;div style="height: </span><span class="sc">${</span></span>
+<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>              (yi <span class="op">/</span> maxY) <span class="op">*</span> <span class="dv">180</span></span>
+<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>            <span class="sc">}</span><span class="vs">px; flex: 1; background: pink;"&gt;&lt;/div&gt;`</span></span>
+<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>        )</span>
+<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>        <span class="op">.</span><span class="fu">join</span>(<span class="st">""</span>)<span class="sc">}</span></span>
+<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a><span class="vs">    `</span><span class="op">;</span></span>
+<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a>  })<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode css"><code class="sourceCode css"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="er">// style.css</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="in">:root</span> {</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="kw">font-family</span><span class="ch">:</span> <span class="dv">Inter</span><span class="op">,</span> <span class="dv">system-ui</span><span class="op">,</span> <span class="dv">Avenir</span><span class="op">,</span> <span class="dv">Helvetica</span><span class="op">,</span> <span class="dv">Arial</span><span class="op">,</span> <span class="dv">sans-serif</span><span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="kw">line-height</span><span class="ch">:</span> <span class="dv">1.5</span><span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="kw">font-weight</span><span class="ch">:</span> <span class="dv">400</span><span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="kw">color-scheme</span><span class="ch">:</span> <span class="dv">light</span> <span class="dv">dark</span><span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="kw">color</span><span class="ch">:</span> <span class="fu">rgba(</span><span class="dv">255</span><span class="op">,</span> <span class="dv">255</span><span class="op">,</span> <span class="dv">255</span><span class="op">,</span> <span class="dv">0.87</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="kw">background-color</span><span class="ch">:</span> <span class="cn">#242424</span><span class="op">;</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="kw">font-synthesis</span><span class="ch">:</span> <span class="dv">none</span><span class="op">;</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  <span class="kw">text-rendering</span><span class="ch">:</span> <span class="dv">optimizeLegibility</span><span class="op">;</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  <span class="kw">-webkit-font-smoothing</span><span class="ch">:</span> <span class="dv">antialiased</span><span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  <span class="kw">-moz-osx-font-smoothing</span><span class="ch">:</span> <span class="dv">grayscale</span><span class="op">;</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>}</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>a {</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>  <span class="kw">font-weight</span><span class="ch">:</span> <span class="dv">500</span><span class="op">;</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>  <span class="kw">color</span><span class="ch">:</span> <span class="cn">#646cff</span><span class="op">;</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  <span class="kw">text-decoration</span><span class="ch">:</span> <span class="bu">inherit</span><span class="op">;</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>}</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>a<span class="in">:hover</span> {</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  <span class="kw">color</span><span class="ch">:</span> <span class="cn">#535bf2</span><span class="op">;</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>}</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>body {</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>  <span class="kw">margin</span><span class="ch">:</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>  <span class="kw">display</span><span class="ch">:</span> <span class="dv">flex</span><span class="op">;</span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>  <span class="kw">place-items</span><span class="ch">:</span> <span class="dv">center</span><span class="op">;</span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>  <span class="kw">min-width</span><span class="ch">:</span> <span class="dv">320</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>  <span class="kw">min-height</span><span class="ch">:</span> <span class="dv">100</span><span class="dt">vh</span><span class="op">;</span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>}</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>h1 {</span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>  <span class="kw">font-size</span><span class="ch">:</span> <span class="dv">3.2</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>  <span class="kw">line-height</span><span class="ch">:</span> <span class="dv">1.1</span><span class="op">;</span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>}</span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="pp">#app</span> {</span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>  <span class="kw">max-width</span><span class="ch">:</span> <span class="dv">1280</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>  <span class="kw">margin</span><span class="ch">:</span> <span class="dv">0</span> <span class="bu">auto</span><span class="op">;</span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>  <span class="kw">padding</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">rem</span><span class="op">;</span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>  <span class="kw">text-align</span><span class="ch">:</span> <span class="dv">center</span><span class="op">;</span></span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>}</span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a></span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a><span class="fu">.logo</span> {</span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>  <span class="kw">height</span><span class="ch">:</span> <span class="dv">6</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>  <span class="kw">padding</span><span class="ch">:</span> <span class="dv">1.5</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a>  <span class="kw">will-change</span><span class="ch">:</span> <span class="dv">filter</span><span class="op">;</span></span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>  <span class="kw">transition</span><span class="ch">:</span> <span class="dv">filter 300</span><span class="dt">ms</span><span class="op">;</span></span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>}</span>
+<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a><span class="fu">.logo</span><span class="in">:hover</span> {</span>
+<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>  <span class="kw">filter</span><span class="ch">:</span> <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span><span class="dt">em</span> <span class="cn">#646cffaa</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a>}</span>
+<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a><span class="fu">.logo.vanilla</span><span class="in">:hover</span> {</span>
+<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a>  <span class="kw">filter</span><span class="ch">:</span> <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span><span class="dt">em</span> <span class="cn">#3178c6aa</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a>}</span>
+<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a><span class="fu">.card</span> {</span>
+<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a>  <span class="kw">padding</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a>}</span>
+<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a></span>
+<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a><span class="fu">.read-the-docs</span> {</span>
+<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a>  <span class="kw">color</span><span class="ch">:</span> <span class="cn">#888</span><span class="op">;</span></span>
+<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a>}</span>
+<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a></span>
+<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a>button {</span>
+<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a>  <span class="kw">border-radius</span><span class="ch">:</span> <span class="dv">8</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a>  <span class="kw">border</span><span class="ch">:</span> <span class="dv">1</span><span class="dt">px</span> <span class="dv">solid</span> <span class="dv">transparent</span><span class="op">;</span></span>
+<span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a>  <span class="kw">padding</span><span class="ch">:</span> <span class="dv">0.6</span><span class="dt">em</span> <span class="dv">1.2</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb7-71"><a href="#cb7-71" tabindex="-1"></a>  <span class="kw">font-size</span><span class="ch">:</span> <span class="dv">1</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a>  <span class="kw">font-weight</span><span class="ch">:</span> <span class="dv">500</span><span class="op">;</span></span>
+<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a>  <span class="kw">font-family</span><span class="ch">:</span> <span class="bu">inherit</span><span class="op">;</span></span>
+<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a>  <span class="kw">background-color</span><span class="ch">:</span> <span class="cn">#1a1a1a</span><span class="op">;</span></span>
+<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a>  <span class="kw">cursor</span><span class="ch">:</span> <span class="dv">pointer</span><span class="op">;</span></span>
+<span id="cb7-76"><a href="#cb7-76" tabindex="-1"></a>  <span class="kw">transition</span><span class="ch">:</span> <span class="dv">border-color 0.25</span><span class="dt">s</span><span class="op">;</span></span>
+<span id="cb7-77"><a href="#cb7-77" tabindex="-1"></a>}</span>
+<span id="cb7-78"><a href="#cb7-78" tabindex="-1"></a>button<span class="in">:hover</span> {</span>
+<span id="cb7-79"><a href="#cb7-79" tabindex="-1"></a>  <span class="kw">border-color</span><span class="ch">:</span> <span class="cn">#646cff</span><span class="op">;</span></span>
+<span id="cb7-80"><a href="#cb7-80" tabindex="-1"></a>}</span>
+<span id="cb7-81"><a href="#cb7-81" tabindex="-1"></a>button<span class="in">:focus</span><span class="op">,</span></span>
+<span id="cb7-82"><a href="#cb7-82" tabindex="-1"></a>button<span class="in">:focus-visible</span> {</span>
+<span id="cb7-83"><a href="#cb7-83" tabindex="-1"></a>  <span class="kw">outline</span><span class="ch">:</span> <span class="dv">4</span><span class="dt">px</span> <span class="bu">auto</span> <span class="dv">-webkit-focus-ring-color</span><span class="op">;</span></span>
+<span id="cb7-84"><a href="#cb7-84" tabindex="-1"></a>}</span>
+<span id="cb7-85"><a href="#cb7-85" tabindex="-1"></a></span>
+<span id="cb7-86"><a href="#cb7-86" tabindex="-1"></a>input {</span>
+<span id="cb7-87"><a href="#cb7-87" tabindex="-1"></a>  <span class="kw">border-radius</span><span class="ch">:</span> <span class="dv">8</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb7-88"><a href="#cb7-88" tabindex="-1"></a>  <span class="kw">border</span><span class="ch">:</span> <span class="dv">1</span><span class="dt">px</span> <span class="dv">solid</span> <span class="dv">transparent</span><span class="op">;</span></span>
+<span id="cb7-89"><a href="#cb7-89" tabindex="-1"></a>  <span class="kw">padding</span><span class="ch">:</span> <span class="dv">0.6</span><span class="dt">em</span> <span class="dv">1.2</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb7-90"><a href="#cb7-90" tabindex="-1"></a>  <span class="kw">font-size</span><span class="ch">:</span> <span class="dv">1</span><span class="dt">em</span><span class="op">;</span></span>
+<span id="cb7-91"><a href="#cb7-91" tabindex="-1"></a>  <span class="kw">font-weight</span><span class="ch">:</span> <span class="dv">500</span><span class="op">;</span></span>
+<span id="cb7-92"><a href="#cb7-92" tabindex="-1"></a>  <span class="kw">font-family</span><span class="ch">:</span> <span class="bu">inherit</span><span class="op">;</span></span>
+<span id="cb7-93"><a href="#cb7-93" tabindex="-1"></a>  <span class="kw">background-color</span><span class="ch">:</span> <span class="cn">#1a1a1a</span><span class="op">;</span></span>
+<span id="cb7-94"><a href="#cb7-94" tabindex="-1"></a>  <span class="kw">color</span><span class="ch">:</span> <span class="cn">#fff</span><span class="op">;</span></span>
+<span id="cb7-95"><a href="#cb7-95" tabindex="-1"></a>  <span class="kw">outline</span><span class="ch">:</span> <span class="dv">none</span><span class="op">;</span></span>
+<span id="cb7-96"><a href="#cb7-96" tabindex="-1"></a>}</span>
+<span id="cb7-97"><a href="#cb7-97" tabindex="-1"></a>input<span class="in">:hover</span> {</span>
+<span id="cb7-98"><a href="#cb7-98" tabindex="-1"></a>  <span class="kw">border-color</span><span class="ch">:</span> <span class="cn">#646cff</span><span class="op">;</span></span>
+<span id="cb7-99"><a href="#cb7-99" tabindex="-1"></a>}</span>
+<span id="cb7-100"><a href="#cb7-100" tabindex="-1"></a>input<span class="in">:focus</span><span class="op">,</span></span>
+<span id="cb7-101"><a href="#cb7-101" tabindex="-1"></a>input<span class="in">:focus-visible</span> {</span>
+<span id="cb7-102"><a href="#cb7-102" tabindex="-1"></a>  <span class="kw">outline</span><span class="ch">:</span> <span class="dv">4</span><span class="dt">px</span> <span class="bu">auto</span> <span class="dv">-webkit-focus-ring-color</span><span class="op">;</span></span>
+<span id="cb7-103"><a href="#cb7-103" tabindex="-1"></a>}</span>
+<span id="cb7-104"><a href="#cb7-104" tabindex="-1"></a></span>
+<span id="cb7-105"><a href="#cb7-105" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">prefers-color-scheme</span><span class="ch">:</span> <span class="dv">light</span><span class="fu">)</span> {</span>
+<span id="cb7-106"><a href="#cb7-106" tabindex="-1"></a>  <span class="in">:root</span> {</span>
+<span id="cb7-107"><a href="#cb7-107" tabindex="-1"></a>    <span class="kw">color</span><span class="ch">:</span> <span class="cn">#213547</span><span class="op">;</span></span>
+<span id="cb7-108"><a href="#cb7-108" tabindex="-1"></a>    <span class="kw">background-color</span><span class="ch">:</span> <span class="cn">#ffffff</span><span class="op">;</span></span>
+<span id="cb7-109"><a href="#cb7-109" tabindex="-1"></a>  }</span>
+<span id="cb7-110"><a href="#cb7-110" tabindex="-1"></a>  a<span class="in">:hover</span> {</span>
+<span id="cb7-111"><a href="#cb7-111" tabindex="-1"></a>    <span class="kw">color</span><span class="ch">:</span> <span class="cn">#747bff</span><span class="op">;</span></span>
+<span id="cb7-112"><a href="#cb7-112" tabindex="-1"></a>  }</span>
+<span id="cb7-113"><a href="#cb7-113" tabindex="-1"></a>  button {</span>
+<span id="cb7-114"><a href="#cb7-114" tabindex="-1"></a>    <span class="kw">background-color</span><span class="ch">:</span> <span class="cn">#f9f9f9</span><span class="op">;</span></span>
+<span id="cb7-115"><a href="#cb7-115" tabindex="-1"></a>  }</span>
+<span id="cb7-116"><a href="#cb7-116" tabindex="-1"></a>  input {</span>
+<span id="cb7-117"><a href="#cb7-117" tabindex="-1"></a>    <span class="kw">background-color</span><span class="ch">:</span> <span class="cn">#f9f9f9</span><span class="op">;</span></span>
+<span id="cb7-118"><a href="#cb7-118" tabindex="-1"></a>    <span class="kw">color</span><span class="ch">:</span> <span class="cn">#000</span><span class="op">;</span></span>
+<span id="cb7-119"><a href="#cb7-119" tabindex="-1"></a>  }</span>
+<span id="cb7-120"><a href="#cb7-120" tabindex="-1"></a>}</span></code></pre></div>
 </div>
+</div>
+<div class="section level2">
+<h2 id="run-the-app">Run the app<a class="anchor" aria-label="anchor" href="#run-the-app"></a>
+</h2>
+<p>To run the app, start the Rserve server:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">Rscript</span> src/faithful-app.rserve.R</span></code></pre></div>
+<p>Then start the Vite server:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="ex">pnpm</span> run dev</span></code></pre></div>
+<p>You should now be able to see the app running at
+<code>http://localhost:5173</code> (or similar, see the console
+output).</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
