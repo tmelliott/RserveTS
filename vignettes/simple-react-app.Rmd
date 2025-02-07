@@ -38,7 +38,7 @@ That's it! We'll use `ts_compile()` later to create the server code and Typescri
 
 ## Create the React app
 
-I'm using [Vite](https://vitejs.dev/) to create the app, but you could use any framework. Whatever you use, you'll need to be able to bundle the code (including libraries such as [zod](https://zod.dev)).
+I'm using [Vite](https://vite.dev/) to create the app, but you could use any framework. Whatever you use, you'll need to be able to bundle the code (including libraries such as [zod](https://zod.dev)).
 
 ```bash
 pnpm create vite faithful-demo --template vanilla-ts

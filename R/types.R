@@ -152,6 +152,13 @@ n_type_fun <- function(n, type) {
 #' @return A ts object that accepts logical scalars or vectors of length `n`.
 #' @export
 #' @md
+#' @examples
+#' x <- ts_logical(1)
+#' x$check(TRUE)
+#'
+#' \dontrun{
+#' x$check(5)
+#' }
 ts_logical <- function(n = -1L) {
     ts_object(
         n_type(n, "z.boolean()"),

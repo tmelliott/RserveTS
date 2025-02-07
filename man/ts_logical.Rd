@@ -16,3 +16,11 @@ A ts object that accepts logical scalars or vectors of length \code{n}.
 Booleans are represented in Zod schema as either a boolean (\code{z.boolean()}),
 or a typed Uint8Array (\code{z.instanceof(Uint8Array)}).
 }
+\examples{
+x <- ts_logical(1)
+x$check(TRUE)
+
+\dontrun{
+x$check(5)
+}
+}

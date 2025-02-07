@@ -1,6 +1,3 @@
-# # optional, check arguments - useful for debugging/development
-# check_args(match.call(), formals())
-
 test_that("anonomous function definitions", {
     add <- ts_function(
         function(a = ts_numeric(1), b = ts_numeric(1)) a + b,
