@@ -1,5 +1,5 @@
 Package: ts
-Title: Helper functions for writing type safe functions for rserve-ts
+Title: Helper Functions for Writing Type-safe Functions for rserve-ts
 Version: 0.1.0
 Authors@R:
     person("Tom", "Elliott", , "tom@inzight.co.nz",
