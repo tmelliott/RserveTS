@@ -1,7 +1,7 @@
 url: http://tomelliott.co.nz/ts/
 template:
   bootstrap: 5
-  bootswatch: cosmo
+  bootswatch: simplex
 
 reference:
   - title: Building apps
@@ -14,6 +14,7 @@ reference:
   - title: Types
     desc: Type helper functions for defining argument and return types.
   - contents:
+      - type_objects
       - ts_logical
       - ts_integer
       - ts_numeric
@@ -24,3 +25,4 @@ reference:
       - ts_null
       - ts_void
       - ts_object
+      - ts_union

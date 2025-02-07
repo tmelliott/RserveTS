@@ -44,10 +44,25 @@ ts_result <- function(type, value) {
 
 #' TS function definition
 #'
+#' @details
+#' Defining functions is the core of writing Rserve apps.
+#' Functions are referred to as *object capabilities* (ocaps),
+#' as they are 'objects' that allow Javascript to access capabilities
+#' of R with a restricted interface. Only arguments can be adjusted.
+#'
+#' TS functions can be defined using existing (named) or anonymous functions.
+#' Anonymous functions are useful in that the arguments to the functions
+#' can explicitly be defined with their types as formal arguments:
+#'
+#' ```
+#' ts_function(function(x = ts_integer(), y = ts_string()) { ... })
+#' ```
+#'
 #' @param f an R function
 #' @param ... argument definitions (only required if f does not specify these in its formals)
 #' @param result return type (ignored if overloads are provided)
 #' @export
+#' @md
 ts_function <- function(f, ..., result = ts_void()) {
     args <- list(...)
     if (!is.null(result) && !is_ts_object(result)) {

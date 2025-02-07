@@ -39,7 +39,8 @@ check_type(type, x)
 \item{type}{A ts object}
 }
 \description{
-This is the base type for all typed objects. It is not meant to be used directly.
+This is the base type for all typed objects, and can be used to define
+custom types.
 }
 \section{Functions}{
 \itemize{

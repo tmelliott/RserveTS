@@ -1,6 +1,7 @@
 #' Typed object
 #'
-#' This is the base type for all typed objects. It is not meant to be used directly.
+#' This is the base type for all typed objects, and can be used to define
+#' custom types.
 #'
 #' @param input_type The type of the object that Typescript expect to send to R.
 #' @param return_type The type of the object that Typescript expects to recieve from R.
@@ -111,7 +112,14 @@ check_type.ts_function <- function(type, x) {
     )
 }
 
+#' Union type
+#'
+#' Create a union of types. Currently this only accepts schemas as strings.
+#' @param ... Types to merge
+#' @export
+#' @md
 ts_union <- function(...) sprintf("z.union([%s])", paste(..., sep = ", "))
+
 ts_array <- function(type = c("z.number()", "z.boolean()", "z.string()")) {
     if (type == "z.number()") {
         return("z.instanceof(Float64Array)")

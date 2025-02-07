@@ -16,3 +16,16 @@ ts_function(f, ..., result = ts_void())
 \description{
 TS function definition
 }
+\details{
+Defining functions is the core of writing Rserve apps.
+Functions are referred to as \emph{object capabilities} (ocaps),
+as they are 'objects' that allow Javascript to access capabilities
+of R with a restricted interface. Only arguments can be adjusted.
+
+TS functions can be defined using existing (named) or anonymous functions.
+Anonymous functions are useful in that the arguments to the functions
+can explicitly be defined with their types as formal arguments:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{ts_function(function(x = ts_integer(), y = ts_string()) \{ ... \})
+}\if{html}{\out{</div>}}
+}
