@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
@@ -30,4 +33,3 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           bodyFile: "body.md"
-          token: ${{ secrets.GITHUB_TOKEN }}
