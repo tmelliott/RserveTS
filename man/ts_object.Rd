@@ -5,7 +5,7 @@
 \alias{is_ts_object}
 \alias{get_type}
 \alias{check_type}
-\title{Typed object}
+\title{Typed object (internal use only)}
 \usage{
 ts_object(
   input_type = "any",

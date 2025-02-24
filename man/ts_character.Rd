@@ -16,3 +16,7 @@ A ts object that accepts strings or string vectors of length \code{n}.
 Strings are represented in Zod schema as either a string (\code{z.string()}),
 or a string array (\code{z.array(z.string())}).
 }
+\examples{
+x <- ts_character(1)
+x$check("a")
+}

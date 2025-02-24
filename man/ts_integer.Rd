@@ -16,3 +16,12 @@ A ts object that accepts integer scalars or vectors of length \code{n}.
 Integers are represented in Zod schema as either a number (\code{z.number()}),
 or a Int32Array (\code{z.instanceof(Int32Array)}).
 }
+\examples{
+x <- ts_integer(1)
+x$check(1L)
+
+\dontrun{
+# this will fail
+x$check(1:10)
+}
+}

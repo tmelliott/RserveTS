@@ -29,3 +29,9 @@ can explicitly be defined with their types as formal arguments:
 \if{html}{\out{<div class="sourceCode">}}\preformatted{ts_function(function(x = ts_integer(), y = ts_string()) \{ ... \})
 }\if{html}{\out{</div>}}
 }
+\examples{
+f <- ts_function(function(x = ts_integer(1), y = ts_character(1)) {
+    x + nchar(y)
+}, result = ts_integer(1))
+f$call(1, "hello")
+}

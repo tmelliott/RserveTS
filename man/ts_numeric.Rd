@@ -16,3 +16,13 @@ A ts object that accepts numeric scalars or vectors of length \code{n}.
 Numbers are represented in Zod schema as either a number (\code{z.number()}),
 or a Float64Array (\code{z.instanceof(Float64Array)}).
 }
+\examples{
+x <- ts_numeric(1)
+x$check(1)
+
+\dontrun{
+# this will fail
+x$check(c(1, 2, 3))
+x$check("a")
+}
+}

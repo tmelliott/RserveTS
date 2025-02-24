@@ -1,4 +1,4 @@
-#' Typed object
+#' Typed object (internal use only)
 #'
 #' This is the base type for all typed objects, and can be used to define
 #' custom types.
@@ -115,9 +115,11 @@ check_type.ts_function <- function(type, x) {
 #' Union type
 #'
 #' Create a union of types. Currently this only accepts schemas as strings.
-#' @param ... Types to merge
+#' @param ... Zod types to merge (as strings)
 #' @export
 #' @md
+#' @examples
+#' x <- ts_union("z.number()", "z.string()")
 ts_union <- function(...) sprintf("z.union([%s])", paste(..., sep = ", "))
 
 ts_array <- function(type = c("z.number()", "z.boolean()", "z.string()")) {
@@ -157,6 +159,7 @@ n_type_fun <- function(n, type) {
 #' x$check(TRUE)
 #'
 #' \dontrun{
+#' # this will fail
 #' x$check(5)
 #' }
 ts_logical <- function(n = -1L) {
@@ -182,6 +185,14 @@ ts_logical <- function(n = -1L) {
 #' @return A ts object that accepts integer scalars or vectors of length `n`.
 #' @export
 #' @md
+#' @examples
+#' x <- ts_integer(1)
+#' x$check(1L)
+#'
+#' \dontrun{
+#' # this will fail
+#' x$check(1:10)
+#' }
 ts_integer <- function(n = -1L) {
     ts_object(
         n_type(n, "z.number()", "z.instanceof(Int32Array)"),
@@ -209,6 +220,15 @@ ts_integer <- function(n = -1L) {
 #' @return A ts object that accepts numeric scalars or vectors of length `n`.
 #' @export
 #' @md
+#' @examples
+#' x <- ts_numeric(1)
+#' x$check(1)
+#'
+#' \dontrun{
+#' # this will fail
+#' x$check(c(1, 2, 3))
+#' x$check("a")
+#' }
 ts_numeric <- function(n = -1L) {
     ts_object(
         n_type(n, "z.number()"),
@@ -231,6 +251,9 @@ ts_numeric <- function(n = -1L) {
 #' @return A ts object that accepts strings or string vectors of length `n`.
 #' @export
 #' @md
+#' @examples
+#' x <- ts_character(1)
+#' x$check("a")
 ts_character <- function(n = -1L) {
     ts_object(
         n_type(n, "z.string()"),
@@ -256,6 +279,15 @@ vector_as_ts_array <- function(x) {
 #'
 #' @export
 #' @md
+#' @examples
+#' x <- ts_factor(levels = c("a", "b"))
+#' x$check(factor("a", levels = c("a", "b")))
+#'
+#' \dontrun{
+#' # this will fail
+#' x$check("a")
+#' x$check(factor("c", levels = c("a", "b", "c")))
+#' }
 ts_factor <- function(levels = NULL) {
     ts_object(
         ifelse(is.null(levels),
@@ -290,6 +322,10 @@ ts_factor <- function(levels = NULL) {
 #'
 #' @export
 #' @md
+#'
+#' @examples
+#' x <- ts_list(a = ts_integer(1), b = ts_character(1))
+#' x$check(list(a = 1L, b = "a"))
 ts_list <- function(...) {
     values <- list(...)
 
@@ -348,6 +384,10 @@ ts_list <- function(...) {
 #'
 #' @export
 #' @md
+#'
+#' @examples
+#' x <- ts_dataframe(a = ts_integer(1), b = ts_character(1))
+#' x$check(data.frame(a = 1L, b = "a"))
 ts_dataframe <- function(...) {
     values <- list(...)
     type <- "z.record(z.string(), z.any())"
@@ -379,11 +419,15 @@ ts_dataframe <- function(...) {
 
 #' Null type
 #'
-#' This is a type that only accepts `NULL`.
+#' This is a type that only accepts `NULL`. For function return types, use `ts_void`.
 #'
 #' @return A ts object that only accepts `NULL`.
 #' @export
 #'
+#' @md
+#' @examples
+#' x <- ts_null()
+#' x$check(NULL)
 ts_null <- function() {
     ts_object(
         "z.null()",
@@ -402,6 +446,7 @@ ts_null <- function() {
 #' @return A ts object that accepts `NULL`.
 #' @export
 #' @md
+#' @seealso \code{\link{ts_null}}
 ts_void <- function() {
     ts_object(
         "z.void()",

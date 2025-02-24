@@ -63,6 +63,14 @@ ts_result <- function(type, value) {
 #' @param result return type (ignored if overloads are provided)
 #' @export
 #' @md
+#'
+#' @return a ts function object which has a `call` method that will call the function with the given arguments, which will be checked for type correctness.
+#'
+#' @examples
+#' f <- ts_function(function(x = ts_integer(1), y = ts_character(1)) {
+#'     x + nchar(y)
+#' }, result = ts_integer(1))
+#' f$call(1, "hello")
 ts_function <- function(f, ..., result = ts_void()) {
     args <- list(...)
     if (!is.null(result) && !is_ts_object(result)) {
@@ -117,9 +125,19 @@ print.ts_function <- function(x, ...) {
 #' Anything that is not a function simply returns itself.
 #' However, functions are wrapped with `Rserve::ocap()`,
 #' and the result is subsequently wrapped with `ts_app()`.
+#'
 #' @param x A ts function object (`ts_function()`)
 #' @export
 #' @md
+#'
+#' @returns An object of class 'OCref', see [Rserve::ocap()]
+#'
+#' @examples
+#' f <- ts_function(function(x = ts_integer(1), y = ts_character(1)) {
+#'     x + nchar(y)
+#' }, result = ts_integer(1))
+#' app <- ts_app(f) # class of 'OCref'
+#' # this can now be used in an Rserve application, for example
 ts_app <- function(x) UseMethod("ts_app")
 
 #' @export

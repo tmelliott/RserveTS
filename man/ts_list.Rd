@@ -15,3 +15,7 @@ A ts object that accepts lists with the specified types.
 \description{
 A list is a vector of other robjects, which may or may not be named.
 }
+\examples{
+x <- ts_list(a = ts_integer(1), b = ts_character(1))
+x$check(list(a = 1L, b = "a"))
+}

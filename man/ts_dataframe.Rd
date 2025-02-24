@@ -15,3 +15,7 @@ A ts object that accepts data frames with the specified types.
 \description{
 This is essentially a list, but the elements must have names and are all the same length.
 }
+\examples{
+x <- ts_dataframe(a = ts_integer(1), b = ts_character(1))
+x$check(data.frame(a = 1L, b = "a"))
+}

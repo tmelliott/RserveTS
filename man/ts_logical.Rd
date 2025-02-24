@@ -21,6 +21,7 @@ x <- ts_logical(1)
 x$check(TRUE)
 
 \dontrun{
+# this will fail
 x$check(5)
 }
 }

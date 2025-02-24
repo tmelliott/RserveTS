@@ -9,8 +9,18 @@ ts_app(x)
 \arguments{
 \item{x}{A ts function object (\code{ts_function()})}
 }
+\value{
+An object of class 'OCref', see \code{\link[Rserve:ocap]{Rserve::ocap()}}
+}
 \description{
 Anything that is not a function simply returns itself.
 However, functions are wrapped with \code{Rserve::ocap()},
 and the result is subsequently wrapped with \code{ts_app()}.
+}
+\examples{
+f <- ts_function(function(x = ts_integer(1), y = ts_character(1)) {
+    x + nchar(y)
+}, result = ts_integer(1))
+app <- ts_app(f) # class of 'OCref'
+# this can now be used in an Rserve application, for example
 }

@@ -15,3 +15,13 @@ A ts object that accepts factors with the specified levels.
 \description{
 Factors are integers with labels. On the JS side, these are \emph{always} represented as a string array (even if only one value - yay!).
 }
+\examples{
+x <- ts_factor(levels = c("a", "b"))
+x$check(factor("a", levels = c("a", "b")))
+
+\dontrun{
+# this will fail
+x$check("a")
+x$check(factor("c", levels = c("a", "b", "c")))
+}
+}
