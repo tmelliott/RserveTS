@@ -59,7 +59,20 @@ and the result is subsequently wrapped with <code>ts_app()</code>.</p>
 <dd><p>A ts function object (<code><a href="ts_function.html">ts_function()</a></code>)</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>An object of class 'OCref', see <code><a href="https://rdrr.io/pkg/Rserve/man/ocap.html" class="external-link">Rserve::ocap()</a></code></p>
+    </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="ts_function.html">ts_function</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">x</span> <span class="op">=</span> <span class="fu"><a href="ts_integer.html">ts_integer</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="va">y</span> <span class="op">=</span> <span class="fu"><a href="ts_character.html">ts_character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">x</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span>, result <span class="op">=</span> <span class="fu"><a href="ts_integer.html">ts_integer</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">app</span> <span class="op">&lt;-</span> <span class="fu">ts_app</span><span class="op">(</span><span class="va">f</span><span class="op">)</span> <span class="co"># class of 'OCref'</span></span></span>
+<span class="r-in"><span><span class="co"># this can now be used in an Rserve application, for example</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
