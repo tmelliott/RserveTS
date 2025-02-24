@@ -1,11 +1,15 @@
 Package: ts
 Title: Helper Functions for Writing Type-safe Functions for rserve-ts
 Version: 0.1.0
-Authors@R:
+Authors@R: c(
     person("Tom", "Elliott", , "tom@inzight.co.nz",
            role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-7815-6318"))
-Description: A set of helper functions for writing type safe functions for writing and compiling typescript functions for use with rserve-ts.
+           comment = c(
+            ORCID = "0000-0002-7815-6318",
+            Funding = "Supported by the Ngā Puanga Pūtaiao Fellowships from Government funding, administered by the Royal Society Te Apārangi, New Zealand."
+           ))
+    )
+Description: A set of helper functions for specifying typed functions for writing and compiling TypesSript functions for use with rserve-ts. The package allows users to easily specify Javascript input types and Rserve output types for Ocap (object capability) functioned. The companion library 'rserve-ts', available on npm <https://www.npmjs.com/package/rserve-ts>, provides the necessary infrastructure to run these functions in a Typescript environment.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

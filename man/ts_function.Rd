@@ -13,6 +13,9 @@ ts_function(f, ..., result = ts_void())
 
 \item{result}{return type (ignored if overloads are provided)}
 }
+\value{
+a ts function object which has a \code{call} method that will call the function with the given arguments, which will be checked for type correctness.
+}
 \description{
 TS function definition
 }
