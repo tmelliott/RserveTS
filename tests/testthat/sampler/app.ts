@@ -27,6 +27,11 @@ async function main() {
   const s = await app.sample_num(new Float64Array([1, 2, 3, 4, 5]), 2);
   console.log("Sample num:", s);
 
+  console.log("\n-----------\n- checking recursive scoping ...\n");
+  const store = await app.save_for_later(10);
+  const value = await store.get();
+  console.log("Retrieved value: ", value);
+
   process.exit(0);
 }
 console.log("Running sampler script...\n");

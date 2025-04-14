@@ -13,17 +13,25 @@ ts_compile <- function(f, ..., name, filename) {
     o <- UseMethod("ts_compile")
 }
 
-#' @export
-ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
+compile_fn <- function(f) {
     inputs <- f$args
     result <- f$result
 
     inputs <- sapply(inputs, \(x) x$input_type)
     fn_args <- paste(paste(inputs), collapse = ", ")
+    sprintf(
+        "Robj.ocap([%s], %s)",
+        fn_args,
+        result$return_type
+    )
+}
+
+#' @export
+ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
+    ocap_str <- compile_fn(f)
 
     sprintf(
-        "const %s = Robj.ocap([%s], %s);", name, fn_args,
-        result$return_type
+        "const %s = %s;", name, ocap_str
     )
 }
 

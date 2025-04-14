@@ -73,7 +73,9 @@ get_type.ts_function <- function(x, which = c("input", "return")) {
     if (which == "input") {
         return("z.function()")
     }
-    "Robj.ocap()"
+
+    compile_fn(x)
+    # "Robj.ocap()"
 }
 
 #' @export
