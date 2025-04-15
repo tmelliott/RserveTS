@@ -122,7 +122,32 @@ check_type.ts_function <- function(type, x) {
 #' @md
 #' @examples
 #' x <- ts_union("z.number()", "z.string()")
-ts_union <- function(...) sprintf("z.union([%s])", paste(..., sep = ", "))
+ts_union <- function(...) {
+    types <- list(...)
+
+    ts_object(
+        sprintf(
+            "z.union([%s])",
+            paste(sapply(types, \(x) x$input_type), collapse = ", ")
+        ),
+        paste(sapply(types, \(x) x$return_type), collapse = " | "),
+        check = function(x = NULL) {
+            any_pass <- FALSE
+            for (t in types) {
+                r <- try(t$check(x), silent = TRUE)
+                if (!inherits(r, "try-error")) {
+                    any_pass <- TRUE
+                    break
+                }
+            }
+            if (!any_pass) stop("No types match")
+            x
+        }
+    )
+}
+ts_optional <- function(type) {
+    ts_union(type, ts_undefined())
+}
 
 ts_array <- function(type = c("z.number()", "z.boolean()", "z.string()")) {
     if (type == "z.number()") {
@@ -139,7 +164,7 @@ n_type <- function(n, type, pl = ts_array(type)) {
         return(type)
     }
     if (n == -1) {
-        return(ts_union(type, pl))
+        return(sprintf("z.union([%s, %s])", type, pl))
     }
     pl
 }
@@ -455,6 +480,25 @@ ts_void <- function() {
         "null",
         check = function(x) {
             return(NULL)
+        }
+    )
+}
+
+#' Undefined type
+#'
+#' For the undefined type.
+#' @return A ts object that accepts 'undefined'.
+#' @export
+#' @md
+ts_undefined <- function() {
+    ts_object(
+        "z.undefined()",
+        "undefined",
+        check = function(x = NULL) {
+            if (is.null(x)) {
+                return()
+            }
+            stop("Expecting nothing.")
         }
     )
 }
