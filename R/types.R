@@ -117,11 +117,11 @@ check_type.ts_function <- function(type, x) {
 #' Union type
 #'
 #' Create a union of types. Currently this only accepts schemas as strings.
-#' @param ... Zod types to merge (as strings)
+#' @param ... Type objects to merge
 #' @export
 #' @md
 #' @examples
-#' x <- ts_union("z.number()", "z.string()")
+#' x <- ts_union(ts_numeric(1), ts_character(1))
 ts_union <- function(...) {
     types <- list(...)
 
@@ -145,6 +145,15 @@ ts_union <- function(...) {
         }
     )
 }
+
+#' Optional type
+#'
+#' A wrapper around union of a type and undefined
+#' @param type Type that is optional
+#' @export
+#' @md
+#' @examples
+#' x <- ts_optional(ts_numeric(1))
 ts_optional <- function(type) {
     ts_union(type, ts_undefined())
 }
