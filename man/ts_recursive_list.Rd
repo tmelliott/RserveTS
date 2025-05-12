@@ -29,7 +29,7 @@ upcoming version of zod 4, this should be simplified. For now, it's tricky.
 }
 \examples{
 r_list <- ts_recursive_list(
-    name = ts_character(1),
-    recur = list(children = ts_self())
+    list(name = ts_character(1)),
+    list(children = ts_self())
 )
 }

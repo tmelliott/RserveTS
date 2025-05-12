@@ -533,8 +533,8 @@ ts_undefined <- function() {
 #'
 #' @examples
 #' r_list <- ts_recursive_list(
-#'     name = ts_character(1),
-#'     recur = list(children = ts_self())
+#'     list(name = ts_character(1)),
+#'     list(children = ts_self())
 #' )
 ts_recursive_list <- function(values, recur) {
     if (length(values) == 0) stop("Must specify values")
