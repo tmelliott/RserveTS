@@ -18,3 +18,36 @@ test_that("Optional arguments", {
 
     expect_error(optional$check("hello"))
 })
+
+
+# thing <- function(f) {
+#     e <- new.env()
+#     e$f <- f
+#     e$call <- function(...) {
+#         mc <- match.call(e$f)
+#         print()
+#         print(mc)
+#         mc
+#     }
+#     e
+# }
+
+# t <- thing(function(x = TRUE) x)
+
+
+test_that("Recursive types", {
+    rl <- ts_recursive_list(
+        list(
+            name = ts_character(1)
+        ),
+        list(
+            children = ts_self()
+        )
+    )
+
+    expect_error(
+        rl$check(list(name = "John", children = list(
+            list(nam = "Maria")
+        )))
+    )
+})

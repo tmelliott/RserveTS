@@ -22,3 +22,12 @@ save_for_later <- ts_function(
     },
     result = ts_list(get = get_later)
 )
+
+optional_fn <- ts_function(
+    # function(x = ts_optional(ts_numeric(1))) {
+    function(x = ts_undefined()) {
+        print(x)
+        !is.null(x)
+    },
+    result = ts_logical(1)
+)

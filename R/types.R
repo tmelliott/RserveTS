@@ -504,10 +504,169 @@ ts_undefined <- function() {
         "z.undefined()",
         "undefined",
         check = function(x = NULL) {
-            if (is.null(x)) {
+            if (missing(x) || is.null(x)) {
                 return()
             }
             stop("Expecting nothing.")
         }
     )
 }
+
+#' Recursive list
+#'
+#' For complex recursive lists. These are objects that can contain subcomponents
+#' of the same (parent) type.
+#' e.g., Person can have name, dob, properties, and 'children' which is an
+#' (optional) array of Person objects.
+#'
+#' Defining this type in Zod is currently complicated, as the type has to be
+#' pre-defined, and then extended after manually defining the Type. In an
+#' upcoming version of zod 4, this should be simplified. For now, it's tricky.
+#'
+#' @param values properties that define the base schema of the list;
+#'               must be a named list.
+#' @param recur a named list of properties that are added.
+#'              These can use the 'ts_self()' helper.
+#' @return A ts object that accepts recursive lists.
+#' @export
+#' @md
+#'
+#' @examples
+#' r_list <- ts_recursive_list(
+#'     name = ts_character(1),
+#'     recur = list(children = ts_self())
+#' )
+ts_recursive_list <- function(values, recur) {
+    if (length(values) == 0) stop("Must specify values")
+    if (is.null(names(values))) stop("Input must be named")
+    if (!is.list(values)) stop("values must be a list")
+
+    # first define the base schema (*must* be a Zod object)
+    types <- sapply(values, get_type, which = "input")
+    type_funs <- sapply(values, get_type, which = "return")
+
+    base_type <- sprintf(
+        "const baseObjectSchema = z.object({\n  %s \n});",
+        paste(names(values), types, sep = ": ", collapse = ";,\n  ")
+    )
+    # TODO: pass objects from TypeScript to R?
+    # base_type_fn <- sprintf(
+    #     "Robj.list({\n  %s \n})",
+    #     paste(names(values), type_funs, sep = ": ", collapse = ",\n  ")
+    # )
+    # cat("\n\n")
+    # cat(base_type_fn)
+
+    # next create the Type with recursive properties
+    recur_types <- gsub("__self", "self",
+        gsub("__self[]", "__self.array()",
+            sapply(recur, get_type, which = "input"),
+            fixed = TRUE
+        ),
+        fixed = TRUE
+    )
+    recur_zod <- gsub("__self", "ObjectType",
+        sapply(recur, get_type, which = "input"),
+        fixed = TRUE
+    )
+    # recur_type_funs <- sapply(values, get_type, which = "return")
+
+    obj_type <- sprintf(
+        "type ObjectType = z.infer<typeof baseObjectSchema> & {\n  %s\n};",
+        paste(names(recur_zod), recur_zod, sep = ": ", collapse = ";,\n  ")
+    )
+
+    # then create the lazy zod definition
+    zod_type <- sprintf(
+        paste(
+            sep = "\n",
+            "const listType = Robj.recursive_list<ObjectType>(",
+            "  baseObjectSchema,",
+            "  (self) => ({",
+            "    %s",
+            "  })",
+            ");"
+        ),
+        paste(names(recur_zod), recur_types, sep = ": ", collapse = ";,\n    ")
+    )
+
+    # finally put together the IFFE
+    result <- sprintf(
+        "(function () {\n  %s\n  %s\n  %s\n  return listType;\n})();",
+        gsub("\n", "\n  ", base_type, fixed = TRUE),
+        gsub("\n", "\n  ", obj_type, fixed = TRUE),
+        gsub("\n", "\n  ", zod_type, fixed = TRUE)
+    )
+
+    # recur <- lapply(recur, \(x) {
+    #     if (grepl("[]", x, fixed = TRUE)) {
+    #         ts_list(ts_self(1))
+    #     } else {
+    #         x
+    #     }
+    # })
+
+    SELF <- ts_object(
+        "undefined",
+        result,
+        check = function(x) {
+            if (!is.list(x)) stop("Expected a list")
+            if (!is.null(values)) {
+                if (!is.null(names(values))) {
+                    # if (!identical(names(x), names(c(values, recur)))) {
+                    if (!all(names(values) %in% names(x))) {
+                        stop(
+                            "Expected a list with names: ",
+                            paste(names(values), collapse = ", ")
+                        )
+                    }
+                }
+                for (i in seq_along(values)) {
+                    n <- names(values)[i]
+                    x[[n]] <- check_type(values[[n]], x[[n]])
+                }
+
+                # check recurring types
+                for (i in seq_along(recur)) {
+                    n <- names(recur)[i]
+
+                    if ("ts_self" %in% class(recur[[n]])) {
+                        if (grepl("[]", recur[[n]], fixed = TRUE)) {
+                            x[[n]] <- lapply(x[[n]], \(z) {
+                                check_type(SELF, z)
+                            })
+                        } else {
+                            x[[n]] <- check_type(SELF, x[[n]])
+                        }
+                    } else {
+                        x[[n]] <- check_type(recur[[n]], x[[n]])
+                    }
+                }
+            }
+            x
+        }
+    )
+    SELF
+}
+
+#' Self object
+#'
+#' Representation of the 'self' property, used by recursive list definitions
+#'
+#' @param n number of elements, either n = 1 (for singular) or
+#'          n != 0 (for array)
+#' @return a representation of 'self'
+#' @export
+#' @md
+ts_self <- function(n = -1L) {
+    structure(
+        ifelse(n == 1, "__self", "__self[]"),
+        class = "ts_self"
+    )
+}
+
+#' @export
+get_type.ts_self <- function(x, which) unclass(x)
+
+#' @export
+check_type.ts_self <- function(type, x) x

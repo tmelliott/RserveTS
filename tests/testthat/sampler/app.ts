@@ -32,6 +32,12 @@ async function main() {
   const value = await store.get();
   console.log("Retrieved value: ", value);
 
+  console.log("\n-----------\n- checking optional arguments ...\n");
+  // const optNum = await app.optional_fn(5);
+  // console.log("Passed arg: ", optNum);
+  const optNull = await app.optional_fn(undefined);
+  console.log("Passed arg: ", optNull);
+
   process.exit(0);
 }
 console.log("Running sampler script...\n");
