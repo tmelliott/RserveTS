@@ -26,3 +26,7 @@ reference:
       - ts_void
       - ts_object
       - ts_union
+      - ts_optional
+      - ts_undefined
+      - ts_recursive_list
+      - ts_self
