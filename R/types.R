@@ -573,7 +573,7 @@ ts_recursive_list <- function(values, recur) {
 
     obj_type <- sprintf(
         "type ObjectType = z.infer<typeof baseObjectSchema> & {\n  %s\n};",
-        paste(names(recur_zod), recur_zod, sep = ": ", collapse = ";,\n  ")
+        paste(names(recur_zod), recur_zod, sep = ": ", collapse = ",\n  ")
     )
 
     # then create the lazy zod definition
@@ -585,7 +585,7 @@ ts_recursive_list <- function(values, recur) {
             "  (self) => ({",
             "    %s",
             "  })",
-            ");"
+            ")"
         ),
         paste(names(recur_zod), recur_types, sep = ": ", collapse = ";,\n    ")
     )
