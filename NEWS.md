@@ -1,3 +1,11 @@
+# ts 0.2.0
+
+- Added support for recursive lists with `ts_recursive_list()`
+- Added union types with `ts_union()`
+- Added optional types with `ts_optional()`
+- Exported `ts_optional()` function
+- Updated documentation
+
 # ts 0.1.0 - Initial release
 
 The initial developmental release of `ts`.
