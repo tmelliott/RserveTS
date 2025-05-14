@@ -8,6 +8,19 @@ test_that("Union types", {
     expect_error(number_or_null$check("not a number"))
 })
 
+test_that("Array types", {
+    person <- ts_list(name = ts_character(), age = ts_integer())
+    person_array <- ts_array(person)
+
+    john <- list(name = "John", age = 30L)
+    anne <- list(name = "Anne", age = 15L)
+
+    expect_equal(person$check(john), john)
+    expect_equal(person_array$check(list(john, anne)), list(john, anne))
+
+    expect_error(person_array$check(john))
+})
+
 test_that("Optional arguments", {
     optional <- ts_optional(ts_numeric())
     expect_equal(optional$check(5), 5)

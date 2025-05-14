@@ -36,7 +36,6 @@ print.ts_object <- function(x, ...) {
     }
     h3("Return type: ")
     if (nchar(x$return_type) > 50) {
-        print(x$return_type)
         cat(format_js(x$return_type), "\n")
     } else {
         cat(x$return_type, "\n")
@@ -158,15 +157,44 @@ ts_optional <- function(type) {
     ts_union(type, ts_undefined())
 }
 
-ts_array <- function(type = c("z.number()", "z.boolean()", "z.string()")) {
+#' Array type
+#'
+#' An array of typed objects. In zod, these are represented
+#' by `z.array()`; returned objects must be R lists, `Robj.list()`.
+#'
+#' @param type The input type, either a zod-style string ("z.number()") or a ts_object.
+#' @return An array object
+#' @md
+#' @export
+ts_array <- function(type) {
+    UseMethod("ts_array")
+}
+
+#' @export
+ts_array.character <- function(type) {
     if (type == "z.number()") {
         return("z.instanceof(Float64Array)")
     }
     if (type == "z.boolean()") {
         return("z.instanceof(Uint8Array)")
     }
-    return("z.array(z.string())")
+    sprintf("z.array(%s)", type)
 }
+
+#' @export
+ts_array.ts_object <- function(type) {
+    ts_object(
+        sprintf("z.array(%s)", type$input_type),
+        sprintf("z.array(%s)", type$return_type),
+        check = function(x) {
+            if (!is.list(x)) stop("Must be a list")
+            lapply(x, type$check)
+        }
+    )
+}
+
+#' @export
+ts_array.default <- function(type) stop("Invalid type")
 
 n_type <- function(n, type, pl = ts_array(type)) {
     if (n == 1) {
@@ -372,7 +400,7 @@ ts_list <- function(...) {
         type_funs <- sapply(values, get_type, which = "return")
         if (!is.null(names(values))) {
             type <- sprintf(
-                "{ %s }",
+                "z.object({ %s })",
                 paste(names(values), types, sep = ": ", collapse = ", ")
             )
             type_fn <- sprintf(
@@ -547,7 +575,7 @@ ts_recursive_list <- function(values, recur) {
 
     base_type <- sprintf(
         "const baseObjectSchema = z.object({\n  %s \n});",
-        paste(names(values), types, sep = ": ", collapse = ";,\n  ")
+        paste(names(values), types, sep = ": ", collapse = ",\n  ")
     )
     # TODO: pass objects from TypeScript to R?
     # base_type_fn <- sprintf(
@@ -585,14 +613,18 @@ ts_recursive_list <- function(values, recur) {
             "  (self) => ({",
             "    %s",
             "  })",
-            ")"
+            ");"
         ),
-        paste(names(recur_zod), recur_types, sep = ": ", collapse = ";,\n    ")
+        paste(
+            names(recur_zod),
+            paste(recur_types, "optional()", sep = "."),
+            sep = ": ", collapse = ",\n    "
+        )
     )
 
     # finally put together the IFFE
     result <- sprintf(
-        "(function () {\n  %s\n  %s\n  %s\n  return listType;\n})();",
+        "(function () {\n  %s\n  %s\n  %s\n  return listType;\n})()",
         gsub("\n", "\n  ", base_type, fixed = TRUE),
         gsub("\n", "\n  ", obj_type, fixed = TRUE),
         gsub("\n", "\n  ", zod_type, fixed = TRUE)

@@ -2,6 +2,7 @@
 
 - Added support for recursive lists with `ts_recursive_list()`
 - Added union types with `ts_union()`
+- Exported array type `ts_array()` that now works with ts_objects
 - Added optional types with `ts_optional()`
 - Exported `ts_optional()` function
 - Updated documentation
