@@ -64,3 +64,8 @@ test_that("Recursive types", {
         )))
     )
 })
+
+test_that("Javascript function types", {
+    j1 <- js_function(ts_numeric(1))
+    expect_equal(j1$return_type, NULL)
+})

@@ -1,3 +1,5 @@
+- added initial support for js functions with `js_function()`
+
 # ts 0.2.0
 
 - Added support for recursive lists with `ts_recursive_list()`

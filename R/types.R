@@ -702,3 +702,25 @@ get_type.ts_self <- function(x, which) unclass(x)
 
 #' @export
 check_type.ts_self <- function(type, x) x
+
+#' JS functions callable from R
+#'
+#' If result is NULL, it will be an oobSend (R process will continue),
+#' otherwise R process will wait for a response (oobMessage).
+#'
+#' TODO: when compiling, automatically wrap in self.oobMessage() or self.oobSend(), as necessary... ?
+#' - how about naked js functions? i.e., we might want to pass a function *back* to javascript, for some reason?
+#'
+#'
+#' @param ... arguments passed to the function
+#' @return A ts object that accepts js functions (as input)
+#' @export
+js_function <- function(..., result = NULL) {
+    input <- list(...)
+    types <- sapply(input, get_type, which = "input")
+
+    ts_object(
+        sprintf("Robj.js_function(%s)", paste(types, collapse = ", ")),
+        "Robj.void()"
+    )
+}
