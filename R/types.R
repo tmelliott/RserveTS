@@ -723,7 +723,9 @@ js_function <- function(..., result = NULL) {
         sprintf(
             "Robj.js_function([%s]%s)",
             paste(types, collapse = ", "),
-            ifelse(is.null(result), "", get_type(result, which = "input"))
+            ifelse(is.null(result), "",
+                paste(",", get_type(result, which = "input"))
+            )
         ),
         "Robj.void()"
     )
