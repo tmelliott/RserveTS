@@ -720,7 +720,11 @@ js_function <- function(..., result = NULL) {
     types <- sapply(input, get_type, which = "input")
 
     ts_object(
-        sprintf("Robj.js_function(%s)", paste(types, collapse = ", ")),
+        sprintf(
+            "Robj.js_function([%s]%s)",
+            paste(types, collapse = ", "),
+            ifelse(is.null(result), "", get_type(result, which = "input"))
+        ),
         "Robj.void()"
     )
 }
