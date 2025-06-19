@@ -31,3 +31,4 @@ reference:
       - ts_undefined
       - ts_recursive_list
       - ts_self
+      - js_function
