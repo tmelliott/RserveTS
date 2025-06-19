@@ -3,6 +3,7 @@
 # ts 0.2.0
 
 - Added support for recursive lists with `ts_recursive_list()`
+- Added support for passing in Javascript functions with `js_function()`
 - Added union types with `ts_union()`
 - Exported array type `ts_array()` that now works with ts_objects
 - Added optional types with `ts_optional()`
