@@ -36,7 +36,6 @@ print.ts_object <- function(x, ...) {
     }
     h3("Return type: ")
     if (nchar(x$return_type) > 50) {
-        print(x$return_type)
         cat(format_js(x$return_type), "\n")
     } else {
         cat(x$return_type, "\n")
@@ -73,7 +72,9 @@ get_type.ts_function <- function(x, which = c("input", "return")) {
     if (which == "input") {
         return("z.function()")
     }
-    "Robj.ocap()"
+
+    compile_fn(x)
+    # "Robj.ocap()"
 }
 
 #' @export
@@ -115,29 +116,92 @@ check_type.ts_function <- function(type, x) {
 #' Union type
 #'
 #' Create a union of types. Currently this only accepts schemas as strings.
-#' @param ... Zod types to merge (as strings)
+#' @param ... Type objects to merge
 #' @export
 #' @md
 #' @examples
-#' x <- ts_union("z.number()", "z.string()")
-ts_union <- function(...) sprintf("z.union([%s])", paste(..., sep = ", "))
+#' x <- ts_union(ts_numeric(1), ts_character(1))
+ts_union <- function(...) {
+    types <- list(...)
 
-ts_array <- function(type = c("z.number()", "z.boolean()", "z.string()")) {
+    ts_object(
+        sprintf(
+            "z.union([%s])",
+            paste(sapply(types, \(x) x$input_type), collapse = ", ")
+        ),
+        paste(sapply(types, \(x) x$return_type), collapse = " | "),
+        check = function(x = NULL) {
+            any_pass <- FALSE
+            for (t in types) {
+                r <- try(t$check(x), silent = TRUE)
+                if (!inherits(r, "try-error")) {
+                    any_pass <- TRUE
+                    break
+                }
+            }
+            if (!any_pass) stop("No types match")
+            x
+        }
+    )
+}
+
+#' Optional type
+#'
+#' A wrapper around union of a type and undefined
+#' @param type Type that is optional
+#' @export
+#' @md
+#' @examples
+#' x <- ts_optional(ts_numeric(1))
+ts_optional <- function(type) {
+    ts_union(type, ts_undefined())
+}
+
+#' Array type
+#'
+#' An array of typed objects. In zod, these are represented
+#' by `z.array()`; returned objects must be R lists, `Robj.list()`.
+#'
+#' @param type The input type, either a zod-style string ("z.number()") or a ts_object.
+#' @return An array object
+#' @md
+#' @export
+ts_array <- function(type) {
+    UseMethod("ts_array")
+}
+
+#' @export
+ts_array.character <- function(type) {
     if (type == "z.number()") {
         return("z.instanceof(Float64Array)")
     }
     if (type == "z.boolean()") {
         return("z.instanceof(Uint8Array)")
     }
-    return("z.array(z.string())")
+    sprintf("z.array(%s)", type)
 }
+
+#' @export
+ts_array.ts_object <- function(type) {
+    ts_object(
+        sprintf("z.array(%s)", type$input_type),
+        sprintf("z.array(%s)", type$return_type),
+        check = function(x) {
+            if (!is.list(x)) stop("Must be a list")
+            lapply(x, type$check)
+        }
+    )
+}
+
+#' @export
+ts_array.default <- function(type) stop("Invalid type")
 
 n_type <- function(n, type, pl = ts_array(type)) {
     if (n == 1) {
         return(type)
     }
     if (n == -1) {
-        return(ts_union(type, pl))
+        return(sprintf("z.union([%s, %s])", type, pl))
     }
     pl
 }
@@ -336,7 +400,7 @@ ts_list <- function(...) {
         type_funs <- sapply(values, get_type, which = "return")
         if (!is.null(names(values))) {
             type <- sprintf(
-                "{ %s }",
+                "z.object({ %s })",
                 paste(names(values), types, sep = ": ", collapse = ", ")
             )
             type_fn <- sprintf(
@@ -454,5 +518,218 @@ ts_void <- function() {
         check = function(x) {
             return(NULL)
         }
+    )
+}
+
+#' Undefined type
+#'
+#' For the undefined type.
+#' @return A ts object that accepts 'undefined'.
+#' @export
+#' @md
+ts_undefined <- function() {
+    ts_object(
+        "z.undefined()",
+        "undefined",
+        check = function(x = NULL) {
+            if (missing(x) || is.null(x)) {
+                return()
+            }
+            stop("Expecting nothing.")
+        }
+    )
+}
+
+#' Recursive list
+#'
+#' For complex recursive lists. These are objects that can contain subcomponents
+#' of the same (parent) type.
+#' e.g., Person can have name, dob, properties, and 'children' which is an
+#' (optional) array of Person objects.
+#'
+#' Defining this type in Zod is currently complicated, as the type has to be
+#' pre-defined, and then extended after manually defining the Type. In an
+#' upcoming version of zod 4, this should be simplified. For now, it's tricky.
+#'
+#' @param values properties that define the base schema of the list;
+#'               must be a named list.
+#' @param recur a named list of properties that are added.
+#'              These can use the 'ts_self()' helper.
+#' @return A ts object that accepts recursive lists.
+#' @export
+#' @md
+#'
+#' @examples
+#' r_list <- ts_recursive_list(
+#'     list(name = ts_character(1)),
+#'     list(children = ts_self())
+#' )
+ts_recursive_list <- function(values, recur) {
+    if (length(values) == 0) stop("Must specify values")
+    if (is.null(names(values))) stop("Input must be named")
+    if (!is.list(values)) stop("values must be a list")
+
+    # first define the base schema (*must* be a Zod object)
+    types <- sapply(values, get_type, which = "input")
+    type_funs <- sapply(values, get_type, which = "return")
+
+    base_type <- sprintf(
+        "const baseObjectSchema = z.object({\n  %s \n});",
+        paste(names(values), types, sep = ": ", collapse = ",\n  ")
+    )
+    # TODO: pass objects from TypeScript to R?
+    # base_type_fn <- sprintf(
+    #     "Robj.list({\n  %s \n})",
+    #     paste(names(values), type_funs, sep = ": ", collapse = ",\n  ")
+    # )
+    # cat("\n\n")
+    # cat(base_type_fn)
+
+    # next create the Type with recursive properties
+    recur_types <- gsub("__self", "self",
+        gsub("__self[]", "__self.array()",
+            sapply(recur, get_type, which = "input"),
+            fixed = TRUE
+        ),
+        fixed = TRUE
+    )
+    recur_zod <- gsub("__self", "ObjectType",
+        sapply(recur, get_type, which = "input"),
+        fixed = TRUE
+    )
+    # recur_type_funs <- sapply(values, get_type, which = "return")
+
+    obj_type <- sprintf(
+        "type ObjectType = z.infer<typeof baseObjectSchema> & {\n  %s\n};",
+        paste(names(recur_zod), recur_zod, sep = ": ", collapse = ",\n  ")
+    )
+
+    # then create the lazy zod definition
+    zod_type <- sprintf(
+        paste(
+            sep = "\n",
+            "const listType = Robj.recursive_list<ObjectType>(",
+            "  baseObjectSchema,",
+            "  (self) => ({",
+            "    %s",
+            "  })",
+            ");"
+        ),
+        paste(
+            names(recur_zod),
+            paste(recur_types, "optional()", sep = "."),
+            sep = ": ", collapse = ",\n    "
+        )
+    )
+
+    # finally put together the IFFE
+    result <- sprintf(
+        "(function () {\n  %s\n  %s\n  %s\n  return listType;\n})()",
+        gsub("\n", "\n  ", base_type, fixed = TRUE),
+        gsub("\n", "\n  ", obj_type, fixed = TRUE),
+        gsub("\n", "\n  ", zod_type, fixed = TRUE)
+    )
+
+    # recur <- lapply(recur, \(x) {
+    #     if (grepl("[]", x, fixed = TRUE)) {
+    #         ts_list(ts_self(1))
+    #     } else {
+    #         x
+    #     }
+    # })
+
+    SELF <- ts_object(
+        "undefined",
+        result,
+        check = function(x) {
+            if (!is.list(x)) stop("Expected a list")
+            if (!is.null(values)) {
+                if (!is.null(names(values))) {
+                    # if (!identical(names(x), names(c(values, recur)))) {
+                    if (!all(names(values) %in% names(x))) {
+                        stop(
+                            "Expected a list with names: ",
+                            paste(names(values), collapse = ", ")
+                        )
+                    }
+                }
+                for (i in seq_along(values)) {
+                    n <- names(values)[i]
+                    x[[n]] <- check_type(values[[n]], x[[n]])
+                }
+
+                # check recurring types
+                for (i in seq_along(recur)) {
+                    n <- names(recur)[i]
+
+                    if ("ts_self" %in% class(recur[[n]])) {
+                        if (grepl("[]", recur[[n]], fixed = TRUE)) {
+                            x[[n]] <- lapply(x[[n]], \(z) {
+                                check_type(SELF, z)
+                            })
+                        } else {
+                            x[[n]] <- check_type(SELF, x[[n]])
+                        }
+                    } else {
+                        x[[n]] <- check_type(recur[[n]], x[[n]])
+                    }
+                }
+            }
+            x
+        }
+    )
+    SELF
+}
+
+#' Self object
+#'
+#' Representation of the 'self' property, used by recursive list definitions
+#'
+#' @param n number of elements, either n = 1 (for singular) or
+#'          n != 0 (for array)
+#' @return a representation of 'self'
+#' @export
+#' @md
+ts_self <- function(n = -1L) {
+    structure(
+        ifelse(n == 1, "__self", "__self[]"),
+        class = "ts_self"
+    )
+}
+
+#' @export
+get_type.ts_self <- function(x, which) unclass(x)
+
+#' @export
+check_type.ts_self <- function(type, x) x
+
+#' JS functions callable from R
+#'
+#' If result is NULL, it will be an oobSend (R process will continue),
+#' otherwise R process will wait for a response (oobMessage).
+#'
+#' TODO: when compiling, automatically wrap in self.oobMessage() or self.oobSend(), as necessary... ?
+#' - how about naked js functions? i.e., we might want to pass a function *back* to javascript, for some reason?
+#'
+#'
+#' @param ... arguments passed to the function
+#' @param result the type of value returned from JS to R
+#' @return A ts object that accepts js functions (as input).
+#' Currently not able to pass as output (but should, in future ...).
+#' @export
+js_function <- function(..., result = NULL) {
+    input <- list(...)
+    types <- sapply(input, get_type, which = "input")
+
+    ts_object(
+        sprintf(
+            "Robj.js_function([%s]%s)",
+            paste(types, collapse = ", "),
+            ifelse(is.null(result), "",
+                paste(",", get_type(result, which = "input"))
+            )
+        ),
+        # TODO: it is possible to return a javascript function from R ...
+        NULL
     )
 }

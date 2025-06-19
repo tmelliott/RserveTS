@@ -11,3 +11,23 @@ sample_num <- ts_function(
     size = ts_integer(1),
     result = ts_numeric()
 )
+
+get_later <- ts_function(function() stored_value, result = ts_numeric(1))
+save_for_later <- ts_function(
+    function(stored_value = ts_numeric(1)) {
+        print(paste("Storing value", stored_value))
+        list(
+            get = get_later$copy()
+        )
+    },
+    result = ts_list(get = get_later)
+)
+
+optional_fn <- ts_function(
+    # function(x = ts_optional(ts_numeric(1))) {
+    function(x = ts_undefined()) {
+        print(x)
+        !is.null(x)
+    },
+    result = ts_logical(1)
+)

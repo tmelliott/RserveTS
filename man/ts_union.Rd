@@ -7,11 +7,11 @@
 ts_union(...)
 }
 \arguments{
-\item{...}{Zod types to merge (as strings)}
+\item{...}{Type objects to merge}
 }
 \description{
 Create a union of types. Currently this only accepts schemas as strings.
 }
 \examples{
-x <- ts_union("z.number()", "z.string()")
+x <- ts_union(ts_numeric(1), ts_character(1))
 }

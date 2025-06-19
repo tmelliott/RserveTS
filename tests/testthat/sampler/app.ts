@@ -27,6 +27,17 @@ async function main() {
   const s = await app.sample_num(new Float64Array([1, 2, 3, 4, 5]), 2);
   console.log("Sample num:", s);
 
+  console.log("\n-----------\n- checking recursive scoping ...\n");
+  const store = await app.save_for_later(10);
+  const value = await store.get();
+  console.log("Retrieved value: ", value);
+
+  console.log("\n-----------\n- checking optional arguments ...\n");
+  // const optNum = await app.optional_fn(5);
+  // console.log("Passed arg: ", optNum);
+  const optNull = await app.optional_fn(undefined);
+  console.log("Passed arg: ", optNull);
+
   process.exit(0);
 }
 console.log("Running sampler script...\n");
