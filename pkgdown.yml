@@ -3,7 +3,7 @@ pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   simple-react-app: simple-react-app.html
-last_built: 2025-06-19T02:03Z
+last_built: 2025-06-19T02:09Z
 urls:
   reference: http://tomelliott.co.nz/ts/reference
   article: http://tomelliott.co.nz/ts/articles
