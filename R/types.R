@@ -713,7 +713,8 @@ check_type.ts_self <- function(type, x) x
 #'
 #'
 #' @param ... arguments passed to the function
-#' @return A ts object that accepts js functions (as input)
+#' @return A ts object that accepts js functions (as input).
+#' Currently not able to pass as output (but should, in future ...).
 #' @export
 js_function <- function(..., result = NULL) {
     input <- list(...)
@@ -727,6 +728,7 @@ js_function <- function(..., result = NULL) {
                 paste(",", get_type(result, which = "input"))
             )
         ),
-        "Robj.void()"
+        # TODO: it is possible to return a javascript function from R ...
+        NULL
     )
 }
