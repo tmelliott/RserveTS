@@ -713,6 +713,7 @@ check_type.ts_self <- function(type, x) x
 #'
 #'
 #' @param ... arguments passed to the function
+#' @param result the type of value returned from JS to R
 #' @return A ts object that accepts js functions (as input).
 #' Currently not able to pass as output (but should, in future ...).
 #' @export

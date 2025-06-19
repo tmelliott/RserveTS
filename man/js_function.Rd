@@ -8,9 +8,12 @@ js_function(..., result = NULL)
 }
 \arguments{
 \item{...}{arguments passed to the function}
+
+\item{result}{the type of value returned from JS to R}
 }
 \value{
-A ts object that accepts js functions (as input)
+A ts object that accepts js functions (as input).
+Currently not able to pass as output (but should, in future ...).
 }
 \description{
 If result is NULL, it will be an oobSend (R process will continue),
