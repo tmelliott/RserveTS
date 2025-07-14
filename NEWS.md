@@ -1,4 +1,5 @@
 - added initial support for js functions with `js_function()`
+- fix return type for ts_undefined(), ts_void(), ts_union() (#6)
 
 # ts 0.2.0
 

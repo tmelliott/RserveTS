@@ -129,7 +129,11 @@ ts_union <- function(...) {
             "z.union([%s])",
             paste(sapply(types, \(x) x$input_type), collapse = ", ")
         ),
-        paste(sapply(types, \(x) x$return_type), collapse = " | "),
+        sprintf(
+            "z.union([%s])",
+            paste(sapply(types, \(x) x$return_type), collapse = ", ")
+        ),
+        # paste(sapply(types, \(x) x$return_type), collapse = " | "),
         check = function(x = NULL) {
             any_pass <- FALSE
             for (t in types) {
@@ -514,7 +518,7 @@ ts_null <- function() {
 ts_void <- function() {
     ts_object(
         "z.void()",
-        "null",
+        "Robj.null()",
         check = function(x) {
             return(NULL)
         }
@@ -530,7 +534,7 @@ ts_void <- function() {
 ts_undefined <- function() {
     ts_object(
         "z.undefined()",
-        "undefined",
+        "Robj.null()",
         check = function(x = NULL) {
             if (missing(x) || is.null(x)) {
                 return()
