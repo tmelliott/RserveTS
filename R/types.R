@@ -385,6 +385,15 @@ ts_factor <- function(levels = NULL) {
 #' Typed list
 #'
 #' A list is a vector of other robjects, which may or may not be named.
+#'
+#' There are five types of lists we can define:
+#'
+#' 1. Unknown list
+#' 2. Known, named list (e.g., list(x = 1:5, y = 'hello world')). This is an object in JS.
+#' 3. Known, unnamed list (e.g., list(1:5, 'hello world')). This is an array in JS.
+#' 4. Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record<string, type> in JS.
+#' 5. Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an Array<type> in JS.
+#'
 #' @param ... A list of types, named or unnamed.
 #' @return A ts object that accepts lists with the specified types.
 #'
@@ -412,8 +421,14 @@ ts_list <- function(...) {
                 paste(names(values), type_funs, sep = ": ", collapse = ", ")
             )
         } else {
-            type <- sprintf("[%s]", paste(types, collapse = ", "))
-            type_fn <- sprintf("[%s]", paste(type_funs, collapse = ", "))
+            type <- sprintf(
+                ifelse(length(values) == 1, "z.array(%s)", "z.tuple([%s])"),
+                paste(types, collapse = ", ")
+            )
+            type_fn <- sprintf(
+                ifelse(length(values) == 1, "%s", "[%s]"),
+                paste(type_funs, collapse = ", ")
+            )
         }
     }
 
