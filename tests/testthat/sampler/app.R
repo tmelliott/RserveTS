@@ -1,18 +1,24 @@
 library(ts)
 
-fn_mean <- ts_function(mean, x = ts_numeric(), result = ts_numeric(1))
+fn_mean <- ts_function(mean,
+    x = ts_numeric(), result = ts_numeric(1),
+    export = TRUE
+)
 fn_first <- ts_function(function(x = ts_character()) x[1],
-    result = ts_character(1)
+    result = ts_character(1), export = TRUE
 )
 
 sample_num <- ts_function(
     sample,
     x = ts_numeric(0),
     size = ts_integer(1),
-    result = ts_numeric()
+    result = ts_numeric(),
+    export = TRUE
 )
 
-get_later <- ts_function(function() stored_value, result = ts_numeric(1))
+get_later <- ts_function(function() stored_value,
+    result = ts_numeric(1), export = TRUE
+)
 save_for_later <- ts_function(
     function(stored_value = ts_numeric(1)) {
         print(paste("Storing value", stored_value))
@@ -20,7 +26,8 @@ save_for_later <- ts_function(
             get = get_later$copy()
         )
     },
-    result = ts_list(get = get_later)
+    result = ts_list(get = get_later),
+    export = TRUE
 )
 
 optional_fn <- ts_function(
@@ -29,12 +36,16 @@ optional_fn <- ts_function(
         print(x)
         !is.null(x)
     },
-    result = ts_logical(1)
+    result = ts_logical(1),
+    export = TRUE
 )
 
 bad_function <- ts_function(
     function(x = ts_union(ts_numeric(1), ts_character(1))) {
         x + 5
     },
-    result = ts_numeric(1)
+    result = ts_numeric(1),
+    export = TRUE
 )
+
+hidden_function <- ts_function(function() NULL)

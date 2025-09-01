@@ -64,6 +64,7 @@ ts_result <- function(type, value) {
 #' @param f an R function
 #' @param ... argument definitions (only required if f does not specify these in its formals)
 #' @param result return type (ignored if overloads are provided)
+#' @param export if `TRUE`, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to Rserve; otherwise it will need to be sent as the result of another ocap.
 #' @export
 #' @md
 #'
@@ -74,7 +75,7 @@ ts_result <- function(type, value) {
 #'     x + nchar(y)
 #' }, result = ts_integer(1))
 #' f$call(1, "hello")
-ts_function <- function(f, ..., result = ts_void()) {
+ts_function <- function(f, ..., result = ts_void(), export = FALSE) {
     args <- list(...)
     if (!is.null(result) && !is_ts_object(result)) {
         stop("Invalid return type")
@@ -89,6 +90,7 @@ ts_function <- function(f, ..., result = ts_void()) {
     # e$env <- env
     e$args <- args
     e$result <- result
+    e$export <- export
 
     e$call <- function(...) {
         # mc <- match.call(e$f)

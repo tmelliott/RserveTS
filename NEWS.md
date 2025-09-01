@@ -1,3 +1,7 @@
+# ts 0.4.0
+
+- (breaking) add `export = ` argument ts `ts_function()` (`FALSE` by default) to control which functions are exposed with the first connection
+
 # ts 0.3.0
 
 - added initial support for js functions with `js_function()`
