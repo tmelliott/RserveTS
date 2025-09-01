@@ -4,7 +4,7 @@
 \alias{ts_function}
 \title{TS function definition}
 \usage{
-ts_function(f, ..., result = ts_void())
+ts_function(f, ..., result = ts_void(), export = FALSE)
 }
 \arguments{
 \item{f}{an R function}
@@ -12,6 +12,8 @@ ts_function(f, ..., result = ts_void())
 \item{...}{argument definitions (only required if f does not specify these in its formals)}
 
 \item{result}{return type (ignored if overloads are provided)}
+
+\item{export}{if \code{TRUE}, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to Rserve; otherwise it will need to be sent as the result of another ocap.}
 }
 \value{
 a ts function object which has a \code{call} method that will call the function with the given arguments, which will be checked for type correctness.
