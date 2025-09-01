@@ -15,6 +15,16 @@ A ts object that accepts lists with the specified types.
 \description{
 A list is a vector of other robjects, which may or may not be named.
 }
+\details{
+There are five types of lists we can define:
+\enumerate{
+\item Unknown list
+\item Known, named list (e.g., list(x = 1:5, y = 'hello world')). This is an object in JS.
+\item Known, unnamed list (e.g., list(1:5, 'hello world')). This is an array in JS.
+\item Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record<string, type> in JS.
+\item Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an Array\if{html}{\out{<type>}} in JS.
+}
+}
 \examples{
 x <- ts_list(a = ts_integer(1), b = ts_character(1))
 x$check(list(a = 1L, b = "a"))

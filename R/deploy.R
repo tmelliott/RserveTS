@@ -73,5 +73,8 @@ ls_ocaps <- function(f) {
     e <- new.env()
     source(f, local = e)
     x <- ls(e)
-    x[sapply(x, \(z) class(e[[z]]) == "ts_function")]
+    x[sapply(
+        x,
+        \(z) class(e[[z]]) == "ts_function" && isTRUE(e[[z]]$export)
+    )]
 }
