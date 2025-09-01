@@ -1,6 +1,6 @@
 Package: ts
 Title: Helper Functions for Writing Type-safe Functions for rserve-ts
-Version: 0.2.1
+Version: 0.3.0
 Authors@R: c(
     person("Tom", "Elliott", , "tom@inzight.co.nz",
            role = c("aut", "cre"),

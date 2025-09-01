@@ -5,7 +5,7 @@ test_that("anonomous function definitions", {
     )
 
     expect_equal(add$call(1, 2), 3)
-    expect_error(add$call("a", 2))
+    expect_s3_class(add$call("a", 2), "try-error")
 })
 
 test_that("named function definitions", {

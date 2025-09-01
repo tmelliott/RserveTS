@@ -1,7 +1,7 @@
 // var R = require("./node_modules/rserve-ts/dist/index.js").default;
 // global.WebSocket = require("ws");
 
-import RserveClient from "rserve-ts";
+import RserveClient, { isRServeError } from "rserve-ts";
 import WebSocket from "ws";
 
 interface global {
@@ -37,6 +37,21 @@ async function main() {
   // console.log("Passed arg: ", optNum);
   const optNull = await app.optional_fn(undefined);
   console.log("Passed arg: ", optNull);
+
+  console.log("\n-----------\n- checking error handling ...\n");
+  const noErr = await app.bad_function(5);
+  console.log("OK result: ", noErr);
+
+  try {
+    const err = await app.bad_function("foo");
+    console.error("No error: ", err);
+  } catch (e) {
+    if (isRServeError(e)) {
+      console.error("ERROR: ", e[0]);
+    } else {
+      console.error(e);
+    }
+  }
 
   process.exit(0);
 }

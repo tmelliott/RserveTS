@@ -31,3 +31,10 @@ optional_fn <- ts_function(
     },
     result = ts_logical(1)
 )
+
+bad_function <- ts_function(
+    function(x = ts_union(ts_numeric(1), ts_character(1))) {
+        x + 5
+    },
+    result = ts_numeric(1)
+)

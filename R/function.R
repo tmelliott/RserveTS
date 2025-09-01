@@ -99,13 +99,17 @@ ts_function <- function(f, ..., result = ts_void()) {
         # because Rserve can only pass args as an unnamed array,
         # anyway ... and we don't need to check input types
         # as they will be valid on the TypeScript side ...
-        .res <- e$f(...)
+        .res <- try(e$f(...), silent = TRUE)
+        return(.res)
+        # if (inherits(.res, "try-error")) {
+        #     return(.res)
+        # }
 
         # so, we only need to check the result before sending it to
         # TypeScript (and even that is probably overkill because
         # Zod will check the types for us, anyway ...)
-        check_type(result, .res)
-        .res
+        # check_type(result, .res)
+        # .res
     }
 
     e$copy <- function(env = parent.frame()) {

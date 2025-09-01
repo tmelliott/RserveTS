@@ -1,5 +1,9 @@
+# ts 0.3.0
+
 - added initial support for js functions with `js_function()`
 - fix return type for ts_undefined(), ts_void(), ts_union() (#6)
+- add unnamed array-type list
+- add basic error handling (try() around all functions)
 
 # ts 0.2.0
 
