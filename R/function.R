@@ -93,25 +93,8 @@ ts_function <- function(f, ..., result = ts_void(), export = FALSE) {
     e$export <- export
 
     e$call <- function(...) {
-        # mc <- match.call(e$f)
-        # .args <- parse_args(args, mc[-1])
-        # .res <- do.call(e$f, .args)
-
-        # We don't need to do match.call or anything,
-        # because Rserve can only pass args as an unnamed array,
-        # anyway ... and we don't need to check input types
-        # as they will be valid on the TypeScript side ...
         .res <- try(e$f(...), silent = TRUE)
-        return(.res)
-        # if (inherits(.res, "try-error")) {
-        #     return(.res)
-        # }
-
-        # so, we only need to check the result before sending it to
-        # TypeScript (and even that is probably overkill because
-        # Zod will check the types for us, anyway ...)
-        # check_type(result, .res)
-        # .res
+        .res
     }
 
     e$copy <- function(env = parent.frame()) {
