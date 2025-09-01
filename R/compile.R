@@ -51,15 +51,27 @@ ts_compile.character <- function(
     e <- new.env()
     source(f, local = e)
 
-    x <- sapply(ls(e), \(x) ts_compile(e[[x]], filename = "", name = x))
+    fns <- ls(e)
+    exports <- fns[sapply(
+        fns,
+        \(z) class(e[[z]]) == "ts_function" && isTRUE(e[[z]]$export)
+    )]
+
+    exportFns <- sapply(
+        exports,
+        \(z) ts_compile(e[[z]], filename = "", name = z)
+    )
 
     src <- c(
         "import { Robj } from 'rserve-ts';",
         "import { z } from 'zod';",
         "\n",
-        x,
+        exportFns,
         "\n",
-        sprintf("export default {\n  %s\n};", paste(ls(e), collapse = ",\n  "))
+        sprintf(
+            "export default {\n  %s\n};",
+            paste(exports, collapse = ",\n  ")
+        )
     )
 
     cat(src, file = sprintf("%s.ts", filename), sep = "\n")
