@@ -57,6 +57,14 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A ts object that accepts lists with the specified types.</p>
     </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>There are five types of lists we can define:</p><ol><li><p>Unknown list</p></li>
+<li><p>Known, named list (e.g., list(x = 1:5, y = 'hello world')). This is an object in JS.</p></li>
+<li><p>Known, unnamed list (e.g., list(1:5, 'hello world')). This is an array in JS.</p></li>
+<li><p>Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record&lt;string, type&gt; in JS.</p></li>
+<li><p>Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an Array<type> in JS.</type></p></li>
+</ol></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
