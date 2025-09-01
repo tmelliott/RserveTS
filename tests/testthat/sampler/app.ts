@@ -48,9 +48,9 @@ async function main() {
   } catch (e) {
     if (isRServeError(e)) {
       console.error("ERROR: ", e[0]);
-      return;
+    } else {
+      console.error(e);
     }
-    console.error(e);
   }
 
   process.exit(0);
