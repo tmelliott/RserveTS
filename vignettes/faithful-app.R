@@ -1,4 +1,4 @@
-library(ts)
+library(RserveTS)
 
 get_hist <- ts_function(
     function(bins = ts_integer(1)) {
