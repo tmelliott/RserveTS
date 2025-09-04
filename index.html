@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Helper Functions for Writing Type-safe Functions for rserve-ts • ts</title>
+<title>Deploy Rserve Applications Supporting TypeScript • RserveTS</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Helper Functions for Writing Type-safe Functions for rserve-ts">
-<meta name="description" content="A set of helper functions for specifying typed functions for writing and compiling TypesSript functions for use with rserve-ts. The package allows users to easily specify Javascript input types and Rserve output types for Ocap (object capability) functioned. The companion library rserve-ts, available on npm &lt;https://www.npmjs.com/package/rserve-ts&gt;, provides the necessary infrastructure to run these functions in a Typescript environment.">
-<meta property="og:description" content="A set of helper functions for specifying typed functions for writing and compiling TypesSript functions for use with rserve-ts. The package allows users to easily specify Javascript input types and Rserve output types for Ocap (object capability) functioned. The companion library rserve-ts, available on npm &lt;https://www.npmjs.com/package/rserve-ts&gt;, provides the necessary infrastructure to run these functions in a Typescript environment.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Deploy Rserve Applications Supporting TypeScript">
+<meta name="description" content="Tools for writing functions for TypeScript applications using Rserve, with methods for compilation and deployment of applications in the format expected by rserve-ts. The package allows users to easily specify Javascript input types and Rserve output types for Ocap (object capability) functions. The companion library rserve-ts, available on npm &lt;https://www.npmjs.com/package/rserve-ts&gt;, provides the necessary infrastructure to run these functions in a Typescript environment.">
+<meta property="og:description" content="Tools for writing functions for TypeScript applications using Rserve, with methods for compilation and deployment of applications in the format expected by rserve-ts. The package allows users to easily specify Javascript input types and Rserve output types for Ocap (object capability) functions. The companion library rserve-ts, available on npm &lt;https://www.npmjs.com/package/rserve-ts&gt;, provides the necessary infrastructure to run these functions in a Typescript environment.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -20,7 +20,7 @@
 
     <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="index.html">ts</a>
+    <a class="navbar-brand me-2" href="index.html">RserveTS</a>
 
     <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
@@ -52,18 +52,18 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="ts-write-apps-with-r-rserve-and-typescript">ts: Write apps with R, Rserve, and TypeScript<a class="anchor" aria-label="anchor" href="#ts-write-apps-with-r-rserve-and-typescript"></a>
+<div class="page-header"><h1 id="rservets-deploy-rserve-applications-supporting-typescript">RserveTS: Deploy Rserve Applications Supporting TypeScript<a class="anchor" aria-label="anchor" href="#rservets-deploy-rserve-applications-supporting-typescript"></a>
 </h1></div>
 <!-- badges: start -->
 
-<p>The <strong>ts</strong> package makes it easy for users to write functions that can be used in <a href="https://www.npmjs.com/package/rserve-ts" class="external-link"><strong>rserve-ts</strong></a> applications.</p>
+<p>The <strong>RserveTS</strong> package makes it easy for users to write functions that can be used in <a href="https://www.npmjs.com/package/rserve-ts" class="external-link"><strong>rserve-ts</strong></a> applications.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of ts from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
+<p>You can install the development version of <code>RserveTS</code> from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"tmelliott/ts"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"tmelliott/RserveTS"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
@@ -71,7 +71,7 @@
 <p>Writing functions is easy, just use the <code>ts_*()</code> functions to define formals and return types.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># demo.R</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://tomelliott.co.nz/ts/">ts</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://tomelliott.co.nz/RserveTS/">RserveTS</a></span><span class="op">)</span></span>
 <span><span class="va">addFn</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ts_function.html">ts_function</a></span><span class="op">(</span></span>
 <span>  <span class="kw">function</span><span class="op">(</span><span class="va">a</span> <span class="op">=</span> <span class="fu"><a href="reference/ts_numeric.html">ts_numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, <span class="va">b</span> <span class="op">=</span> <span class="fu"><a href="reference/ts_numeric.html">ts_numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="va">a</span> <span class="op">+</span> <span class="va">b</span>,</span>
 <span>  result <span class="op">=</span> <span class="fu"><a href="reference/ts_numeric.html">ts_numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
@@ -135,7 +135,7 @@
 <div class="citation">
 <h2 data-toc-skip>Citation</h2>
 <ul class="list-unstyled">
-<li><a href="authors.html#citation">Citing ts</a></li>
+<li><a href="authors.html#citation">Citing RserveTS</a></li>
 </ul>
 </div>
 
@@ -150,8 +150,8 @@
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/tmelliott/ts/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/tmelliott/ts/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
-<li><a href="https://github.com/tmelliott/ts/actions/workflows/check-demo.yaml" class="external-link"><img src="https://github.com/tmelliott/ts/actions/workflows/check-demo.yaml/badge.svg" alt="Demo"></a></li>
+<li><a href="https://github.com/tmelliott/RserveTS/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/tmelliott/RserveTS/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://github.com/tmelliott/RserveTS/actions/workflows/check-demo.yaml" class="external-link"><img src="https://github.com/tmelliott/RserveTS/actions/workflows/check-demo.yaml/badge.svg" alt="Demo"></a></li>
 </ul>
 </div>
 
