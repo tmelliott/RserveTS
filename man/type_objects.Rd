@@ -9,7 +9,7 @@ app developers, which includes the main types in R and their
 TypeScript counterparts.
 }
 \section{TS objects}{
-The basic object in \code{ts} is a \code{ts_object} class. This is represented by
+The basic object in \code{RserveTS} is a \code{ts_object} class. This is represented by
 input and return types, an optional default value, and a checking
 function.
 

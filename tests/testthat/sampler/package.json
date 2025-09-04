@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "Rscript -e 'ts::ts_compile(\"app.R\"); ts::ts_deploy(\"app.R\")'",
+    "build": "Rscript -e 'RserveTS::ts_compile(\"app.R\"); RserveTS::ts_deploy(\"app.R\")'",
     "rserve": "Rscript app.rserve.R",
     "start": "ts-node app.ts"
   },

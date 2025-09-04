@@ -1,9 +1,9 @@
 # Demo app
 
-1. Installing R and the the `ts` package
+1. Installing R and the the `RserveTS` package
 
 ```r
-devtools::install_github("tmelliott/ts")
+devtools::install_github("tmelliott/RserveTS")
 ```
 
 2. Install node and npm (or pnpm!), then install dependencies

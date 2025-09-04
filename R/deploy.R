@@ -28,11 +28,11 @@ ts_deploy <- function(f,
         paste(sapply(init, \(z) sprintf("%s = %s", z, z)), collapse = ",\n   ")
     )
 
-    x <- x[!grepl("library\\(ts\\)", x)] # Remove library(ts) from the app
+    x <- x[!grepl("library\\(RserveTS\\)", x)] # Remove library(ts) from the app
 
     src <- c(
         "library(Rserve)",
-        "library(ts)",
+        "library(RserveTS)",
         "",
         x,
         sprintf("first.fns <- function() ts_app(%s)", init),

@@ -1,4 +1,4 @@
-library(ts)
+library(RserveTS)
 
 fn_mean <- ts_function(mean,
     x = ts_numeric(), result = ts_numeric(1),

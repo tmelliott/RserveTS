@@ -16,10 +16,10 @@ knitr::opts_chunk$set(
 
 We will create a simple [ReactJS](https://reactjs.org/) application that implements our favourite *Old Faithful* dataset. Of course, this is not a great use-case for Rserve as it would be more appropriate to use a REST API, but it is a simple example to demonstrate how to use Rserve with a front-end application.
 
-## Install the ts package
+## Install the RserveTS package
 
 ```r
-devtools::install_github('tmelliott/ts')
+devtools::install_github('tmelliott/RserveTS')
 ```
 
 ## Write the R code
