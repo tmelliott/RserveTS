@@ -8,7 +8,7 @@
 #'
 #' @details
 #' # TS objects
-#' The basic object in `ts` is a `ts_object` class. This is represented by
+#' The basic object in `RserveTS` is a `ts_object` class. This is represented by
 #' input and return types, an optional default value, and a checking
 #' function.
 #'
