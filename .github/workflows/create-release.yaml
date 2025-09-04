@@ -24,7 +24,7 @@ jobs:
       - name: create_body
         run: |
           news <- readLines('NEWS.md')
-          i <- grep("^# ts", news)[1:2]
+          i <- grep("^# RserveTS", news)[1:2]
           if (is.na(i[2])) i[2L] <- length(news) + 1L
           news <- news[(i[1L] + 1L):(i[2L] - 1L)]
           news <- news[trimws(news) != ""]
