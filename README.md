@@ -1,26 +1,26 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ts: Write apps with R, Rserve, and TypeScript
+# RserveTS: Deploy Rserve Applications Supporting TypeScript
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/tmelliott/ts/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tmelliott/ts/actions/workflows/R-CMD-check.yaml)
-[![Demo](https://github.com/tmelliott/ts/actions/workflows/check-demo.yaml/badge.svg)](https://github.com/tmelliott/ts/actions/workflows/check-demo.yaml)
+[![R-CMD-check](https://github.com/tmelliott/RserveTS/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tmelliott/RserveTS/actions/workflows/R-CMD-check.yaml)
+[![Demo](https://github.com/tmelliott/RserveTS/actions/workflows/check-demo.yaml/badge.svg)](https://github.com/tmelliott/RserveTS/actions/workflows/check-demo.yaml)
 <!-- badges: end -->
 
-The **ts** package makes it easy for users to write functions that can
-be used in [**rserve-ts**](https://www.npmjs.com/package/rserve-ts)
+The **RserveTS** package makes it easy for users to write functions that
+can be used in [**rserve-ts**](https://www.npmjs.com/package/rserve-ts)
 applications.
 
 ## Installation
 
-You can install the development version of ts from
+You can install the development version of `RserveTS` from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("tmelliott/ts")
+devtools::install_github("tmelliott/RserveTS")
 ```
 
 ## Example
@@ -30,7 +30,7 @@ formals and return types.
 
 ``` r
 # demo.R
-library(ts)
+library(RserveTS)
 addFn <- ts_function(
   function(a = ts_numeric(1), b = ts_numeric(1)) a + b,
   result = ts_numeric(1)

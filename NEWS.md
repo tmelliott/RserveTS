@@ -1,3 +1,8 @@
+# RserveTS 0.5.0
+
+- rename package to 'RserveTS' to make it more obvious what the package does,
+  and to avoid any potential confusion with "time series"
+
 # ts 0.4.0
 
 - (breaking) add `export = ` argument to `ts_function()` (`FALSE` by default) to control which functions are exposed with the first connection
