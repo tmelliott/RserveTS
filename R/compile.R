@@ -54,7 +54,7 @@ ts_compile.character <- function(
     fns <- ls(e)
     exports <- fns[sapply(
         fns,
-        \(z) class(e[[z]]) == "ts_function" && isTRUE(e[[z]]$export)
+        \(z) inherits(e[[z]], "ts_function") && isTRUE(e[[z]]$export)
     )]
 
     exportFns <- sapply(

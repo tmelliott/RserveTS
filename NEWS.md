@@ -1,3 +1,5 @@
+- fix bug (use inherits() instead of class() == "")
+
 # RserveTS 0.5.0
 
 - rename package to 'RserveTS' to make it more obvious what the package does,
