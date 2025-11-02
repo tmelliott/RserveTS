@@ -1,3 +1,7 @@
+# RserveTS 0.6.0
+
+- Add new widget functionality to simplify creating widget objects that store state that can be modified by the JS application. The node package [`@tmelliott/react-rserve`](https://www.npmjs.com/package/@tmelliott/react-rserve) contains hooks for working with these widgets.
+
 # RserveTS 0.5.0
 
 - rename package to 'RserveTS' to make it more obvious what the package does,

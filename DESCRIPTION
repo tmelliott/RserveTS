@@ -16,7 +16,8 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Config/testthat/edition: 3
 Depends:
-    R (>= 4.1.0)
+    R (>= 4.1.0),
+    objectProperties
 Imports:
     rlang,
     Rserve
