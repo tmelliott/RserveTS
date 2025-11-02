@@ -1,3 +1,7 @@
+# RserveTS 0.6.0
+
+- Add new widget functionality to simplify creating widget objects that store state that can be modified by the JS application. The node package [`@tmelliott/react-rserve`](https://www.npmjs.com/package/@tmelliott/react-rserve) contains hooks for working with these widgets.
+
 - fix bug (use inherits() instead of class() == "")
 
 # RserveTS 0.5.0
