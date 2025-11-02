@@ -75,6 +75,6 @@ ls_ocaps <- function(f) {
     x <- ls(e)
     x[sapply(
         x,
-        \(z) class(e[[z]]) == "ts_function" && isTRUE(e[[z]]$export)
+        \(z) inherits(e[[z]], "ts_function") && isTRUE(e[[z]]$export)
     )]
 }
