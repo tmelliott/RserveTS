@@ -1,10 +1,8 @@
-# RserveTS 0.7.1
-
-- Add `objectSignals` as dependency 
-
 # RserveTS 0.7.0
 
 - Enhanced `createWidget()` function with support for child widgets. Widgets can now contain other widgets as properties, enabling hierarchical widget structures. The function now properly handles child widget initialization and state management.
+- Add `objectSignals` as dependency
+- Export `tsWidget` base class for proper class lookup 
 
 # RserveTS 0.6.0
 
