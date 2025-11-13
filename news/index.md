@@ -1,5 +1,9 @@
 # Changelog
 
+## RserveTS 0.7.1
+
+- Add `objectSignals` as dependency
+
 ## RserveTS 0.7.0
 
 - Enhanced
