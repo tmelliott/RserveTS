@@ -34,11 +34,13 @@
 #'   \item \code{set(x)}: Set the property value
 #' }
 #'
+#' @importFrom methods setRefClass new
+#' @importFrom objectProperties properties
 #' @export
 #'
 #' @examples
 #' # Create a simple counter widget
-#'
+#' \dontrun{
 #' createWidget(
 #'     name = "Counter",
 #'     properties = list(count = ts_integer(1)),
@@ -46,6 +48,7 @@
 #'         widget$set("count", 0)
 #'     }
 #' )
+#' }
 createWidget <- function(
     name,
     properties = list(),
@@ -66,7 +69,8 @@ createWidget <- function(
                     .self$.childrenVersion <- 0L
                 }
             )
-        )
+        ),
+        where = parent.env(environment())
     )
 
     ts_props <- tsProps(properties)
