@@ -1,6 +1,8 @@
 # RserveTS 0.7.1
 
-- Add `objectSignals` as dependency 
+- Add `objectSignals` as dependency
+- Fix locked environment issue in `createWidget()` by adding `.env` parameter. The function now defaults to using `parent.frame()` (caller's environment) which is CRAN-compliant and avoids locked namespace issues. Users can override with `.env = .GlobalEnv` if needed for deployments in locked environments.
+- Export `tsWidget` base class for proper class lookup 
 
 # RserveTS 0.7.0
 

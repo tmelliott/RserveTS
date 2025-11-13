@@ -13,6 +13,9 @@
 #'   instance and sets up initial state
 #' @param methods Named list of methods to add to the widget class. Each method
 #'   should be a `ts_function` object
+#' @param .env Environment where the ref class should be created. Defaults to
+#'   `parent.frame()` which is the caller's environment (typically unlocked).
+#'   Can be overridden (e.g., to `.GlobalEnv`) if needed.
 #' @param ... Additional arguments passed to the TypeScript function constructor
 #'
 #' @return A TypeScript function constructor that creates widget instances with
@@ -54,7 +57,13 @@ createWidget <- function(
     properties = list(),
     initialize = NULL,
     methods = list(),
+    .env = parent.frame(),
     ...) {
+    # setRefClass with contains tries to register class metadata in the base class's
+    # namespace. To work around locked namespace issues, we need to ensure the
+    # class definition can be registered. The .env parameter allows specifying
+    # where the new class should be created, but inheritance metadata may still
+    # need to be registered in the package namespace.
     rc <- setRefClass(name,
         properties(
             fields = widgetProperties(properties)
@@ -70,7 +79,7 @@ createWidget <- function(
                 }
             )
         ),
-        where = parent.env(environment())
+        where = .env
     )
 
     ts_props <- tsProps(properties)
@@ -292,6 +301,13 @@ jsfun <- function(x) {
     function(...) Rserve::self.oobMessage(list(x, ...))
 }
 
+#' Base Widget Class
+#'
+#' Base reference class for all widgets created with \code{createWidget}.
+#' This class provides the core functionality for reactive properties and
+#' state synchronization with TypeScript.
+#'
+#' @export
 tsWidget <- setRefClass("tsWidget",
     properties(
         fields = list(
