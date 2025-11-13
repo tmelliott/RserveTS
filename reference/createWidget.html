@@ -11,7 +11,7 @@ TypeScript, with automatic state synchronization."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">RserveTS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -104,7 +104,7 @@ reactive properties and methods for TypeScript interoperability</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create a simple counter widget</span></span></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">createWidget</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    name <span class="op">=</span> <span class="st">"Counter"</span>,</span></span>
 <span class="r-in"><span>    properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>count <span class="op">=</span> <span class="fu"><a href="ts_integer.html">ts_integer</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span></span>
@@ -112,14 +112,7 @@ reactive properties and methods for TypeScript interoperability</p>
 <span class="r-in"><span>        <span class="va">widget</span><span class="op">$</span><span class="fu">set</span><span class="op">(</span><span class="st">"count"</span>, <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="op">}</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> --- Ocap function </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Arguments:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - fn: z.union([Robj.js_function([z.object({ count: z.union([z.number(), z.undefined()]) })], z.null()), z.undefined()])</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Return type:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Robj.list({ properties: Robj.list({ count: Robj.list({ register: Robj.ocap([Robj.js_function([z.number()], z.null()), z.string()], Robj.character(1)), get: Robj.ocap([], Robj.integer(1)), set: Robj.ocap([z.number()], Robj.null()) }) }) })</span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -131,7 +124,7 @@ reactive properties and methods for TypeScript interoperability</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
