@@ -1,6 +1,6 @@
 Package: RserveTS
 Title: Deploy Rserve Applications Supporting TypeScript
-Version: 0.7.0
+Version: 0.7.1
 Authors@R: c(
     person("Tom", "Elliott", , "tom@inzight.co.nz",
            role = c("aut", "cre"),
@@ -17,7 +17,8 @@ RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 Depends:
     R (>= 4.1.0),
-    objectProperties
+    objectProperties,
+    objectSignals
 Imports:
     methods,
     rlang,
