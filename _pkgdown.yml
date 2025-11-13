@@ -12,6 +12,7 @@ reference:
       - ts_compile
       - ts_deploy
       - createWidget
+      - tsWidget
   - title: Types
     desc: Type helper functions for defining argument and return types.
   - contents:
