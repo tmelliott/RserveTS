@@ -55,7 +55,7 @@ Each property automatically gets TypeScript-accessible methods:
 }
 \examples{
 # Create a simple counter widget
-
+\dontrun{
 createWidget(
     name = "Counter",
     properties = list(count = ts_integer(1)),
@@ -63,4 +63,5 @@ createWidget(
         widget$set("count", 0)
     }
 )
+}
 }

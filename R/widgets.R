@@ -34,11 +34,13 @@
 #'   \item \code{set(x)}: Set the property value
 #' }
 #'
+#' @importFrom methods setRefClass new
+#' @importFrom objectProperties properties
 #' @export
 #'
 #' @examples
 #' # Create a simple counter widget
-#'
+#' \dontrun{
 #' createWidget(
 #'     name = "Counter",
 #'     properties = list(count = ts_integer(1)),
@@ -46,6 +48,7 @@
 #'         widget$set("count", 0)
 #'     }
 #' )
+#' }
 createWidget <- function(
     name,
     properties = list(),
@@ -54,61 +57,39 @@ createWidget <- function(
     ...) {
     rc <- setRefClass(name,
         properties(
-            fields = c(
-                widgetProperties(properties),
-                list(
-                    changed = "character",
-                    setState = "function"
-                )
-            )
+            fields = widgetProperties(properties)
         ),
+        contains = "tsWidget",
         methods = c(
             widgetMethods(substitute(methods)),
             list(
                 initialize = function(setState) {
                     .self$setState <- setState
-                },
-                set = function(prop, value) {
-                    if (!any(.self$changed == prop)) {
-                        .self$changed <- c(.self$changed, prop)
-                    }
-                    .self[[prop]] <- value
-                },
-                get = function(prop) .self[[prop]],
-                addPropHandler = function(prop, fn) {
-                    .self[[sprintf("%sChanged", prop)]]$connect(fn)
-                },
-                updateState = function(all = FALSE) {
-                    if (all) chg <- names(properties) else chg <- .self$changed
-                    if (length(chg) == 0) {
-                        return()
-                    }
-
-                    x <- lapply(chg, \(p) .self$get(p))
-                    names(x) <- chg
-
-                    .self$setState(x)
-                    .self$changed <- character()
+                    .self$.child_connectors <- NULL
+                    .self$.childrenVersion <- 0L
                 }
             )
         ),
-        where = parent.frame()
+        where = parent.env(environment())
     )
 
-    props <- lapply(names(properties), \(name) {
-        prop <- properties[[name]]
+    ts_props <- tsProps(properties)
+    widget_props <- widgetProps(properties)
+
+    props <- lapply(names(ts_props), \(name) {
+        prop <- ts_props[[name]]
+        if (!inherits(prop, "ts_object")) {
+            return(NULL)
+        }
         list(
             register = ts_function(
                 function(fn, id) {
                     id <- widget$addPropHandler(
                         name, function() {
-                            # cat("-- calling JS fun\n")
                             jsfun(fn)(widget$get(name))
-                            # cat("-- jsfun complete ...\n")
                             invisible(NULL)
                         }
                     )
-                    cat("- REGISTER", name, "| id =", id, "\n")
                     id
                 },
                 fn = js_function(
@@ -120,17 +101,12 @@ createWidget <- function(
             ),
             get = ts_function(
                 function() {
-                    # cat(sprintf("- get {%s}\n", name))
                     widget$get(name)
                 },
                 result = prop
             ),
             set = ts_function(
                 function(x) {
-                    cat(sprintf(
-                        "- setting {%s} to %s\n",
-                        name, x
-                    ))
                     widget$set(name, x)
                     invisible()
                 },
@@ -138,34 +114,41 @@ createWidget <- function(
             )
         )
     })
-    names(props) <- names(properties)
+    names(props) <- names(ts_props)
 
     w_type <- ts_list(
         properties = do.call(
             ts_list,
             lapply(props, \(prop) do.call(ts_list, prop))
-        )
+        ),
+        children = do.call(ts_list, widget_props)
     )
 
     setStateType <- do.call(
         ts_list,
-        lapply(properties, \(prop) ts_optional(prop))
+        lapply(ts_props, \(prop) ts_optional(prop))
     )
 
     w_ctor <- ts_function(
         # pass in 'init' args here ...
         function(fn) {
             widget <- rc$new(
-                setState = if (is.null(fn)) function() {} else jsfun(fn)
+                setState = if (is.null(fn)) NULL else jsfun(fn)
             )
-
             if (!is.null(initialize)) {
                 initialize(widget)
             }
             widget$updateState()
 
+            lapply(
+                names(widget_props),
+                \(prop) widget$add_child(prop, widget_props[[prop]])
+            )
+
             list(
-                properties = lapply(props, \(prop) lapply(prop, \(method) method$copy()))
+                properties =
+                    lapply(props, \(prop) lapply(prop, \(method) method$copy())),
+                children = widget$.child_connectors
             )
         },
         fn = ts_optional(js_function(state = setStateType, result = ts_null())),
@@ -173,13 +156,27 @@ createWidget <- function(
         ...
     )
 
+    class(w_ctor) <- c("ts_widget", class(w_ctor))
+    attr(w_ctor, ".__refclass") <- rc
+    attr(w_ctor, ".__props") <- list(
+        ts = props,
+        widgets = widget_props,
+        ts_raw = ts_props
+    )
+    attr(w_ctor, ".__init") <- initialize
+
     w_ctor
 }
 
 # convert typed properties to ref class fields
 widgetProperties <- function(properties) {
     fields <- lapply(properties, \(x) {
-        if (!inherits(x, "ts_object")) stop("Invalid property")
+        if (inherits(x, "ts_widget")) {
+            return("tsWidget")
+        }
+        if (!inherits(x, "ts_object")) {
+            return(x)
+        }
         t <- gsub("\\(.+", "", gsub("Robj.", "", x$return_type, fixed = TRUE))
         if (t == "dataframe") t <- "data.frame"
         t
@@ -187,10 +184,20 @@ widgetProperties <- function(properties) {
     fields
 }
 
+tsProps <- function(properties) {
+    properties[sapply(properties, \(prop) {
+        inherits(prop, "ts_object")
+    })]
+}
+widgetProps <- function(properties) {
+    properties[sapply(properties, \(prop) {
+        inherits(prop, "ts_widget")
+    })]
+}
+
 # create list of methods
 widgetMethods <- function(methods) {
     methods <- as.list(methods)[-1]
-
 
     lapply(methods, \(x) {
         # TODO: gotta make sure these *are* ts_function
@@ -198,3 +205,194 @@ widgetMethods <- function(methods) {
         eval(x[[2]])
     })
 }
+
+# New helper function (add after widgetMethods)
+create_child_connector <- function(child_instance, parent_instance, property_name, type_info, widget_def) {
+    # Use raw TypeScript type definitions
+    ts_raw <- type_info$ts_raw
+
+    setStateType <- do.call(
+        ts_list,
+        lapply(ts_raw, \(prop) ts_optional(prop))
+    )
+
+    # Generate property methods for THIS child instance (not copied)
+    child_props <- lapply(names(ts_raw), \(name) {
+        prop <- ts_raw[[name]]
+        if (!inherits(prop, "ts_object")) {
+            return(NULL)
+        }
+        list(
+            register = ts_function(
+                function(fn, id) {
+                    id <- child_instance$addPropHandler(
+                        name, function() {
+                            jsfun(fn)(child_instance$get(name))
+                            invisible(NULL)
+                        }
+                    )
+                    id
+                },
+                fn = js_function(x = prop, result = ts_null()),
+                id = ts_character(1),
+                result = ts_character(1L)
+            ),
+            get = ts_function(
+                function() child_instance$get(name),
+                result = prop
+            ),
+            set = ts_function(
+                function(x) {
+                    child_instance$set(name, x)
+                    invisible()
+                },
+                x = prop
+            )
+        )
+    })
+    names(child_props) <- names(ts_raw)
+
+    w_type <- ts_list(
+        properties = do.call(
+            ts_list,
+            lapply(child_props, \(prop) do.call(ts_list, prop))
+        ),
+        children = ts_null()
+    )
+
+    ts_function(
+        function(fn) {
+            child_instance$register(fn = if (is.null(fn)) NULL else fn)
+
+            child_init <- attr(widget_def, ".__init")
+            if (!is.null(child_init)) {
+                has_parent_param <- "parent" %in% names(formals(child_init))
+                if (has_parent_param) {
+                    child_init(child_instance, parent_instance)
+                } else {
+                    child_init(child_instance)
+                }
+            }
+            child_instance$updateState(all = TRUE)
+
+            list(
+                properties = child_props,
+                children = NULL
+            )
+        },
+        fn = ts_optional(js_function(state = setStateType, result = ts_null())),
+        result = w_type
+    )
+}
+
+jsfun <- function(x) {
+    if (!inherits(x, "javascript_function")) {
+        stop("Not a function")
+    }
+    function(...) Rserve::self.oobMessage(list(x, ...))
+}
+
+tsWidget <- setRefClass("tsWidget",
+    properties(
+        fields = list(
+            changed = "character",
+            setState = "ANY",
+            .child_connectors = "ANY",
+            .childrenVersion = "integer",
+            .property_names = "character"
+        )
+    ),
+    methods = list(
+        set = function(prop, value) {
+            if (!any(.self$changed == prop)) {
+                .self$changed <- c(.self$changed, prop)
+            }
+            tryCatch(
+                {
+                    .self[[prop]] <- value
+                },
+                error = function(e) {
+                    stop(e)
+                }
+            )
+        },
+        get = function(prop) .self[[prop]],
+        addPropHandler = function(prop, fn) {
+            .self[[sprintf("%sChanged", prop)]]$connect(fn)
+        },
+        updateState = function(all = FALSE) {
+            if (is.null(.self$setState)) {
+                return()
+            }
+            if (all) {
+                # Use stored property names if available (for child widgets)
+                if (!is.null(.self$.property_names)) {
+                    chg <- .self$.property_names
+                } else {
+                    # Fallback for main widgets - get all fields except internal ones
+                    all_fields <- names(.self$getRefClass()$fields())
+                    chg <- all_fields[!all_fields %in% c("changed", "setState", ".child_connectors", ".childrenVersion")]
+                }
+            } else {
+                chg <- .self$changed
+            }
+            if (length(chg) == 0) {
+                return()
+            }
+
+            x <- lapply(chg, \(p) .self$get(p))
+            names(x) <- chg
+
+            .self$setState(x)
+            .self$changed <- character()
+        },
+        register = function(fn) {
+            if (!is.null(.self$setState)) {
+                warning("Already registered")
+            } else {
+                .self$setState <- jsfun(fn)
+            }
+        },
+        add_child = function(property, widget_def, parent_as = ".parent") {
+            child_rc <- attr(widget_def, ".__refclass")
+            child <- child_rc$new(NULL)
+
+            # Set parent reference
+            if (!is.null(parent_as)) {
+                child[[parent_as]] <- .self
+            }
+
+            # Store child in parent
+            .self[[property]] <- child
+
+            # Get cached type info from widget definition
+            props <- attr(widget_def, ".__props")
+
+            # Store property names in child so updateState knows what to send
+            child$.property_names <- names(props$ts_raw)
+
+            # Create connector function that JS will call
+            child_connector <- create_child_connector(
+                child_instance = child,
+                parent_instance = .self,
+                property_name = property,
+                type_info = props,
+                widget_def = widget_def
+            )
+
+            if (is.null(.self$.child_connectors)) {
+                .self$.child_connectors <- list()
+            }
+
+            # Store connector for JS access
+            .self$.child_connectors[[property]] <- child_connector
+
+            # Mark parent state as changed (for runtime additions)
+            if (!is.null(.self$.childrenVersion)) {
+                .self$set(".childrenVersion", .self$.childrenVersion + 1L)
+            }
+
+            invisible(child) # Return child instance for chaining
+        }
+    )
+)

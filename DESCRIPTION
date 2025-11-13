@@ -1,6 +1,6 @@
 Package: RserveTS
 Title: Deploy Rserve Applications Supporting TypeScript
-Version: 0.3.0
+Version: 0.7.0
 Authors@R: c(
     person("Tom", "Elliott", , "tom@inzight.co.nz",
            role = c("aut", "cre"),
@@ -13,12 +13,13 @@ Description: Tools for writing functions for TypeScript applications using Rserv
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 Depends:
     R (>= 4.1.0),
     objectProperties
 Imports:
+    methods,
     rlang,
     Rserve
 Suggests:
