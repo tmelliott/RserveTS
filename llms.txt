@@ -103,6 +103,9 @@ Writing and compiling functions into Rserve apps.
   : Deploy a ts Rserve app
 - [`createWidget()`](http://tomelliott.co.nz/RserveTS/reference/createWidget.md)
   : Create a TypeScript-Compatible Widget
+- [`tsWidget-class`](http://tomelliott.co.nz/RserveTS/reference/tsWidget-class.md)
+  [`tsWidget`](http://tomelliott.co.nz/RserveTS/reference/tsWidget-class.md)
+  : Base Widget Class
 
 ## Types
 

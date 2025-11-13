@@ -12,6 +12,7 @@ createWidget(
   properties = list(),
   initialize = NULL,
   methods = list(),
+  .env = parent.frame(),
   ...
 )
 ```
@@ -36,6 +37,13 @@ createWidget(
 
   Named list of methods to add to the widget class. Each method should
   be a `ts_function` object
+
+- .env:
+
+  Environment where the ref class should be created. Defaults to
+  [`parent.frame()`](https://rdrr.io/r/base/sys.parent.html) which is
+  the caller's environment (typically unlocked). Can be overridden
+  (e.g., to `.GlobalEnv`) if needed.
 
 - ...:
 
