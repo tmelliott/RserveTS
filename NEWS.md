@@ -1,3 +1,7 @@
+# RserveTS 0.7.0
+
+- Enhanced `createWidget()` function with support for child widgets. Widgets can now contain other widgets as properties, enabling hierarchical widget structures. The function now properly handles child widget initialization and state management.
+
 # RserveTS 0.6.0
 
 - Add new widget functionality to simplify creating widget objects that store state that can be modified by the JS application. The node package [`@tmelliott/react-rserve`](https://www.npmjs.com/package/@tmelliott/react-rserve) contains hooks for working with these widgets.
