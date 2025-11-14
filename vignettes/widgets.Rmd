@@ -1,0 +1,294 @@
+---
+title: "Building Interactive Widgets with RserveTS"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Building Interactive Widgets with RserveTS}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The **RserveTS** package provides a powerful system for creating interactive widgets that maintain synchronized state between R and TypeScript/JavaScript applications. This vignette demonstrates how to build widgets with three example widgets: a plot control widget, a histogram widget, and a barplot widget.
+
+## Overview
+
+Widgets in RserveTS are stateful objects that can be shared between R and TypeScript applications. They provide:
+
+- **Reactive properties**: Properties that automatically synchronize between R and TypeScript
+- **Property handlers**: Callbacks that trigger when properties change
+- **Hierarchical structure**: Widgets can contain child widgets
+- **Type safety**: Full TypeScript type definitions generated from R code
+
+## Example Widgets
+
+The example application demonstrates three interconnected widgets working with the `iris` dataset:
+
+1. **Plot Control Widget** (`CtrlWidget`): A controller widget that coordinates the histogram and barchart widgets
+2. **Histogram Widget** (`HistogramWidget`): Displays a histogram of a selected variable with interactive bar selection
+3. **Barplot Widget** (`BarchartWidget`): Shows species counts that update based on row selection
+
+## Widget Definitions
+
+### Histogram Widget
+
+The histogram widget allows users to select a variable and number of bins, and displays the resulting histogram. It also supports interactive selection of histogram bars to filter data.
+
+```{r, eval = FALSE}
+histogramWidget <- createWidget(
+    "HistogramWidget",
+    properties = list(
+        vars = ts_character(0L),           # Available variable names
+        var = ts_character(1L),             # Currently selected variable
+        nBin = ts_integer(1L),              # Number of bins
+        counts = ts_numeric(0L),            # Histogram counts
+        selectedBar = ts_integer(1L),      # Currently selected bar index
+        controller = "ANY"                 # Parent controller widget
+    ),
+    initialize = function(widget, parent = NULL) {
+        # Assign parent to controller property
+        if (!is.null(parent)) {
+            widget$controller <- parent
+        }
+
+        # Initialize available variables (excluding Species)
+        allvars <- names(iris)
+        widget$set("vars", allvars[allvars != "Species"])
+        widget$set("var", "")
+        widget$set("nBin", 10L)
+        widget$set("selectedBar", 0L)
+        widget$set("counts", numeric(0))
+
+        # Initial update
+        widget$update()
+
+        # Set up property handlers for reactive updates
+        widget$addPropHandler("var", function() widget$update())
+        widget$addPropHandler("nBin", function() widget$update())
+
+        # Handle bar selection to filter data
+        if (!is.null(widget$controller)) {
+            widget$addPropHandler("selectedBar", function() {
+                x <- iris[[widget$var]]
+                if (widget$selectedBar < 0) {
+                    widget$controller$set("selectedRows", seq_along(x))
+                    return()
+                }
+                br <- hist(x,
+                    seq(min(x), max(x), length.out = widget$nBin + 1L),
+                    plot = FALSE
+                )$breaks
+                i <- widget$selectedBar + 1
+                xx <- which(x >= br[i] & x < br[i + 1])
+                widget$controller$set("selectedRows", xx)
+            })
+        }
+    },
+    methods = list(
+        update = ts_function(
+            function() {
+                if (.self$var == "") {
+                    return()
+                }
+                x <- iris[[.self$var]]
+                h <- hist(x,
+                    seq(min(x), max(x), length.out = .self$nBin + 1L),
+                    plot = FALSE
+                )
+
+                # Update the front end
+                .self$set("counts", as.numeric(h$counts))
+
+                # Push changes through to UI
+                .self$updateState()
+            }
+        )
+    ),
+    export = TRUE
+)
+```
+
+**Key features:**
+
+- Properties are defined using `ts_*()` functions to specify TypeScript types
+- The `initialize` function sets up initial state and property handlers
+- Property handlers (`addPropHandler`) trigger callbacks when properties change
+- The `update()` method recalculates the histogram and synchronizes state
+- `updateState()` pushes changes to the TypeScript frontend
+
+### Barplot Widget
+
+The barplot widget displays species counts and updates based on row filtering from the controller.
+
+```{r, eval = FALSE}
+barchartWidget <- createWidget(
+    "BarchartWidget",
+    properties = list(
+        data = ts_dataframe(label = ts_character(0L), count = ts_integer(0L)),
+        subset = ts_integer()  # Row indices to include
+    ),
+    initialize = function(widget) {
+        widget$set("subset", seq_len(nrow(iris)))
+        widget$update()
+        widget$addPropHandler("subset", function() widget$update())
+    },
+    methods = list(
+        update = ts_function(
+            function() {
+                tbl <- xtabs(~Species, data = iris[.self$subset, ]) |>
+                    as.data.frame() |>
+                    setNames(c("label", "count"))
+
+                .self$set("data", tbl)
+                .self$updateState()
+            }
+        )
+    ),
+    export = TRUE
+)
+```
+
+**Key features:**
+
+- Uses `ts_dataframe()` to define structured data with typed columns
+- Automatically updates when the `subset` property changes
+- The `update()` method recalculates counts for the filtered data
+
+### Plot Control Widget
+
+The control widget coordinates the histogram and barplot widgets, managing row selection.
+
+```{r, eval = FALSE}
+ctrlWidget <- createWidget(
+    "CtrlWidget",
+    properties = list(
+        selectedRows = ts_integer(0L),      # Selected row indices
+        histogram = histogramWidget,        # Child histogram widget
+        barchart = barchartWidget           # Child barplot widget
+    ),
+    initialize = function(widget) {
+        widget$set("selectedBin", 0)
+
+        # When rows are selected, update the barplot
+        widget$addPropHandler("selectedRows", function() {
+            widget$barchart$set("subset", widget$selectedRows)
+        })
+    },
+    methods = list(
+        histogram = ts_function(function() {
+        })
+    ),
+    export = TRUE
+)
+```
+
+**Key features:**
+
+- Demonstrates hierarchical widgets: child widgets are included as properties
+- The histogram widget is initialized with the controller as its parent
+- Property handlers coordinate between widgets
+
+## Compiling and Deploying
+
+Once you've defined your widgets, you need to:
+
+1. **Compile** the R code to generate TypeScript schemas
+2. **Deploy** the Rserve server to run the widgets
+
+### Compiling
+
+Use `ts_compile()` to generate both the TypeScript schema and the Rserve deployment script:
+
+```{r, eval = FALSE}
+# Compile widgets.R to generate:
+# - widgets.rserve.ts (TypeScript schema)
+# - widgets.rserve.R (Rserve deployment script)
+ts_compile("widgets.R", filename = "widgets.rserve")
+```
+
+The `ts_compile()` function:
+
+- Reads your R file and identifies exported widgets (those with `export = TRUE`)
+- Generates TypeScript type definitions using Zod schemas
+- Creates an Rserve deployment script using `ts_deploy()`
+
+### Deploying
+
+The generated `widgets.rserve.R` file contains everything needed to run the Rserve server. You can deploy it using:
+
+```{r, eval = FALSE}
+# Option 1: Generate the deployment script and run manually
+ts_compile("widgets.R", filename = "widgets.rserve")
+Rscript widgets.rserve.R
+
+# Option 2: Use ts_deploy() directly (generates and optionally runs)
+ts_deploy("widgets.R", file = "widgets.rserve.R", run = "no")
+Rscript widgets.rserve.R
+```
+
+The deployment script:
+
+- Loads required libraries (`Rserve` and `RserveTS`)
+- Sources your widget definitions
+- Exports widgets via the `ts_app()` function
+- Starts an Rserve instance on port 6311 (configurable) with WebSocket support
+
+### Complete Example
+
+Here's a complete workflow:
+
+```{r, eval = FALSE}
+library(RserveTS)
+
+# 1. Define your widgets in widgets.R
+# (See widget definitions above)
+
+# 2. Compile to generate TypeScript and Rserve files
+ts_compile("widgets.R", filename = "widgets.rserve")
+
+# 3. Deploy the Rserve server
+# In a terminal:
+# Rscript widgets.rserve.R
+```
+
+## Creating a React Application
+
+To create a React application that uses these widgets, you'll need to:
+
+1. Set up a React project (e.g., using Vite)
+2. Install dependencies: `rserve-ts`, `@tmelliott/react-rserve`, and `zod`
+3. Import the generated TypeScript schema
+4. Use the `useRserve` and `useWidget` hooks from `@tmelliott/react-rserve`
+
+You can see a live demo of these widgets working together at:
+
+**https://rserve-widgets-demo.up.railway.app/**
+
+The demo showcases all three widgets:
+
+- Select a variable and adjust bins in the histogram
+- Click histogram bars to filter the data
+- See the barplot update automatically based on the selection
+
+## Summary
+
+Widgets in RserveTS provide a powerful way to build interactive applications with synchronized state between R and TypeScript.
+
+Key concepts:
+
+- **Properties**: Define widget state with TypeScript types
+- **Initialize**: Set up initial state and property handlers
+- **Methods**: Define functions that can be called from TypeScript
+- **Property Handlers**: React to property changes automatically
+- **Child Widgets**: Build hierarchical widget structures
+- **Compilation**: Generate TypeScript schemas with `ts_compile()`
+- **Deployment**: Run Rserve server with `Rscript` on the generated `.rserve.R` file
+
+For more details on creating a React application that uses these widgets, including example code and integration patterns, see the documentation for the `@tmelliott/react-rserve` package.
+
+> **Note**: A detailed section on creating a React application with these widgets will be added in a future update to this vignette.
