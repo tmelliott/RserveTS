@@ -215,7 +215,19 @@ widgetMethods <- function(methods) {
     })
 }
 
-# New helper function (add after widgetMethods)
+#' Create Child Widget Connector
+#'
+#' Internal helper function to create connector functions for child widgets.
+#' Used by the \code{add_child} method of \code{tsWidget}.
+#'
+#' @param child_instance The child widget instance
+#' @param parent_instance The parent widget instance
+#' @param property_name Name of the property containing the child
+#' @param type_info Type information from the widget definition
+#' @param widget_def The widget definition object
+#' @return A TypeScript function constructor for the child widget
+#' @keywords internal
+#' @export
 create_child_connector <- function(child_instance, parent_instance, property_name, type_info, widget_def) {
     # Use raw TypeScript type definitions
     ts_raw <- type_info$ts_raw
@@ -294,6 +306,15 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
     )
 }
 
+#' Convert JavaScript Function to R Function
+#'
+#' Converts a JavaScript function object to an R function that can be called
+#' to send messages via Rserve's out-of-band messaging.
+#'
+#' @param x A JavaScript function object
+#' @return An R function that sends messages via Rserve
+#' @keywords internal
+#' @export
 jsfun <- function(x) {
     if (!inherits(x, "javascript_function")) {
         stop("Not a function")
