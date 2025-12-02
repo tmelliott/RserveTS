@@ -360,7 +360,7 @@ ts_factor <- function(levels = NULL) {
     ts_object(
         ifelse(is.null(levels),
             ts_array("z.string()"),
-            sprintf("(%s)[]", paste(levels, collapse = " | "))
+            sprintf("z.enum([%s]).array()", paste(paste("\"", levels, "\"", sep = ""), collapse = ", "))
         ),
         if (is.null(levels)) {
             "Robj.factor()"
