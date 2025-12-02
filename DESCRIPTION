@@ -1,6 +1,6 @@
 Package: RserveTS
 Title: Deploy Rserve Applications Supporting TypeScript
-Version: 0.7.1
+Version: 0.7.2
 Authors@R: c(
     person("Tom", "Elliott", , "tom@inzight.co.nz",
            role = c("aut", "cre"),
