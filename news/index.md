@@ -1,5 +1,9 @@
 # Changelog
 
+## RserveTS 0.7.2
+
+- Fix bug in JS type for factors.
+
 ## RserveTS 0.7.0
 
 - Enhanced
