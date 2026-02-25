@@ -144,6 +144,13 @@ createWidget <- function(
             widget <- rc$new(
                 setState = if (is.null(fn)) NULL else jsfun(fn)
             )
+            # Apply property defaults before initialize
+            for (prop_name in names(ts_props)) {
+                default_val <- ts_props[[prop_name]]$default
+                if (!is.null(default_val)) {
+                    widget$set(prop_name, default_val)
+                }
+            }
             if (!is.null(initialize)) {
                 initialize(widget)
             }
@@ -284,6 +291,14 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
     ts_function(
         function(fn) {
             child_instance$register(fn = if (is.null(fn)) NULL else fn)
+
+            # Apply property defaults before initialize
+            for (prop_name in names(ts_raw)) {
+                default_val <- ts_raw[[prop_name]]$default
+                if (!is.null(default_val)) {
+                    child_instance$set(prop_name, default_val)
+                }
+            }
 
             child_init <- attr(widget_def, ".__init")
             if (!is.null(child_init)) {

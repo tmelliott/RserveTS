@@ -121,7 +121,7 @@ check_type.ts_function <- function(type, x) {
 #' @md
 #' @examples
 #' x <- ts_union(ts_numeric(1), ts_character(1))
-ts_union <- function(...) {
+ts_union <- function(..., default = NULL) {
     types <- list(...)
 
     ts_object(
@@ -134,6 +134,7 @@ ts_union <- function(...) {
             paste(sapply(types, \(x) x$return_type), collapse = ", ")
         ),
         # paste(sapply(types, \(x) x$return_type), collapse = " | "),
+        default = default,
         check = function(x = NULL) {
             any_pass <- FALSE
             for (t in types) {
@@ -230,10 +231,11 @@ n_type_fun <- function(n, type) {
 #' # this will fail
 #' x$check(5)
 #' }
-ts_logical <- function(n = -1L) {
+ts_logical <- function(n = -1L, default = NULL) {
     ts_object(
         n_type(n, "z.boolean()"),
         n_type_fun(n, "Robj.logical"),
+        default = default,
         check = function(x) {
             if (!is.logical(x)) stop("Expected a boolean")
             if (n > 0 && length(x) != n) {
@@ -261,10 +263,11 @@ ts_logical <- function(n = -1L) {
 #' # this will fail
 #' x$check(1:10)
 #' }
-ts_integer <- function(n = -1L) {
+ts_integer <- function(n = -1L, default = NULL) {
     ts_object(
         n_type(n, "z.number()", "z.instanceof(Int32Array)"),
         n_type_fun(n, "Robj.integer"),
+        default = default,
         check = function(x) {
             if (!is.numeric(x)) stop("Expected a number")
             if (!all.equal(x, as.integer(x))) {
@@ -297,10 +300,11 @@ ts_integer <- function(n = -1L) {
 #' x$check(c(1, 2, 3))
 #' x$check("a")
 #' }
-ts_numeric <- function(n = -1L) {
+ts_numeric <- function(n = -1L, default = NULL) {
     ts_object(
         n_type(n, "z.number()"),
         n_type_fun(n, "Robj.numeric"),
+        default = default,
         check = function(x) {
             if (!is.numeric(x)) stop("Expected a number", call. = FALSE)
             if (n > 0 && length(x) != n) {
@@ -322,10 +326,11 @@ ts_numeric <- function(n = -1L) {
 #' @examples
 #' x <- ts_character(1)
 #' x$check("a")
-ts_character <- function(n = -1L) {
+ts_character <- function(n = -1L, default = NULL) {
     ts_object(
         n_type(n, "z.string()"),
         n_type_fun(n, "Robj.character"),
+        default = default,
         check = function(x) {
             if (!is.character(x)) stop("Expected a string")
             if (n > 0 && length(x) != n) stop("Expected a string of length ", n)
@@ -356,7 +361,7 @@ vector_as_ts_array <- function(x) {
 #' x$check("a")
 #' x$check(factor("c", levels = c("a", "b", "c")))
 #' }
-ts_factor <- function(levels = NULL) {
+ts_factor <- function(levels = NULL, default = NULL) {
     ts_object(
         ifelse(is.null(levels),
             ts_array("z.string()"),
@@ -367,6 +372,7 @@ ts_factor <- function(levels = NULL) {
         } else {
             sprintf("Robj.factor(%s)", vector_as_ts_array(levels))
         },
+        default = default,
         check = function(x) {
             if (!is.factor(x)) stop("Expected a factor")
             if (!is.null(levels) && !identical(levels, levels(x))) {
@@ -403,7 +409,7 @@ ts_factor <- function(levels = NULL) {
 #' @examples
 #' x <- ts_list(a = ts_integer(1), b = ts_character(1))
 #' x$check(list(a = 1L, b = "a"))
-ts_list <- function(...) {
+ts_list <- function(..., default = NULL) {
     values <- list(...)
 
     type <- "z.union([z.object({}), z.array(z.any())])"
@@ -437,6 +443,7 @@ ts_list <- function(...) {
         ifelse(type_fn == "", "Robj.list()",
             sprintf("Robj.list(%s)", type_fn)
         ),
+        default = default,
         check = function(x) {
             if (!is.list(x)) stop("Expected a list")
             if (!is.null(values)) {
@@ -471,7 +478,7 @@ ts_list <- function(...) {
 #' @examples
 #' x <- ts_dataframe(a = ts_integer(1), b = ts_character(1))
 #' x$check(data.frame(a = 1L, b = "a"))
-ts_dataframe <- function(...) {
+ts_dataframe <- function(..., default = NULL) {
     values <- list(...)
     type <- "z.record(z.string(), z.any())"
     type_fn <- ""
@@ -493,6 +500,7 @@ ts_dataframe <- function(...) {
     ts_object(
         type,
         sprintf("Robj.dataframe(%s)", type_fn),
+        default = default,
         check = function(x) {
             if (!is.data.frame(x)) stop("Expected a data frame")
             x
