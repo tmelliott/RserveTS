@@ -57,6 +57,7 @@ createWidget <- function(
     properties = list(),
     initialize = NULL,
     methods = list(),
+    auto_flush = TRUE,
     .env = parent.frame(),
     ...) {
     # setRefClass with contains tries to register class metadata in the base class's
@@ -70,12 +71,13 @@ createWidget <- function(
         ),
         contains = "tsWidget",
         methods = c(
-            widgetMethods(substitute(methods)),
+            widgetMethods(substitute(methods), auto_flush = auto_flush),
             list(
                 initialize = function(setState) {
                     .self$setState <- setState
                     .self$.child_connectors <- NULL
                     .self$.childrenVersion <- 0L
+                    .self$.call_depth <- 0L
                 }
             )
         ),
@@ -211,14 +213,28 @@ widgetProps <- function(properties) {
     })]
 }
 
+# Wrap a function body with depth-counting auto-flush.
+# Only flushes updateState() when the outermost method/handler returns.
+wrap_auto_flush <- function(fn) {
+    original_body <- body(fn)
+    body(fn) <- bquote({
+        .self$.call_depth <- .self$.call_depth + 1L
+        on.exit({
+            .self$.call_depth <- .self$.call_depth - 1L
+            if (.self$.call_depth == 0L) .self$updateState()
+        })
+        .(original_body)
+    })
+    fn
+}
+
 # create list of methods
-widgetMethods <- function(methods) {
+widgetMethods <- function(methods, auto_flush = TRUE) {
     methods <- as.list(methods)[-1]
 
     lapply(methods, \(x) {
-        # TODO: gotta make sure these *are* ts_function
-        # print(x)
-        eval(x[[2]])
+        fn <- eval(x[[2]])
+        if (auto_flush) wrap_auto_flush(fn) else fn
     })
 }
 
@@ -351,7 +367,8 @@ tsWidget <- setRefClass("tsWidget",
             setState = "ANY",
             .child_connectors = "ANY",
             .childrenVersion = "integer",
-            .property_names = "character"
+            .property_names = "character",
+            .call_depth = "integer"
         )
     ),
     methods = list(
@@ -369,8 +386,21 @@ tsWidget <- setRefClass("tsWidget",
             )
         },
         get = function(prop) .self[[prop]],
-        addPropHandler = function(prop, fn) {
-            .self[[sprintf("%sChanged", prop)]]$connect(fn)
+        addPropHandler = function(prop, fn, auto_flush = TRUE) {
+            if (auto_flush) {
+                self <- .self
+                wrapped <- function() {
+                    self$.call_depth <- self$.call_depth + 1L
+                    on.exit({
+                        self$.call_depth <- self$.call_depth - 1L
+                        if (self$.call_depth == 0L) self$updateState()
+                    })
+                    fn()
+                }
+                .self[[sprintf("%sChanged", prop)]]$connect(wrapped)
+            } else {
+                .self[[sprintf("%sChanged", prop)]]$connect(fn)
+            }
         },
         updateState = function(all = FALSE) {
             if (is.null(.self$setState)) {
@@ -383,7 +413,7 @@ tsWidget <- setRefClass("tsWidget",
                 } else {
                     # Fallback for main widgets - get all fields except internal ones
                     all_fields <- names(.self$getRefClass()$fields())
-                    chg <- all_fields[!all_fields %in% c("changed", "setState", ".child_connectors", ".childrenVersion")]
+                    chg <- all_fields[!all_fields %in% c("changed", "setState", ".child_connectors", ".childrenVersion", ".call_depth")]
                 }
             } else {
                 chg <- .self$changed
