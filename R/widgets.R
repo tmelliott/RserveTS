@@ -129,12 +129,18 @@ createWidget <- function(
     })
     names(props) <- names(ts_props)
 
+    method_defs <- method_info$exported_defs
+
     w_type <- ts_list(
         properties = do.call(
             ts_list,
             lapply(props, \(prop) do.call(ts_list, prop))
         ),
-        children = do.call(ts_list, widget_props)
+        children = do.call(ts_list, widget_props),
+        methods = if (length(method_defs) > 0)
+            do.call(ts_list, method_defs)
+        else
+            ts_list()
     )
 
     setStateType <- do.call(
@@ -196,7 +202,8 @@ createWidget <- function(
             list(
                 properties =
                     lapply(props, \(prop) lapply(prop, \(method) method$copy())),
-                children = widget$.child_connectors
+                children = widget$.child_connectors,
+                methods = build_method_ocaps(widget, method_defs)
             )
         },
         fn = ts_optional(js_function(state = setStateType, result = ts_null())),
@@ -214,7 +221,8 @@ createWidget <- function(
     attr(w_ctor, ".__init") <- initialize
     attr(w_ctor, ".__methods") <- list(
         exported = method_info$exported,
-        observers = method_info$observers
+        observers = method_info$observers,
+        exported_defs = method_info$exported_defs
     )
 
     w_ctor
@@ -304,6 +312,7 @@ widgetMethods <- function(methods, auto_flush = TRUE) {
     method_fns <- list()
     observers <- list()
     exported <- character()
+    exported_defs <- list()
 
     for (nm in names(methods)) {
         x <- methods[[nm]]
@@ -319,6 +328,7 @@ widgetMethods <- function(methods, auto_flush = TRUE) {
         if (is.call(x) && identical(x[[1]], quote(ts_function))) {
             fn <- eval(x[[2]])
             exported <- c(exported, nm)
+            exported_defs[[nm]] <- eval(x)
         } else {
             fn <- eval(x)
         }
@@ -330,7 +340,42 @@ widgetMethods <- function(methods, auto_flush = TRUE) {
         }
     }
 
-    list(methods = method_fns, observers = observers, exported = exported)
+    list(methods = method_fns, observers = observers, exported = exported,
+        exported_defs = exported_defs)
+}
+
+# Build ocap wrappers for exported methods on a widget instance.
+# Each wrapper calls instance$method(args...) with proper type signatures.
+build_method_ocaps <- function(instance, method_defs) {
+    if (length(method_defs) == 0) return(list())
+    method_ocaps <- list()
+    for (nm in names(method_defs)) {
+        local({
+            mn <- nm
+            def <- method_defs[[mn]]
+            arg_names <- names(def$args)
+
+            # Build: function(arg1, ...) instance$method(arg1, ...)
+            method_call <- as.call(c(
+                list(call("$", quote(instance), as.name(mn))),
+                lapply(arg_names, as.name)
+            ))
+            wrapper <- function() NULL
+            if (length(arg_names) > 0) {
+                formals(wrapper) <- as.pairlist(setNames(
+                    rep(list(quote(expr = )), length(arg_names)),
+                    arg_names
+                ))
+            }
+            body(wrapper) <- method_call
+
+            method_ocaps[[mn]] <<- do.call(
+                ts_function,
+                c(list(wrapper), def$args, list(result = def$result))
+            )
+        })
+    }
+    method_ocaps
 }
 
 #' Create Child Widget Connector
@@ -349,6 +394,11 @@ widgetMethods <- function(methods, auto_flush = TRUE) {
 create_child_connector <- function(child_instance, parent_instance, property_name, type_info, widget_def) {
     # Use raw TypeScript type definitions
     ts_raw <- type_info$ts_raw
+    child_method_meta <- attr(widget_def, ".__methods")
+    child_method_defs <- if (!is.null(child_method_meta$exported_defs))
+        child_method_meta$exported_defs
+    else
+        list()
 
     setStateType <- do.call(
         ts_list,
@@ -396,7 +446,11 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
             ts_list,
             lapply(child_props, \(prop) do.call(ts_list, prop))
         ),
-        children = ts_null()
+        children = ts_null(),
+        methods = if (length(child_method_defs) > 0)
+            do.call(ts_list, child_method_defs)
+        else
+            ts_list()
     )
 
     ts_function(
@@ -452,7 +506,8 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
 
             list(
                 properties = child_props,
-                children = NULL
+                children = NULL,
+                methods = build_method_ocaps(child_instance, child_method_defs)
             )
         },
         fn = ts_optional(js_function(state = setStateType, result = ts_null())),
