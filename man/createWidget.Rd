@@ -26,6 +26,10 @@ instance and sets up initial state}
 \item{methods}{Named list of methods to add to the widget class. Each method
 should be a \code{ts_function} object}
 
+\item{auto_flush}{Logical, if \code{TRUE} (default), widget methods automatically
+flush state changes to TypeScript after execution. If \code{FALSE}, manual
+\code{updateState()} calls are required.}
+
 \item{.env}{Environment where the ref class should be created. Defaults to
 \code{parent.frame()} which is the caller's environment (typically unlocked).
 Can be overridden (e.g., to \code{.GlobalEnv}) if needed.}

@@ -13,6 +13,9 @@
 #'   instance and sets up initial state
 #' @param methods Named list of methods to add to the widget class. Each method
 #'   should be a `ts_function` object
+#' @param auto_flush Logical, if `TRUE` (default), widget methods automatically
+#'   flush state changes to TypeScript after execution. If `FALSE`, manual
+#'   `updateState()` calls are required.
 #' @param .env Environment where the ref class should be created. Defaults to
 #'   `parent.frame()` which is the caller's environment (typically unlocked).
 #'   Can be overridden (e.g., to `.GlobalEnv`) if needed.
@@ -37,6 +40,7 @@
 #'   \item \code{set(x)}: Set the property value
 #' }
 #'
+#' @import objectSignals
 #' @importFrom methods setRefClass new
 #' @importFrom objectProperties properties
 #' @export
@@ -137,10 +141,11 @@ createWidget <- function(
             lapply(props, \(prop) do.call(ts_list, prop))
         ),
         children = do.call(ts_list, widget_props),
-        methods = if (length(method_defs) > 0)
+        methods = if (length(method_defs) > 0) {
             do.call(ts_list, method_defs)
-        else
+        } else {
             ts_list()
+        }
     )
 
     setStateType <- do.call(
@@ -185,7 +190,8 @@ createWidget <- function(
                     ))
                     for (prop in method_info$observers[[nm]]) {
                         widget$addPropHandler(prop, handler_fn,
-                            auto_flush = FALSE)
+                            auto_flush = FALSE
+                        )
                     }
                 })
             }
@@ -340,14 +346,18 @@ widgetMethods <- function(methods, auto_flush = TRUE) {
         }
     }
 
-    list(methods = method_fns, observers = observers, exported = exported,
-        exported_defs = exported_defs)
+    list(
+        methods = method_fns, observers = observers, exported = exported,
+        exported_defs = exported_defs
+    )
 }
 
 # Build ocap wrappers for exported methods on a widget instance.
 # Each wrapper calls instance$method(args...) with proper type signatures.
 build_method_ocaps <- function(instance, method_defs) {
-    if (length(method_defs) == 0) return(list())
+    if (length(method_defs) == 0) {
+        return(list())
+    }
     method_ocaps <- list()
     for (nm in names(method_defs)) {
         local({
@@ -362,7 +372,7 @@ build_method_ocaps <- function(instance, method_defs) {
             ))
             wrapper <- function() NULL
             if (length(arg_names) > 0) {
-                formals(wrapper) <- as.pairlist(setNames(
+                formals(wrapper) <- as.pairlist(stats::setNames(
                     rep(list(quote(expr = )), length(arg_names)),
                     arg_names
                 ))
@@ -395,10 +405,11 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
     # Use raw TypeScript type definitions
     ts_raw <- type_info$ts_raw
     child_method_meta <- attr(widget_def, ".__methods")
-    child_method_defs <- if (!is.null(child_method_meta$exported_defs))
+    child_method_defs <- if (!is.null(child_method_meta$exported_defs)) {
         child_method_meta$exported_defs
-    else
+    } else {
         list()
+    }
 
     setStateType <- do.call(
         ts_list,
@@ -447,10 +458,11 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
             lapply(child_props, \(prop) do.call(ts_list, prop))
         ),
         children = ts_null(),
-        methods = if (length(child_method_defs) > 0)
+        methods = if (length(child_method_defs) > 0) {
             do.call(ts_list, child_method_defs)
-        else
+        } else {
             ts_list()
+        }
     )
 
     ts_function(
@@ -487,7 +499,8 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
                         ))
                         for (prop in method_meta$observers[[nm]]) {
                             child_instance$addPropHandler(prop, handler_fn,
-                                auto_flush = FALSE)
+                                auto_flush = FALSE
+                            )
                         }
                     })
                 }

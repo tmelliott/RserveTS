@@ -8,6 +8,8 @@ ts_character(n = -1L, default = NULL)
 }
 \arguments{
 \item{n}{The length of the string vector. If \code{n = 1} then a single string is expected. If \code{n = 0} then any length is expected. If \code{n > 1} then a string vector of length \code{n} is expected.}
+
+\item{default}{Default value for the type (optional).}
 }
 \value{
 A ts object that accepts strings or string vectors of length \code{n}.

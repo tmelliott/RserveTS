@@ -8,6 +8,8 @@ ts_list(..., default = NULL)
 }
 \arguments{
 \item{...}{A list of types, named or unnamed.}
+
+\item{default}{Default value for the type (optional).}
 }
 \value{
 A ts object that accepts lists with the specified types.

@@ -8,6 +8,8 @@ ts_integer(n = -1L, default = NULL)
 }
 \arguments{
 \item{n}{The length of the integer vector. If \code{n = 1} then a single integer is expected. If \code{n = 0} then any length is expected. If \code{n > 1} then an integer vector of length \code{n} is expected.}
+
+\item{default}{Default value for the type (optional).}
 }
 \value{
 A ts object that accepts integer scalars or vectors of length \code{n}.

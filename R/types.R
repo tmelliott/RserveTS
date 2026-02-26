@@ -117,6 +117,7 @@ check_type.ts_function <- function(type, x) {
 #'
 #' Create a union of types. Currently this only accepts schemas as strings.
 #' @param ... Type objects to merge
+#' @param default Default value for the type (optional).
 #' @export
 #' @md
 #' @examples
@@ -220,6 +221,7 @@ n_type_fun <- function(n, type) {
 #' or a typed Uint8Array (`z.instanceof(Uint8Array)`).
 #'
 #' @param n The length of the boolean vector. If `n = 1` then a single boolean is expected. If `n = 0` then any length is expected. If `n > 1` then a boolean vector of length `n` is expected.
+#' @param default Default value for the type (optional).
 #' @return A ts object that accepts logical scalars or vectors of length `n`.
 #' @export
 #' @md
@@ -252,6 +254,7 @@ ts_logical <- function(n = -1L, default = NULL) {
 #' or a Int32Array (`z.instanceof(Int32Array)`).
 #'
 #' @param n The length of the integer vector. If `n = 1` then a single integer is expected. If `n = 0` then any length is expected. If `n > 1` then an integer vector of length `n` is expected.
+#' @param default Default value for the type (optional).
 #' @return A ts object that accepts integer scalars or vectors of length `n`.
 #' @export
 #' @md
@@ -288,6 +291,7 @@ ts_integer <- function(n = -1L, default = NULL) {
 #' or a Float64Array (`z.instanceof(Float64Array)`).
 #'
 #' @param n The length of the numeric vector. If `n = 1` then a single number is expected. If `n = 0` then any length is expected. If `n > 1` then a numeric vector of length `n` is expected.
+#' @param default Default value for the type (optional).
 #' @return A ts object that accepts numeric scalars or vectors of length `n`.
 #' @export
 #' @md
@@ -320,6 +324,7 @@ ts_numeric <- function(n = -1L, default = NULL) {
 #' Strings are represented in Zod schema as either a string (`z.string()`),
 #' or a string array (`z.array(z.string())`).
 #' @param n The length of the string vector. If `n = 1` then a single string is expected. If `n = 0` then any length is expected. If `n > 1` then a string vector of length `n` is expected.
+#' @param default Default value for the type (optional).
 #' @return A ts object that accepts strings or string vectors of length `n`.
 #' @export
 #' @md
@@ -348,6 +353,7 @@ vector_as_ts_array <- function(x) {
 #' Factors are integers with labels. On the JS side, these are *always* represented as a string array (even if only one value - yay!).
 #'
 #' @param levels A character vector of levels (optional).
+#' @param default Default value for the type (optional).
 #' @return A ts object that accepts factors with the specified levels.
 #'
 #' @export
@@ -401,6 +407,7 @@ ts_factor <- function(levels = NULL, default = NULL) {
 #' 5. Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an Array<type> in JS.
 #'
 #' @param ... A list of types, named or unnamed.
+#' @param default Default value for the type (optional).
 #' @return A ts object that accepts lists with the specified types.
 #'
 #' @export
@@ -470,6 +477,7 @@ ts_list <- function(..., default = NULL) {
 #' This is essentially a list, but the elements must have names and are all the same length.
 #'
 #' @param ... Named types.
+#' @param default Default value for the type (optional).
 #' @return A ts object that accepts data frames with the specified types.
 #'
 #' @export

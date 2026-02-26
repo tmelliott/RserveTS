@@ -8,6 +8,8 @@ ts_factor(levels = NULL, default = NULL)
 }
 \arguments{
 \item{levels}{A character vector of levels (optional).}
+
+\item{default}{Default value for the type (optional).}
 }
 \value{
 A ts object that accepts factors with the specified levels.
