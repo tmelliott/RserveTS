@@ -6,7 +6,7 @@ or a Float64Array (`z.instanceof(Float64Array)`).
 ## Usage
 
 ``` r
-ts_numeric(n = -1L)
+ts_numeric(n = -1L, default = NULL)
 ```
 
 ## Arguments
@@ -16,6 +16,10 @@ ts_numeric(n = -1L)
   The length of the numeric vector. If `n = 1` then a single number is
   expected. If `n = 0` then any length is expected. If `n > 1` then a
   numeric vector of length `n` is expected.
+
+- default:
+
+  Default value for the type (optional).
 
 ## Value
 

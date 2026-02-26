@@ -5,7 +5,7 @@ Create a union of types. Currently this only accepts schemas as strings.
 ## Usage
 
 ``` r
-ts_union(...)
+ts_union(..., default = NULL)
 ```
 
 ## Arguments
@@ -13,6 +13,10 @@ ts_union(...)
 - ...:
 
   Type objects to merge
+
+- default:
+
+  Default value for the type (optional).
 
 ## Examples
 

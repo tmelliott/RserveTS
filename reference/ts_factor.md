@@ -6,7 +6,7 @@ represented as a string array (even if only one value - yay!).
 ## Usage
 
 ``` r
-ts_factor(levels = NULL)
+ts_factor(levels = NULL, default = NULL)
 ```
 
 ## Arguments
@@ -14,6 +14,10 @@ ts_factor(levels = NULL)
 - levels:
 
   A character vector of levels (optional).
+
+- default:
+
+  Default value for the type (optional).
 
 ## Value
 

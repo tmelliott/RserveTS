@@ -150,6 +150,8 @@ Type helper functions for defining argument and return types.
   Self object
 - [`js_function()`](http://tomelliott.co.nz/RserveTS/reference/js_function.md)
   : JS functions callable from R
+- [`observer()`](http://tomelliott.co.nz/RserveTS/reference/observer.md)
+  : Create an Observer for Reactive Methods
 
 # Articles
 

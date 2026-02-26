@@ -5,7 +5,7 @@ A list is a vector of other robjects, which may or may not be named.
 ## Usage
 
 ``` r
-ts_list(...)
+ts_list(..., default = NULL)
 ```
 
 ## Arguments
@@ -13,6 +13,10 @@ ts_list(...)
 - ...:
 
   A list of types, named or unnamed.
+
+- default:
+
+  Default value for the type (optional).
 
 ## Value
 

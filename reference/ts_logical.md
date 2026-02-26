@@ -6,7 +6,7 @@ Booleans are represented in Zod schema as either a boolean
 ## Usage
 
 ``` r
-ts_logical(n = -1L)
+ts_logical(n = -1L, default = NULL)
 ```
 
 ## Arguments
@@ -16,6 +16,10 @@ ts_logical(n = -1L)
   The length of the boolean vector. If `n = 1` then a single boolean is
   expected. If `n = 0` then any length is expected. If `n > 1` then a
   boolean vector of length `n` is expected.
+
+- default:
+
+  Default value for the type (optional).
 
 ## Value
 

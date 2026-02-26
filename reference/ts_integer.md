@@ -6,7 +6,7 @@ Integers are represented in Zod schema as either a number
 ## Usage
 
 ``` r
-ts_integer(n = -1L)
+ts_integer(n = -1L, default = NULL)
 ```
 
 ## Arguments
@@ -16,6 +16,10 @@ ts_integer(n = -1L)
   The length of the integer vector. If `n = 1` then a single integer is
   expected. If `n = 0` then any length is expected. If `n > 1` then an
   integer vector of length `n` is expected.
+
+- default:
+
+  Default value for the type (optional).
 
 ## Value
 

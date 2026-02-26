@@ -12,6 +12,7 @@ createWidget(
   properties = list(),
   initialize = NULL,
   methods = list(),
+  auto_flush = TRUE,
   .env = parent.frame(),
   ...
 )
@@ -37,6 +38,12 @@ createWidget(
 
   Named list of methods to add to the widget class. Each method should
   be a `ts_function` object
+
+- auto_flush:
+
+  Logical, if `TRUE` (default), widget methods automatically flush state
+  changes to TypeScript after execution. If `FALSE`, manual
+  `updateState()` calls are required.
 
 - .env:
 

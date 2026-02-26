@@ -11,7 +11,7 @@ TypeScript, with automatic state synchronization."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">RserveTS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,6 +54,7 @@ TypeScript, with automatic state synchronization.</p>
 <span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  initialize <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  methods <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  auto_flush <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  .env <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sys.parent.html" class="external-link">parent.frame</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -80,6 +81,12 @@ instance and sets up initial state</p></dd>
 <dt id="arg-methods">methods<a class="anchor" aria-label="anchor" href="#arg-methods"></a></dt>
 <dd><p>Named list of methods to add to the widget class. Each method
 should be a <code>ts_function</code> object</p></dd>
+
+
+<dt id="arg-auto-flush">auto_flush<a class="anchor" aria-label="anchor" href="#arg-auto-flush"></a></dt>
+<dd><p>Logical, if <code>TRUE</code> (default), widget methods automatically
+flush state changes to TypeScript after execution. If <code>FALSE</code>, manual
+<code>updateState()</code> calls are required.</p></dd>
 
 
 <dt id="arg--env">.env<a class="anchor" aria-label="anchor" href="#arg--env"></a></dt>

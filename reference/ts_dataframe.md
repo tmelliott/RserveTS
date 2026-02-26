@@ -6,7 +6,7 @@ the same length.
 ## Usage
 
 ``` r
-ts_dataframe(...)
+ts_dataframe(..., default = NULL)
 ```
 
 ## Arguments
@@ -14,6 +14,10 @@ ts_dataframe(...)
 - ...:
 
   Named types.
+
+- default:
+
+  Default value for the type (optional).
 
 ## Value
 
