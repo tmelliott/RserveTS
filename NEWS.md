@@ -1,3 +1,7 @@
+# RserveTS 0.8.0
+
+- Simplify widget creation with `createWidget()` function. Now takes default values for properties, and automatically flushes state changes to TypeScript after execution.
+
 # RserveTS 0.7.2
 
 - Fix bug in JS type for factors.
