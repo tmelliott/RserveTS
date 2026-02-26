@@ -534,6 +534,18 @@ tsWidget <- setRefClass("tsWidget",
                 .self$setState <- jsfun(fn)
             }
         },
+        batch = function(props, expr) {
+            for (p in props) {
+                .self[[paste0(p, "Changed")]]$block()
+            }
+            on.exit({
+                for (p in props) {
+                    .self[[paste0(p, "Changed")]]$unblock()
+                }
+                .self$updateState()
+            })
+            eval(substitute(expr), envir = parent.frame())
+        },
         add_child = function(property, widget_def, parent_as = ".parent") {
             child_rc <- attr(widget_def, ".__refclass")
             child <- child_rc$new(NULL)
