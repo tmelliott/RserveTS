@@ -9,6 +9,7 @@ createWidget(
   properties = list(),
   initialize = NULL,
   methods = list(),
+  auto_flush = TRUE,
   .env = parent.frame(),
   ...
 )

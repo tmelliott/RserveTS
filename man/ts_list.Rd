@@ -4,7 +4,7 @@
 \alias{ts_list}
 \title{Typed list}
 \usage{
-ts_list(...)
+ts_list(..., default = NULL)
 }
 \arguments{
 \item{...}{A list of types, named or unnamed.}

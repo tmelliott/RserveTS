@@ -4,7 +4,7 @@
 \alias{ts_union}
 \title{Union type}
 \usage{
-ts_union(...)
+ts_union(..., default = NULL)
 }
 \arguments{
 \item{...}{Type objects to merge}

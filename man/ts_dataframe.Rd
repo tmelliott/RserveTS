@@ -4,7 +4,7 @@
 \alias{ts_dataframe}
 \title{Typed dataframe}
 \usage{
-ts_dataframe(...)
+ts_dataframe(..., default = NULL)
 }
 \arguments{
 \item{...}{Named types.}

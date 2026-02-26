@@ -4,7 +4,7 @@
 \alias{ts_logical}
 \title{Logical or boolean type}
 \usage{
-ts_logical(n = -1L)
+ts_logical(n = -1L, default = NULL)
 }
 \arguments{
 \item{n}{The length of the boolean vector. If \code{n = 1} then a single boolean is expected. If \code{n = 0} then any length is expected. If \code{n > 1} then a boolean vector of length \code{n} is expected.}
