@@ -4,10 +4,12 @@
 \alias{ts_union}
 \title{Union type}
 \usage{
-ts_union(...)
+ts_union(..., default = NULL)
 }
 \arguments{
 \item{...}{Type objects to merge}
+
+\item{default}{Default value for the type (optional).}
 }
 \description{
 Create a union of types. Currently this only accepts schemas as strings.

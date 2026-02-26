@@ -4,10 +4,12 @@
 \alias{ts_dataframe}
 \title{Typed dataframe}
 \usage{
-ts_dataframe(...)
+ts_dataframe(..., default = NULL)
 }
 \arguments{
 \item{...}{Named types.}
+
+\item{default}{Default value for the type (optional).}
 }
 \value{
 A ts object that accepts data frames with the specified types.

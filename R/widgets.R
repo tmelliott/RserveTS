@@ -13,6 +13,9 @@
 #'   instance and sets up initial state
 #' @param methods Named list of methods to add to the widget class. Each method
 #'   should be a `ts_function` object
+#' @param auto_flush Logical, if `TRUE` (default), widget methods automatically
+#'   flush state changes to TypeScript after execution. If `FALSE`, manual
+#'   `updateState()` calls are required.
 #' @param .env Environment where the ref class should be created. Defaults to
 #'   `parent.frame()` which is the caller's environment (typically unlocked).
 #'   Can be overridden (e.g., to `.GlobalEnv`) if needed.
@@ -37,6 +40,7 @@
 #'   \item \code{set(x)}: Set the property value
 #' }
 #'
+#' @import objectSignals
 #' @importFrom methods setRefClass new
 #' @importFrom objectProperties properties
 #' @export
@@ -57,6 +61,7 @@ createWidget <- function(
     properties = list(),
     initialize = NULL,
     methods = list(),
+    auto_flush = TRUE,
     .env = parent.frame(),
     ...) {
     # setRefClass with contains tries to register class metadata in the base class's
@@ -64,18 +69,21 @@ createWidget <- function(
     # class definition can be registered. The .env parameter allows specifying
     # where the new class should be created, but inheritance metadata may still
     # need to be registered in the package namespace.
+    method_info <- widgetMethods(substitute(methods), auto_flush = auto_flush)
+
     rc <- setRefClass(name,
         properties(
             fields = widgetProperties(properties)
         ),
         contains = "tsWidget",
         methods = c(
-            widgetMethods(substitute(methods)),
+            method_info$methods,
             list(
                 initialize = function(setState) {
                     .self$setState <- setState
                     .self$.child_connectors <- NULL
                     .self$.childrenVersion <- 0L
+                    .self$.call_depth <- 0L
                 }
             )
         ),
@@ -125,12 +133,19 @@ createWidget <- function(
     })
     names(props) <- names(ts_props)
 
+    method_defs <- method_info$exported_defs
+
     w_type <- ts_list(
         properties = do.call(
             ts_list,
             lapply(props, \(prop) do.call(ts_list, prop))
         ),
-        children = do.call(ts_list, widget_props)
+        children = do.call(ts_list, widget_props),
+        methods = if (length(method_defs) > 0) {
+            do.call(ts_list, method_defs)
+        } else {
+            ts_list()
+        }
     )
 
     setStateType <- do.call(
@@ -144,10 +159,46 @@ createWidget <- function(
             widget <- rc$new(
                 setState = if (is.null(fn)) NULL else jsfun(fn)
             )
+            # Store ts property names so updateState(all=TRUE) knows what to send
+            widget$.property_names <- names(ts_props)
+            # Wire change-tracking: direct assignment auto-adds to changed list
+            for (prop_name in names(ts_props)) {
+                local({
+                    pn <- prop_name
+                    widget[[paste0(pn, "Changed")]]$connect(function() {
+                        if (!any(widget$changed == pn)) {
+                            widget$changed <- c(widget$changed, pn)
+                        }
+                    })
+                })
+            }
+            # Apply property defaults before initialize
+            for (prop_name in names(ts_props)) {
+                default_val <- ts_props[[prop_name]]$default
+                if (!is.null(default_val)) {
+                    widget$set(prop_name, default_val)
+                }
+            }
+            # Wire observer methods to property signals
+            for (nm in names(method_info$observers)) {
+                local({
+                    # Build function() widget$<method>() using substitute
+                    # so $ dispatches to the ref class method (not field via [[)
+                    handler_fn <- eval(substitute(
+                        function() widget$METHOD(),
+                        list(METHOD = as.name(nm))
+                    ))
+                    for (prop in method_info$observers[[nm]]) {
+                        widget$addPropHandler(prop, handler_fn,
+                            auto_flush = FALSE
+                        )
+                    }
+                })
+            }
             if (!is.null(initialize)) {
                 initialize(widget)
             }
-            widget$updateState()
+            widget$updateState(all = TRUE)
 
             lapply(
                 names(widget_props),
@@ -157,7 +208,8 @@ createWidget <- function(
             list(
                 properties =
                     lapply(props, \(prop) lapply(prop, \(method) method$copy())),
-                children = widget$.child_connectors
+                children = widget$.child_connectors,
+                methods = build_method_ocaps(widget, method_defs)
             )
         },
         fn = ts_optional(js_function(state = setStateType, result = ts_null())),
@@ -173,6 +225,11 @@ createWidget <- function(
         ts_raw = ts_props
     )
     attr(w_ctor, ".__init") <- initialize
+    attr(w_ctor, ".__methods") <- list(
+        exported = method_info$exported,
+        observers = method_info$observers,
+        exported_defs = method_info$exported_defs
+    )
 
     w_ctor
 }
@@ -204,15 +261,131 @@ widgetProps <- function(properties) {
     })]
 }
 
-# create list of methods
-widgetMethods <- function(methods) {
+#' Create an Observer for Reactive Methods
+#'
+#' Wraps a method so it reacts to property changes. Used inside the
+#' \code{methods} list of \code{createWidget()} to declare which properties
+#' trigger the method.
+#'
+#' @param props Character vector of property names to observe.
+#' @param fn The method body: a plain \code{function} (internal) or a
+#'   \code{ts_function} (exported to JS).
+#' @return A \code{ts_observer} object used by \code{createWidget()}.
+#' @export
+#' @md
+#'
+#' @examples
+#' \dontrun{
+#' createWidget("Example",
+#'     properties = list(x = ts_integer(1L, default = 0L)),
+#'     methods = list(
+#'         on_x = observer("x", function() {
+#'             cat("x changed to", .self$x, "\n")
+#'         })
+#'     )
+#' )
+#' }
+observer <- function(props, fn) {
+    structure(
+        list(props = props, fn = fn),
+        class = "ts_observer"
+    )
+}
+
+# Wrap a function body with depth-counting auto-flush.
+# Only flushes updateState() when the outermost method/handler returns.
+wrap_auto_flush <- function(fn) {
+    original_body <- body(fn)
+    body(fn) <- bquote({
+        .self$.call_depth <- .self$.call_depth + 1L
+        on.exit({
+            .self$.call_depth <- .self$.call_depth - 1L
+            if (.self$.call_depth == 0L) .self$updateState()
+        })
+        .(original_body)
+    })
+    fn
+}
+
+# Process method definitions into ref class methods + observer metadata.
+# Returns list with:
+#   $methods   - named list of functions for setRefClass
+#   $observers - named list: method_name -> character vector of watched props
+#   $exported  - character vector of method names wrapped in ts_function
+widgetMethods <- function(methods, auto_flush = TRUE) {
     methods <- as.list(methods)[-1]
 
-    lapply(methods, \(x) {
-        # TODO: gotta make sure these *are* ts_function
-        # print(x)
-        eval(x[[2]])
-    })
+    method_fns <- list()
+    observers <- list()
+    exported <- character()
+    exported_defs <- list()
+
+    for (nm in names(methods)) {
+        x <- methods[[nm]]
+        obs_props <- NULL
+
+        # Unwrap observer() to get inner fn + watched props
+        if (is.call(x) && identical(x[[1]], quote(observer))) {
+            obs_props <- eval(x[[2]])
+            x <- x[[3]] # inner function or ts_function call
+        }
+
+        # Extract raw function and determine if exported
+        if (is.call(x) && identical(x[[1]], quote(ts_function))) {
+            fn <- eval(x[[2]])
+            exported <- c(exported, nm)
+            exported_defs[[nm]] <- eval(x)
+        } else {
+            fn <- eval(x)
+        }
+
+        method_fns[[nm]] <- if (auto_flush) wrap_auto_flush(fn) else fn
+
+        if (!is.null(obs_props)) {
+            observers[[nm]] <- obs_props
+        }
+    }
+
+    list(
+        methods = method_fns, observers = observers, exported = exported,
+        exported_defs = exported_defs
+    )
+}
+
+# Build ocap wrappers for exported methods on a widget instance.
+# Each wrapper calls instance$method(args...) with proper type signatures.
+build_method_ocaps <- function(instance, method_defs) {
+    if (length(method_defs) == 0) {
+        return(list())
+    }
+    method_ocaps <- list()
+    for (nm in names(method_defs)) {
+        local({
+            mn <- nm
+            def <- method_defs[[mn]]
+            arg_names <- names(def$args)
+
+            # Build: function(arg1, ...) instance$method(arg1, ...)
+            method_call <- as.call(c(
+                list(call("$", quote(instance), as.name(mn))),
+                lapply(arg_names, as.name)
+            ))
+            wrapper <- function() NULL
+            if (length(arg_names) > 0) {
+                formals(wrapper) <- as.pairlist(stats::setNames(
+                    rep(list(quote(expr = )), length(arg_names)),
+                    arg_names
+                ))
+            }
+            body(wrapper) <- method_call
+
+            method_ocaps[[mn]] <<- do.call(
+                ts_function,
+                c(list(wrapper), def$args, list(result = def$result))
+            )
+        })
+    }
+    method_ocaps
 }
 
 #' Create Child Widget Connector
@@ -231,6 +404,12 @@ widgetMethods <- function(methods) {
 create_child_connector <- function(child_instance, parent_instance, property_name, type_info, widget_def) {
     # Use raw TypeScript type definitions
     ts_raw <- type_info$ts_raw
+    child_method_meta <- attr(widget_def, ".__methods")
+    child_method_defs <- if (!is.null(child_method_meta$exported_defs)) {
+        child_method_meta$exported_defs
+    } else {
+        list()
+    }
 
     setStateType <- do.call(
         ts_list,
@@ -278,12 +457,54 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
             ts_list,
             lapply(child_props, \(prop) do.call(ts_list, prop))
         ),
-        children = ts_null()
+        children = ts_null(),
+        methods = if (length(child_method_defs) > 0) {
+            do.call(ts_list, child_method_defs)
+        } else {
+            ts_list()
+        }
     )
 
     ts_function(
         function(fn) {
             child_instance$register(fn = if (is.null(fn)) NULL else fn)
+
+            # Wire change-tracking: direct assignment auto-adds to changed list
+            for (prop_name in names(ts_raw)) {
+                local({
+                    pn <- prop_name
+                    child_instance[[paste0(pn, "Changed")]]$connect(function() {
+                        if (!any(child_instance$changed == pn)) {
+                            child_instance$changed <- c(child_instance$changed, pn)
+                        }
+                    })
+                })
+            }
+            # Apply property defaults before initialize
+            for (prop_name in names(ts_raw)) {
+                default_val <- ts_raw[[prop_name]]$default
+                if (!is.null(default_val)) {
+                    child_instance$set(prop_name, default_val)
+                }
+            }
+
+            # Wire observer methods to property signals
+            method_meta <- attr(widget_def, ".__methods")
+            if (!is.null(method_meta$observers)) {
+                for (nm in names(method_meta$observers)) {
+                    local({
+                        handler_fn <- eval(substitute(
+                            function() child_instance$METHOD(),
+                            list(METHOD = as.name(nm))
+                        ))
+                        for (prop in method_meta$observers[[nm]]) {
+                            child_instance$addPropHandler(prop, handler_fn,
+                                auto_flush = FALSE
+                            )
+                        }
+                    })
+                }
+            }
 
             child_init <- attr(widget_def, ".__init")
             if (!is.null(child_init)) {
@@ -298,7 +519,8 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
 
             list(
                 properties = child_props,
-                children = NULL
+                children = NULL,
+                methods = build_method_ocaps(child_instance, child_method_defs)
             )
         },
         fn = ts_optional(js_function(state = setStateType, result = ts_null())),
@@ -336,7 +558,8 @@ tsWidget <- setRefClass("tsWidget",
             setState = "ANY",
             .child_connectors = "ANY",
             .childrenVersion = "integer",
-            .property_names = "character"
+            .property_names = "character",
+            .call_depth = "integer"
         )
     ),
     methods = list(
@@ -344,18 +567,24 @@ tsWidget <- setRefClass("tsWidget",
             if (!any(.self$changed == prop)) {
                 .self$changed <- c(.self$changed, prop)
             }
-            tryCatch(
-                {
-                    .self[[prop]] <- value
-                },
-                error = function(e) {
-                    stop(e)
-                }
-            )
+            .self[[prop]] <- value
         },
         get = function(prop) .self[[prop]],
-        addPropHandler = function(prop, fn) {
-            .self[[sprintf("%sChanged", prop)]]$connect(fn)
+        addPropHandler = function(prop, fn, auto_flush = TRUE) {
+            if (auto_flush) {
+                self <- .self
+                wrapped <- function() {
+                    self$.call_depth <- self$.call_depth + 1L
+                    on.exit({
+                        self$.call_depth <- self$.call_depth - 1L
+                        if (self$.call_depth == 0L) self$updateState()
+                    })
+                    fn()
+                }
+                .self[[sprintf("%sChanged", prop)]]$connect(wrapped)
+            } else {
+                .self[[sprintf("%sChanged", prop)]]$connect(fn)
+            }
         },
         updateState = function(all = FALSE) {
             if (is.null(.self$setState)) {
@@ -368,7 +597,7 @@ tsWidget <- setRefClass("tsWidget",
                 } else {
                     # Fallback for main widgets - get all fields except internal ones
                     all_fields <- names(.self$getRefClass()$fields())
-                    chg <- all_fields[!all_fields %in% c("changed", "setState", ".child_connectors", ".childrenVersion")]
+                    chg <- all_fields[!all_fields %in% c("changed", "setState", ".child_connectors", ".childrenVersion", ".call_depth")]
                 }
             } else {
                 chg <- .self$changed
@@ -389,6 +618,21 @@ tsWidget <- setRefClass("tsWidget",
             } else {
                 .self$setState <- jsfun(fn)
             }
+        },
+        batch = function(props, expr) {
+            for (p in props) {
+                .self[[paste0(p, "Changed")]]$block()
+            }
+            on.exit({
+                for (p in props) {
+                    .self[[paste0(p, "Changed")]]$unblock()
+                    if (!any(.self$changed == p)) {
+                        .self$changed <- c(.self$changed, p)
+                    }
+                }
+                .self$updateState()
+            })
+            eval(substitute(expr), envir = parent.frame())
         },
         add_child = function(property, widget_def, parent_as = ".parent") {
             child_rc <- attr(widget_def, ".__refclass")

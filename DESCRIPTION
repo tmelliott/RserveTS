@@ -22,7 +22,8 @@ Depends:
 Imports:
     methods,
     rlang,
-    Rserve
+    Rserve,
+    stats
 Suggests:
     knitr,
     rmarkdown,

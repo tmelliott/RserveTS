@@ -4,10 +4,12 @@
 \alias{ts_numeric}
 \title{Numeric type}
 \usage{
-ts_numeric(n = -1L)
+ts_numeric(n = -1L, default = NULL)
 }
 \arguments{
 \item{n}{The length of the numeric vector. If \code{n = 1} then a single number is expected. If \code{n = 0} then any length is expected. If \code{n > 1} then a numeric vector of length \code{n} is expected.}
+
+\item{default}{Default value for the type (optional).}
 }
 \value{
 A ts object that accepts numeric scalars or vectors of length \code{n}.

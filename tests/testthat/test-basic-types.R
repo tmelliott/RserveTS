@@ -76,6 +76,38 @@ test_that("factor type (with levels)", {
   expect_error(x$check(1))
 })
 
+## Default values
+
+test_that("default parameter is stored on ts_object", {
+  x <- ts_integer(1L, default = 42L)
+  expect_equal(x$default, 42L)
+
+  y <- ts_character(1L, default = "hello")
+  expect_equal(y$default, "hello")
+
+  z <- ts_numeric(1L)
+  expect_null(z$default)
+})
+
+test_that("default parameter works on all primitive types", {
+  expect_equal(ts_logical(1L, default = TRUE)$default, TRUE)
+  expect_equal(ts_integer(1L, default = 5L)$default, 5L)
+  expect_equal(ts_numeric(1L, default = 3.14)$default, 3.14)
+  expect_equal(ts_character(1L, default = "x")$default, "x")
+  expect_equal(
+    ts_factor(c("a", "b"), default = factor("a", levels = c("a", "b")))$default,
+    factor("a", levels = c("a", "b"))
+  )
+})
+
+test_that("default parameter works on compound types", {
+  x <- ts_list(a = ts_integer(1L), default = list(a = 1L))
+  expect_equal(x$default, list(a = 1L))
+
+  y <- ts_union(ts_integer(1L), ts_character(1L), default = "fallback")
+  expect_equal(y$default, "fallback")
+})
+
 test_that("list type - default", {
   x <- ts_list()
   expect_equal(x$check(list()), list())
