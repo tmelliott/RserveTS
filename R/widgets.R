@@ -148,6 +148,19 @@ createWidget <- function(
             widget <- rc$new(
                 setState = if (is.null(fn)) NULL else jsfun(fn)
             )
+            # Store ts property names so updateState(all=TRUE) knows what to send
+            widget$.property_names <- names(ts_props)
+            # Wire change-tracking: direct assignment auto-adds to changed list
+            for (prop_name in names(ts_props)) {
+                local({
+                    pn <- prop_name
+                    widget[[paste0(pn, "Changed")]]$connect(function() {
+                        if (!any(widget$changed == pn)) {
+                            widget$changed <- c(widget$changed, pn)
+                        }
+                    })
+                })
+            }
             # Apply property defaults before initialize
             for (prop_name in names(ts_props)) {
                 default_val <- ts_props[[prop_name]]$default
@@ -173,7 +186,7 @@ createWidget <- function(
             if (!is.null(initialize)) {
                 initialize(widget)
             }
-            widget$updateState()
+            widget$updateState(all = TRUE)
 
             lapply(
                 names(widget_props),
@@ -390,6 +403,17 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
         function(fn) {
             child_instance$register(fn = if (is.null(fn)) NULL else fn)
 
+            # Wire change-tracking: direct assignment auto-adds to changed list
+            for (prop_name in names(ts_raw)) {
+                local({
+                    pn <- prop_name
+                    child_instance[[paste0(pn, "Changed")]]$connect(function() {
+                        if (!any(child_instance$changed == pn)) {
+                            child_instance$changed <- c(child_instance$changed, pn)
+                        }
+                    })
+                })
+            }
             # Apply property defaults before initialize
             for (prop_name in names(ts_raw)) {
                 default_val <- ts_raw[[prop_name]]$default
@@ -475,14 +499,7 @@ tsWidget <- setRefClass("tsWidget",
             if (!any(.self$changed == prop)) {
                 .self$changed <- c(.self$changed, prop)
             }
-            tryCatch(
-                {
-                    .self[[prop]] <- value
-                },
-                error = function(e) {
-                    stop(e)
-                }
-            )
+            .self[[prop]] <- value
         },
         get = function(prop) .self[[prop]],
         addPropHandler = function(prop, fn, auto_flush = TRUE) {
@@ -541,6 +558,9 @@ tsWidget <- setRefClass("tsWidget",
             on.exit({
                 for (p in props) {
                     .self[[paste0(p, "Changed")]]$unblock()
+                    if (!any(.self$changed == p)) {
+                        .self$changed <- c(.self$changed, p)
+                    }
                 }
                 .self$updateState()
             })
