@@ -65,13 +65,15 @@ createWidget <- function(
     # class definition can be registered. The .env parameter allows specifying
     # where the new class should be created, but inheritance metadata may still
     # need to be registered in the package namespace.
+    method_info <- widgetMethods(substitute(methods), auto_flush = auto_flush)
+
     rc <- setRefClass(name,
         properties(
             fields = widgetProperties(properties)
         ),
         contains = "tsWidget",
         methods = c(
-            widgetMethods(substitute(methods), auto_flush = auto_flush),
+            method_info$methods,
             list(
                 initialize = function(setState) {
                     .self$setState <- setState
@@ -153,6 +155,21 @@ createWidget <- function(
                     widget$set(prop_name, default_val)
                 }
             }
+            # Wire observer methods to property signals
+            for (nm in names(method_info$observers)) {
+                local({
+                    # Build function() widget$<method>() using substitute
+                    # so $ dispatches to the ref class method (not field via [[)
+                    handler_fn <- eval(substitute(
+                        function() widget$METHOD(),
+                        list(METHOD = as.name(nm))
+                    ))
+                    for (prop in method_info$observers[[nm]]) {
+                        widget$addPropHandler(prop, handler_fn,
+                            auto_flush = FALSE)
+                    }
+                })
+            }
             if (!is.null(initialize)) {
                 initialize(widget)
             }
@@ -182,6 +199,10 @@ createWidget <- function(
         ts_raw = ts_props
     )
     attr(w_ctor, ".__init") <- initialize
+    attr(w_ctor, ".__methods") <- list(
+        exported = method_info$exported,
+        observers = method_info$observers
+    )
 
     w_ctor
 }
@@ -213,6 +234,37 @@ widgetProps <- function(properties) {
     })]
 }
 
+#' Create an Observer for Reactive Methods
+#'
+#' Wraps a method so it reacts to property changes. Used inside the
+#' \code{methods} list of \code{createWidget()} to declare which properties
+#' trigger the method.
+#'
+#' @param props Character vector of property names to observe.
+#' @param fn The method body: a plain \code{function} (internal) or a
+#'   \code{ts_function} (exported to JS).
+#' @return A \code{ts_observer} object used by \code{createWidget()}.
+#' @export
+#' @md
+#'
+#' @examples
+#' \dontrun{
+#' createWidget("Example",
+#'     properties = list(x = ts_integer(1L, default = 0L)),
+#'     methods = list(
+#'         on_x = observer("x", function() {
+#'             cat("x changed to", .self$x, "\n")
+#'         })
+#'     )
+#' )
+#' }
+observer <- function(props, fn) {
+    structure(
+        list(props = props, fn = fn),
+        class = "ts_observer"
+    )
+}
+
 # Wrap a function body with depth-counting auto-flush.
 # Only flushes updateState() when the outermost method/handler returns.
 wrap_auto_flush <- function(fn) {
@@ -228,14 +280,44 @@ wrap_auto_flush <- function(fn) {
     fn
 }
 
-# create list of methods
+# Process method definitions into ref class methods + observer metadata.
+# Returns list with:
+#   $methods   - named list of functions for setRefClass
+#   $observers - named list: method_name -> character vector of watched props
+#   $exported  - character vector of method names wrapped in ts_function
 widgetMethods <- function(methods, auto_flush = TRUE) {
     methods <- as.list(methods)[-1]
 
-    lapply(methods, \(x) {
-        fn <- eval(x[[2]])
-        if (auto_flush) wrap_auto_flush(fn) else fn
-    })
+    method_fns <- list()
+    observers <- list()
+    exported <- character()
+
+    for (nm in names(methods)) {
+        x <- methods[[nm]]
+        obs_props <- NULL
+
+        # Unwrap observer() to get inner fn + watched props
+        if (is.call(x) && identical(x[[1]], quote(observer))) {
+            obs_props <- eval(x[[2]])
+            x <- x[[3]] # inner function or ts_function call
+        }
+
+        # Extract raw function and determine if exported
+        if (is.call(x) && identical(x[[1]], quote(ts_function))) {
+            fn <- eval(x[[2]])
+            exported <- c(exported, nm)
+        } else {
+            fn <- eval(x)
+        }
+
+        method_fns[[nm]] <- if (auto_flush) wrap_auto_flush(fn) else fn
+
+        if (!is.null(obs_props)) {
+            observers[[nm]] <- obs_props
+        }
+    }
+
+    list(methods = method_fns, observers = observers, exported = exported)
 }
 
 #' Create Child Widget Connector
@@ -313,6 +395,23 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
                 default_val <- ts_raw[[prop_name]]$default
                 if (!is.null(default_val)) {
                     child_instance$set(prop_name, default_val)
+                }
+            }
+
+            # Wire observer methods to property signals
+            method_meta <- attr(widget_def, ".__methods")
+            if (!is.null(method_meta$observers)) {
+                for (nm in names(method_meta$observers)) {
+                    local({
+                        handler_fn <- eval(substitute(
+                            function() child_instance$METHOD(),
+                            list(METHOD = as.name(nm))
+                        ))
+                        for (prop in method_meta$observers[[nm]]) {
+                            child_instance$addPropHandler(prop, handler_fn,
+                                auto_flush = FALSE)
+                        }
+                    })
                 }
             }
 
