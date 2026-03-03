@@ -13,6 +13,7 @@ reference:
       - ts_deploy
       - createWidget
       - tsWidget
+      - observer
   - title: Types
     desc: Type helper functions for defining argument and return types.
   - contents:
@@ -34,4 +35,8 @@ reference:
       - ts_recursive_list
       - ts_self
       - js_function
-      - observer
+  - title: Debugging
+    desc: Debugging utilities for RserveTS.
+    contents:
+      - rts_debug_enabled
+      - rts_log

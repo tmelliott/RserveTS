@@ -156,6 +156,7 @@ createWidget <- function(
     w_ctor <- ts_function(
         # pass in 'init' args here ...
         function(fn) {
+            rts_log("Creating widget '", name, "'", tag = "widget")
             widget <- rc$new(
                 setState = if (is.null(fn)) NULL else jsfun(fn)
             )
@@ -196,8 +197,17 @@ createWidget <- function(
                 })
             }
             if (!is.null(initialize)) {
-                initialize(widget)
+                init_params <- names(formals(initialize))
+                rts_log("Calling initialize for '", name,
+                    "' (params: ", paste(init_params, collapse = ", "), ")",
+                    tag = "init")
+                if (length(init_params) > 0) {
+                    initialize(widget)
+                } else {
+                    initialize()
+                }
             }
+            rts_log("Flushing initial state for '", name, "'", tag = "state")
             widget$updateState(all = TRUE)
 
             lapply(
@@ -402,8 +412,10 @@ build_method_ocaps <- function(instance, method_defs) {
 #' @keywords internal
 #' @export
 create_child_connector <- function(child_instance, parent_instance, property_name, type_info, widget_def) {
+    rts_log("Creating child connector for '", property_name, "'", tag = "child")
     # Use raw TypeScript type definitions
     ts_raw <- type_info$ts_raw
+    child_widget_props <- type_info$widgets
     child_method_meta <- attr(widget_def, ".__methods")
     child_method_defs <- if (!is.null(child_method_meta$exported_defs)) {
         child_method_meta$exported_defs
@@ -457,7 +469,11 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
             ts_list,
             lapply(child_props, \(prop) do.call(ts_list, prop))
         ),
-        children = ts_null(),
+        children = if (length(child_widget_props) > 0) {
+            do.call(ts_list, child_widget_props)
+        } else {
+            ts_list()
+        },
         methods = if (length(child_method_defs) > 0) {
             do.call(ts_list, child_method_defs)
         } else {
@@ -467,6 +483,9 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
 
     ts_function(
         function(fn) {
+            rts_log("JS connecting child '", property_name, "'",
+                " (fn is ", if (is.null(fn)) "NULL" else "set", ")",
+                tag = "child")
             child_instance$register(fn = if (is.null(fn)) NULL else fn)
 
             # Wire change-tracking: direct assignment auto-adds to changed list
@@ -480,13 +499,9 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
                     })
                 })
             }
-            # Apply property defaults before initialize
-            for (prop_name in names(ts_raw)) {
-                default_val <- ts_raw[[prop_name]]$default
-                if (!is.null(default_val)) {
-                    child_instance$set(prop_name, default_val)
-                }
-            }
+            # Defaults already applied in add_child (before parent methods run).
+            # Do NOT re-apply here — parent may have set values between
+            # add_child and JS connection.
 
             # Wire observer methods to property signals
             method_meta <- attr(widget_def, ".__methods")
@@ -508,18 +523,29 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
 
             child_init <- attr(widget_def, ".__init")
             if (!is.null(child_init)) {
-                has_parent_param <- "parent" %in% names(formals(child_init))
-                if (has_parent_param) {
+                init_params <- names(formals(child_init))
+                rts_log("Calling child init for '", property_name,
+                    "' (params: ", paste(init_params, collapse = ", "), ")",
+                    tag = "init")
+                if ("parent" %in% init_params) {
                     child_init(child_instance, parent_instance)
-                } else {
+                } else if (length(init_params) > 0) {
                     child_init(child_instance)
+                } else {
+                    child_init()
                 }
             }
             child_instance$updateState(all = TRUE)
 
+            # Wire up grandchild widgets (same as w_ctor)
+            lapply(
+                names(child_widget_props),
+                \(prop) child_instance$add_child(prop, child_widget_props[[prop]])
+            )
+
             list(
                 properties = child_props,
-                children = NULL,
+                children = child_instance$.child_connectors,
                 methods = build_method_ocaps(child_instance, child_method_defs)
             )
         },
@@ -588,6 +614,7 @@ tsWidget <- setRefClass("tsWidget",
         },
         updateState = function(all = FALSE) {
             if (is.null(.self$setState)) {
+                rts_log("updateState skipped (no setState)", tag = "state")
                 return()
             }
             if (all) {
@@ -606,6 +633,8 @@ tsWidget <- setRefClass("tsWidget",
                 return()
             }
 
+            rts_log("updateState: [", paste(chg, collapse = ", "), "]",
+                if (all) " (all)" else "", tag = "state")
             x <- lapply(chg, \(p) .self$get(p))
             names(x) <- chg
 
@@ -635,6 +664,7 @@ tsWidget <- setRefClass("tsWidget",
             eval(substitute(expr), envir = parent.frame())
         },
         add_child = function(property, widget_def, parent_as = ".parent") {
+            rts_log("Adding child '", property, "' to widget", tag = "child")
             child_rc <- attr(widget_def, ".__refclass")
             child <- child_rc$new(NULL)
 
@@ -651,6 +681,14 @@ tsWidget <- setRefClass("tsWidget",
 
             # Store property names in child so updateState knows what to send
             child$.property_names <- names(props$ts_raw)
+
+            # Apply property defaults now (before any parent methods can modify child state)
+            for (prop_name in names(props$ts_raw)) {
+                default_val <- props$ts_raw[[prop_name]]$default
+                if (!is.null(default_val)) {
+                    child[[prop_name]] <- default_val
+                }
+            }
 
             # Create connector function that JS will call
             child_connector <- create_child_connector(
