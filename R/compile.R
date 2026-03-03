@@ -31,7 +31,7 @@ ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
     ocap_str <- compile_fn(f)
 
     sprintf(
-        "const %s = %s;", name, ocap_str
+        "export const %s = %s;", name, ocap_str
     )
 }
 
@@ -48,18 +48,56 @@ ts_compile.character <- function(
         warning(sprintf("File not found: %s", f))
         return()
     }
-    e <- new.env()
+    # Track what exists before sourcing so we can find new definitions
+    pre_globals <- ls(globalenv())
+    e <- new.env(parent = globalenv())
     source(f, local = e)
 
-    fns <- ls(e)
-    exports <- fns[sapply(
-        fns,
-        \(z) inherits(e[[z]], "ts_function") && isTRUE(e[[z]]$export)
-    )]
+    # Collect exports from both the local env and any new globals
+    # (inner source() calls default to local=FALSE, putting defs in globalenv)
+    new_globals <- setdiff(ls(globalenv()), pre_globals)
+    candidates <- unique(c(ls(e), new_globals))
+    # Look up each candidate from e first, then globalenv
+    lookup <- function(name) {
+        if (exists(name, envir = e, inherits = FALSE)) e[[name]]
+        else if (exists(name, envir = globalenv(), inherits = FALSE)) get(name, envir = globalenv())
+        else NULL
+    }
+    is_exported <- sapply(candidates, \(z) {
+        obj <- lookup(z)
+        inherits(obj, "ts_function") && isTRUE(obj$export)
+    })
+    exports <- candidates[is_exported]
+
+    # Separate top-level app exports from child-only widget definitions.
+    # A widget is "child-only" if its definition object is used as a child
+    # property of another exported widget.
+    child_defs <- list()
+    for (z in exports) {
+        obj <- lookup(z)
+        if (inherits(obj, "ts_widget")) {
+            wp <- attr(obj, ".__props")$widgets
+            child_defs <- c(child_defs, unname(wp))
+        }
+    }
+    is_child_only <- sapply(exports, \(z) {
+        obj <- lookup(z)
+        any(vapply(child_defs, identical, logical(1), obj))
+    })
+    app_exports <- exports[!is_child_only]
+    widget_exports <- exports[is_child_only]
 
     exportFns <- sapply(
         exports,
-        \(z) ts_compile(e[[z]], filename = "", name = z)
+        \(z) ts_compile(lookup(z), filename = "", name = z)
+    )
+
+    # Generate type aliases for each export
+    # Capitalize first letter: iNZDocument -> TINZDocument
+    capitalize_first <- function(x) paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
+    type_aliases <- sapply(
+        exports,
+        \(z) sprintf("export type T%s = z.infer<typeof %s>;", capitalize_first(z), z)
     )
 
     src <- c(
@@ -71,9 +109,11 @@ ts_compile.character <- function(
         "\n",
         exportFns,
         "\n",
+        type_aliases,
+        "\n",
         sprintf(
             "export default {\n  %s\n};",
-            paste(exports, collapse = ",\n  ")
+            paste(app_exports, collapse = ",\n  ")
         )
     )
 

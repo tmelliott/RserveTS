@@ -7,9 +7,7 @@ parse_args <- function(x, mc) {
         )
     }
     args <- lapply(names(fmls), function(n) {
-        cat("\n---- Checking args ...\n")
-        print(n)
-        print(mc[[n]])
+        rts_log("Checking arg '", n, "'", tag = "ocap")
         tryCatch(
             {
                 fmls[[n]]$check(eval(mc[[n]]))
@@ -155,5 +153,10 @@ ts_app.list <- function(x) {
 
 #' @export
 ts_app.ts_function <- function(x) {
-    Rserve::ocap(function(...) ts_app(x$call(...)))
+    Rserve::ocap(function(...) {
+        rts_log("OCAP call (", length(list(...)), " args)", tag = "ocap")
+        result <- x$call(...)
+        rts_log("OCAP result: ", class(result)[1], tag = "ocap")
+        ts_app(result)
+    })
 }

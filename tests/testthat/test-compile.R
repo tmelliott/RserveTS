@@ -5,7 +5,7 @@ test_that("anonomous functions", {
     )
 
     add_c <- ts_compile(add)
-    expect_equal(add_c, "const add = Robj.ocap([z.number(), z.number()], Robj.numeric(1));")
+    expect_equal(add_c, "export const add = Robj.ocap([z.number(), z.number()], Robj.numeric(1));")
 })
 
 
