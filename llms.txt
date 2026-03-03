@@ -106,6 +106,8 @@ Writing and compiling functions into Rserve apps.
 - [`tsWidget-class`](http://tomelliott.co.nz/RserveTS/reference/tsWidget-class.md)
   [`tsWidget`](http://tomelliott.co.nz/RserveTS/reference/tsWidget-class.md)
   : Base Widget Class
+- [`observer()`](http://tomelliott.co.nz/RserveTS/reference/observer.md)
+  : Create an Observer for Reactive Methods
 
 ## Types
 
@@ -150,8 +152,15 @@ Type helper functions for defining argument and return types.
   Self object
 - [`js_function()`](http://tomelliott.co.nz/RserveTS/reference/js_function.md)
   : JS functions callable from R
-- [`observer()`](http://tomelliott.co.nz/RserveTS/reference/observer.md)
-  : Create an Observer for Reactive Methods
+
+## Debugging
+
+Debugging utilities for RserveTS.
+
+- [`rts_debug_enabled()`](http://tomelliott.co.nz/RserveTS/reference/rts_debug_enabled.md)
+  : Check if debug logging is enabled for a tag
+- [`rts_log()`](http://tomelliott.co.nz/RserveTS/reference/rts_log.md) :
+  Log a debug message
 
 # Articles
 

@@ -10,13 +10,13 @@
 ## Citation
 
 Elliott T (2026). *RserveTS: Deploy Rserve Applications Supporting
-TypeScript*. R package version 0.8.0,
+TypeScript*. R package version 0.8.1,
 <http://tomelliott.co.nz/RserveTS/>.
 
     @Manual{,
       title = {RserveTS: Deploy Rserve Applications Supporting TypeScript},
       author = {Tom Elliott},
       year = {2026},
-      note = {R package version 0.8.0},
+      note = {R package version 0.8.1},
       url = {http://tomelliott.co.nz/RserveTS/},
     }

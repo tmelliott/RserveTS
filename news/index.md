@@ -1,5 +1,10 @@
 # Changelog
 
+## RserveTS 0.8.1
+
+- ts_compile() enhancements
+- add debug logging utilities
+
 ## RserveTS 0.8.0
 
 - Simplify widget creation with
