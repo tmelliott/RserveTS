@@ -19,10 +19,13 @@ compile_fn <- function(f) {
 
     inputs <- sapply(inputs, \(x) x$input_type)
     fn_args <- paste(paste(inputs), collapse = ", ")
+    # Use get_type dispatch so ts_function/ts_widget results compile correctly
+    # (e.g., a method returning a widget connector produces nested Robj.ocap)
+    ret_type <- get_type(result, "return")
     sprintf(
         "Robj.ocap([%s], %s)",
         fn_args,
-        result$return_type
+        ret_type
     )
 }
 
@@ -71,13 +74,20 @@ ts_compile.character <- function(
 
     # Separate top-level app exports from child-only widget definitions.
     # A widget is "child-only" if its definition object is used as a child
-    # property of another exported widget.
+    # property of another exported widget, or as the return type of a method.
     child_defs <- list()
     for (z in exports) {
         obj <- lookup(z)
         if (inherits(obj, "ts_widget")) {
             wp <- attr(obj, ".__props")$widgets
             child_defs <- c(child_defs, unname(wp))
+            # Also check method return types for widget references
+            method_defs <- attr(obj, ".__methods")$exported_defs
+            for (m in method_defs) {
+                if (inherits(m$result, "ts_widget")) {
+                    child_defs <- c(child_defs, list(m$result))
+                }
+            }
         }
     }
     is_child_only <- sapply(exports, \(z) {
