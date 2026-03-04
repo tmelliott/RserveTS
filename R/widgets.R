@@ -645,7 +645,7 @@ tsWidget <- setRefClass("tsWidget",
             if (!is.null(.self$setState)) {
                 warning("Already registered")
             } else {
-                .self$setState <- jsfun(fn)
+                .self$setState <- if (is.null(fn)) NULL else jsfun(fn)
             }
         },
         batch = function(props, expr) {
@@ -712,6 +712,45 @@ tsWidget <- setRefClass("tsWidget",
             }
 
             invisible(child) # Return child instance for chaining
+        },
+        create_dynamic_child = function(widget_def, parent_as = ".parent") {
+            rts_log("Creating dynamic child widget", tag = "child")
+            child_rc <- attr(widget_def, ".__refclass")
+            child <- child_rc$new(NULL)
+
+            # Set parent reference
+            if (!is.null(parent_as)) {
+                child[[parent_as]] <- .self
+            }
+
+            # Get cached type info from widget definition
+            props <- attr(widget_def, ".__props")
+
+            # Store property names in child so updateState knows what to send
+            child$.property_names <- names(props$ts_raw)
+
+            # Apply property defaults
+            for (prop_name in names(props$ts_raw)) {
+                default_val <- props$ts_raw[[prop_name]]$default
+                if (!is.null(default_val)) {
+                    child[[prop_name]] <- default_val
+                }
+            }
+
+            # Create connector function that JS will call to connect
+            connector <- create_child_connector(
+                child_instance = child,
+                parent_instance = .self,
+                property_name = paste0("dynamic_", sample.int(1e6, 1)),
+                type_info = props,
+                widget_def = widget_def
+            )
+
+            list(instance = child, connector = connector)
+        },
+        destroy = function() {
+            rts_log("Destroying widget", tag = "widget")
+            .self$setState <- NULL
         }
     )
 )
