@@ -83,6 +83,22 @@ ts_function <- function(f, ..., result = ts_void(), export = FALSE) {
         args <- lapply(formals(f), eval)
     }
 
+    # Check if return type is void-like (ts_null, ts_void, ts_undefined)
+    # All of these have return_type = "Robj.null()"
+    is_void_like <- !is.null(result) &&
+                    is_ts_object(result) &&
+                    identical(result$return_type, "Robj.null()")
+
+    # If void-like, wrap the function body to automatically return invisible(NULL)
+    if (is_void_like) {
+        original_body <- body(f)
+        # Wrap the body so it ends with invisible(NULL) if no explicit return
+        body(f) <- bquote({
+            .(original_body)
+            invisible(NULL)
+        })
+    }
+
     e <- new.env()
     e$f <- f
     # e$env <- env
