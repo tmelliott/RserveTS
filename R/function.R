@@ -75,7 +75,7 @@ ts_result <- function(type, value) {
 #' f$call(1, "hello")
 ts_function <- function(f, ..., result = ts_void(), export = FALSE) {
     args <- list(...)
-    if (!is.null(result) && !is_ts_object(result)) {
+    if (!is.null(result) && !is_ts_object(result) && !inherits(result, "ts_function")) {
         stop("Invalid return type")
     }
 
