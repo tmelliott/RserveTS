@@ -403,7 +403,7 @@ ts_factor <- function(levels = NULL, default = NULL) {
 #' 1. Unknown list
 #' 2. Known, named list (e.g., list(x = 1:5, y = 'hello world')). This is an object in JS.
 #' 3. Known, unnamed list (e.g., list(1:5, 'hello world')). This is an array in JS.
-#' 4. Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record<string, type> in JS.
+#' 4. Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record<string, type> in JS. Use \code{\link{ts_record}(value_type)} for this case.
 #' 5. Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an Array<type> in JS.
 #'
 #' @param ... A list of types, named or unnamed.
@@ -465,6 +465,43 @@ ts_list <- function(..., default = NULL) {
                 for (i in seq_along(values)) {
                     x[[i]] <- check_type(values[[i]], x[[i]])
                 }
+            }
+            x
+        }
+    )
+}
+
+
+#' Record type (named list of a single value type)
+#'
+#' A list whose element names are unknown at compile time but whose values
+#' all have the same type. In TypeScript this is record<string, value_type>.
+#' Use this for e.g. getAvailablePlotTypes() returning list(default = "default", scatter = "scatter").
+#' For "named list of a single datatype" (case 4 in \code{ts_list}), use \code{ts_record(value_type)}.
+#'
+#' @param value_type A single ts type (e.g. ts_character(1), ts_integer(1)).
+#' @param default Default value for the type (optional).
+#' @return A ts object that accepts named lists with values of the given type.
+#' @export
+#' @md
+#' @examples
+#' x <- ts_record(ts_character(1))
+#' x$check(list(a = "x", b = "y"))
+ts_record <- function(value_type, default = NULL) {
+    stopifnot(is_ts_object(value_type))
+
+    input_type  <- sprintf("z.record(z.string(), %s)", value_type$input_type)
+    return_type <- sprintf("Robj.list(z.record(z.string(), %s))", get_type(value_type, "return"))
+
+    ts_object(
+        input_type,
+        return_type,
+        default = default,
+        check = function(x) {
+            if (!is.list(x)) stop("Expected a list")
+            if (is.null(names(x))) stop("Expected a named list")
+            for (i in seq_along(x)) {
+                x[[i]] <- check_type(value_type, x[[i]])
             }
             x
         }

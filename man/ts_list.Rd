@@ -23,7 +23,7 @@ There are five types of lists we can define:
 \item Unknown list
 \item Known, named list (e.g., list(x = 1:5, y = 'hello world')). This is an object in JS.
 \item Known, unnamed list (e.g., list(1:5, 'hello world')). This is an array in JS.
-\item Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record<string, type> in JS.
+\item Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record<string, type> in JS. Use \code{\link{ts_record}(value_type)} for this case.
 \item Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an Array\if{html}{\out{<type>}} in JS.
 }
 }
