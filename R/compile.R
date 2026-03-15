@@ -66,10 +66,10 @@ ts_compile.character <- function(
         else if (exists(name, envir = globalenv(), inherits = FALSE)) get(name, envir = globalenv())
         else NULL
     }
-    is_exported <- sapply(candidates, \(z) {
+    is_exported <- vapply(candidates, \(z) {
         obj <- lookup(z)
         inherits(obj, "ts_function") && isTRUE(obj$export)
-    })
+    }, logical(1))
     exports <- candidates[is_exported]
 
     # Separate top-level app exports from child-only widget definitions.
@@ -90,24 +90,26 @@ ts_compile.character <- function(
             }
         }
     }
-    is_child_only <- sapply(exports, \(z) {
+    is_child_only <- vapply(exports, \(z) {
         obj <- lookup(z)
         any(vapply(child_defs, identical, logical(1), obj))
-    })
+    }, logical(1))
     app_exports <- exports[!is_child_only]
     widget_exports <- exports[is_child_only]
 
-    exportFns <- sapply(
+    exportFns <- vapply(
         exports,
-        \(z) ts_compile(lookup(z), filename = "", name = z)
+        \(z) ts_compile(lookup(z), filename = "", name = z),
+        character(1)
     )
 
     # Generate type aliases for each export
     # Capitalize first letter: iNZDocument -> TINZDocument
     capitalize_first <- function(x) paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
-    type_aliases <- sapply(
+    type_aliases <- vapply(
         exports,
-        \(z) sprintf("export type T%s = z.infer<typeof %s>;", capitalize_first(z), z)
+        \(z) sprintf("export type T%s = z.infer<typeof %s>;", capitalize_first(z), z),
+        character(1)
     )
 
     src <- c(

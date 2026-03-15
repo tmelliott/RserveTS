@@ -13,6 +13,8 @@
 #'   instance and sets up initial state
 #' @param methods Named list of methods to add to the widget class. Each method
 #'   should be a `ts_function` object
+#' @param actions Logical or list. If logical, toggles action mode with defaults.
+#'   If list, supports `enabled`, `types`, and `strict` (`off|warn|strict`).
 #' @param auto_flush Logical, if `TRUE` (default), widget methods automatically
 #'   flush state changes to TypeScript after execution. If `FALSE`, manual
 #'   `updateState()` calls are required.
@@ -56,11 +58,51 @@
 #'     }
 #' )
 #' }
+normalize_widget_actions <- function(actions) {
+    strict_levels <- c("off", "warn", "strict")
+
+    if (is.logical(actions) && length(actions) == 1) {
+        enabled <- isTRUE(actions)
+        return(list(
+            actions = list(
+                enabled = enabled,
+                types = character(),
+                strict = if (enabled) "warn" else "off"
+            )
+        ))
+    }
+
+    if (!is.list(actions)) {
+        stop("'actions' must be logical or a list")
+    }
+
+    enabled <- if (is.null(actions$enabled)) TRUE else isTRUE(actions$enabled)
+    types <- if (is.null(actions$types)) character() else as.character(actions$types)
+    strict <- if (is.null(actions$strict)) {
+        if (enabled) "warn" else "off"
+    } else {
+        as.character(actions$strict)[1]
+    }
+
+    if (!(strict %in% strict_levels)) {
+        stop("'actions$strict' must be one of: off, warn, strict")
+    }
+
+    list(
+        actions = list(
+            enabled = enabled,
+            types = types,
+            strict = strict
+        )
+    )
+}
+
 createWidget <- function(
     name,
     properties = list(),
     initialize = NULL,
     methods = list(),
+    actions = FALSE,
     auto_flush = TRUE,
     .env = parent.frame(),
     ...) {
@@ -70,6 +112,7 @@ createWidget <- function(
     # where the new class should be created, but inheritance metadata may still
     # need to be registered in the package namespace.
     method_info <- widgetMethods(substitute(methods), auto_flush = auto_flush)
+    capabilities <- normalize_widget_actions(actions)
 
     rc <- setRefClass(name,
         properties(
@@ -141,6 +184,13 @@ createWidget <- function(
             lapply(props, \(prop) do.call(ts_list, prop))
         ),
         children = do.call(ts_list, widget_props),
+        capabilities = ts_list(
+            actions = ts_list(
+                enabled = ts_logical(1L),
+                types = ts_character(0L),
+                strict = ts_character(1L)
+            )
+        ),
         methods = if (length(method_defs) > 0) {
             do.call(ts_list, method_defs)
         } else {
@@ -219,6 +269,7 @@ createWidget <- function(
                 properties =
                     lapply(props, \(prop) lapply(prop, \(method) method$copy())),
                 children = widget$.child_connectors,
+                capabilities = capabilities,
                 methods = build_method_ocaps(widget, method_defs)
             )
         },
@@ -232,8 +283,10 @@ createWidget <- function(
     attr(w_ctor, ".__props") <- list(
         ts = props,
         widgets = widget_props,
-        ts_raw = ts_props
+        ts_raw = ts_props,
+        capabilities = capabilities
     )
+    attr(w_ctor, ".__capabilities") <- capabilities
     attr(w_ctor, ".__init") <- initialize
     attr(w_ctor, ".__methods") <- list(
         exported = method_info$exported,
@@ -416,6 +469,11 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
     # Use raw TypeScript type definitions
     ts_raw <- type_info$ts_raw
     child_widget_props <- type_info$widgets
+    child_capabilities <- if (!is.null(type_info$capabilities)) {
+        type_info$capabilities
+    } else {
+        normalize_widget_actions(FALSE)
+    }
     child_method_meta <- attr(widget_def, ".__methods")
     child_method_defs <- if (!is.null(child_method_meta$exported_defs)) {
         child_method_meta$exported_defs
@@ -474,6 +532,13 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
         } else {
             ts_list()
         },
+        capabilities = ts_list(
+            actions = ts_list(
+                enabled = ts_logical(1L),
+                types = ts_character(0L),
+                strict = ts_character(1L)
+            )
+        ),
         methods = if (length(child_method_defs) > 0) {
             do.call(ts_list, child_method_defs)
         } else {
@@ -546,6 +611,7 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
             list(
                 properties = child_props,
                 children = child_instance$.child_connectors,
+                capabilities = child_capabilities,
                 methods = build_method_ocaps(child_instance, child_method_defs)
             )
         },

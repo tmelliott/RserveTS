@@ -60,3 +60,33 @@ test_that("functions that accept JS functions", {
 
     ts_compile(logger)
 })
+
+test_that("compiled widget schema includes action capabilities metadata", {
+    src <- tempfile(fileext = ".R")
+    base <- tempfile(fileext = ".rserve")
+    ts_out <- sprintf("%s.ts", base)
+
+    on.exit({
+        if (file.exists(src)) unlink(src)
+        if (file.exists(ts_out)) unlink(ts_out)
+        r_out <- sprintf("%s.R", base)
+        if (file.exists(r_out)) unlink(r_out)
+    })
+
+    writeLines(c(
+        "ActionCompileWidget <- createWidget(",
+        "  \"ActionCompileWidget\",",
+        "  properties = list(value = ts_character(1L, default = \"\")),",
+        "  actions = list(enabled = TRUE, types = c(\"SetValue\"), strict = \"warn\")",
+        ")",
+        "ActionCompileWidget$export <- TRUE"
+    ), src)
+
+    ts_compile(src, filename = base)
+    expect_true(file.exists(ts_out))
+
+    compiled <- paste(readLines(ts_out, warn = FALSE), collapse = "\n")
+    expect_match(compiled, "capabilities")
+    expect_match(compiled, "actions")
+    expect_match(compiled, "strict")
+})

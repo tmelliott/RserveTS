@@ -81,6 +81,10 @@ test_that("dynamic child connector returns correct structure", {
   # Should return properties, children, methods — same shape as any widget
   expect_true("properties" %in% names(child_result))
   expect_true("methods" %in% names(child_result))
+  expect_true("capabilities" %in% names(child_result))
+  expect_true("actions" %in% names(child_result$capabilities))
+  expect_false(isTRUE(child_result$capabilities$actions$enabled))
+  expect_equal(child_result$capabilities$actions$strict, "off")
 
   # Properties should include value and label
   expect_true("value" %in% names(child_result$properties))
@@ -140,6 +144,59 @@ test_that("multiple dynamic children are independent", {
 
   expect_equal(val1, 1L)
   expect_equal(val2, 0L)
+})
+
+test_that("dynamic child inherits explicit action capabilities", {
+  local_mocked_bindings(
+    jsfun = function(x) function(...) invisible(NULL)
+  )
+
+  DynActionChildWidget <- createWidget(
+    "DynActionChildWidget",
+    properties = list(value = ts_integer(1L, default = 0L)),
+    actions = list(
+      enabled = TRUE,
+      types = c("SetValue"),
+      strict = "warn"
+    ),
+    .env = globalenv()
+  )
+  assign("DynActionChildWidget", DynActionChildWidget, envir = globalenv())
+
+  DynActionParentWidget <- createWidget(
+    "DynActionParentWidget",
+    properties = list(children = "ANY"),
+    initialize = function(widget) {
+      widget$children <- list()
+    },
+    methods = list(
+      addChild = ts_function(
+        function() {
+          child <- .self$create_dynamic_child(DynActionChildWidget)
+          idx <- length(.self$children) + 1L
+          .self$children[[idx]] <- child
+          child$connector
+        },
+        result = DynActionChildWidget
+      )
+    ),
+    .env = globalenv()
+  )
+  assign("DynActionParentWidget", DynActionParentWidget, envir = globalenv())
+
+  withr::defer({
+    for (nm in c("DynActionChildWidget", "DynActionParentWidget")) {
+      if (exists(nm, envir = globalenv())) rm(list = nm, envir = globalenv())
+    }
+  }, envir = parent.frame())
+
+  parent_result <- DynActionParentWidget$call(mock_setState)
+  connector <- parent_result$methods$addChild$call()
+  child_result <- connector$call(NULL)
+
+  expect_true(isTRUE(child_result$capabilities$actions$enabled))
+  expect_equal(child_result$capabilities$actions$types, "SetValue")
+  expect_equal(child_result$capabilities$actions$strict, "warn")
 })
 
 test_that("destroy nulls out setState", {

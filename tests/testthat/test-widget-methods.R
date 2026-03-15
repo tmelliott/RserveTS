@@ -168,3 +168,44 @@ test_that("exported_defs are stored in widget attributes", {
   expect_equal(sort(names(method_meta$exported_defs)), c("compute", "reset"))
   expect_true(inherits(method_meta$exported_defs$compute, "ts_function"))
 })
+
+test_that("createWidget stores normalized action metadata", {
+  w <- createWidget(
+    "ActionMetaWidget",
+    properties = list(x = ts_integer(1L, default = 0L)),
+    actions = list(
+      enabled = TRUE,
+      types = c("SetX", "ResetX"),
+      strict = "warn"
+    )
+  )
+
+  capabilities <- attr(w, ".__capabilities")
+  expect_true(is.list(capabilities))
+  expect_true(is.list(capabilities$actions))
+  expect_true(isTRUE(capabilities$actions$enabled))
+  expect_equal(capabilities$actions$types, c("SetX", "ResetX"))
+  expect_equal(capabilities$actions$strict, "warn")
+})
+
+test_that("root widget connector exposes capabilities.actions payload", {
+  tracker <- capture_state_updates()
+  local_mocked_bindings(jsfun = tracker$mock)
+
+  w <- createWidget(
+    "ActionRootCapsWidget",
+    properties = list(x = ts_integer(1L, default = 0L)),
+    actions = list(
+      enabled = TRUE,
+      types = c("SetX"),
+      strict = "warn"
+    )
+  )
+
+  result <- w$call(mock_js_fn())
+  expect_true("capabilities" %in% names(result))
+  expect_true("actions" %in% names(result$capabilities))
+  expect_true(isTRUE(result$capabilities$actions$enabled))
+  expect_equal(result$capabilities$actions$types, "SetX")
+  expect_equal(result$capabilities$actions$strict, "warn")
+})
