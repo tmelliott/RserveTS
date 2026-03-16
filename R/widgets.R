@@ -58,6 +58,55 @@
 #'     }
 #' )
 #' }
+widgetActions <- function(..., strict = "warn", enabled = TRUE) {
+    strict_levels <- c("off", "warn", "strict")
+    if (!(strict %in% strict_levels)) {
+        stop("'strict' must be one of: off, warn, strict")
+    }
+
+    defs <- list(...)
+    if (length(defs) == 0) {
+        stop("widgetActions requires at least one action")
+    }
+    action_names <- names(defs)
+    if (is.null(action_names) || any(action_names == "")) {
+        stop("All widgetActions entries must be named")
+    }
+    if (any(duplicated(action_names))) {
+        stop("widgetActions action names must be unique")
+    }
+    safe_pattern <- "^[A-Za-z_][A-Za-z0-9_]*$"
+    if (any(!grepl(safe_pattern, action_names))) {
+        stop(
+            "Action names must match ^[A-Za-z_][A-Za-z0-9_]*$: ",
+            paste(action_names[!grepl(safe_pattern, action_names)], collapse = ", ")
+        )
+    }
+    for (nm in action_names) {
+        if (!inherits(defs[[nm]], "ts_function")) {
+            stop("Action '", nm, "' must be a ts_function")
+        }
+        if (length(defs[[nm]]$args) != 1) {
+            stop("Action '", nm, "' must accept exactly one payload argument")
+        }
+    }
+
+    payload_types <- lapply(defs, \(fn) fn$args[[1]])
+    payload_arg_names <- lapply(defs, \(fn) names(fn$args)[1])
+
+    structure(
+        list(
+            enabled = isTRUE(enabled),
+            strict = strict,
+            types = action_names,
+            defs = defs,
+            payload_types = payload_types,
+            payload_arg_names = payload_arg_names
+        ),
+        class = "ts_widget_actions"
+    )
+}
+
 normalize_widget_actions <- function(actions) {
     strict_levels <- c("off", "warn", "strict")
 
@@ -68,12 +117,24 @@ normalize_widget_actions <- function(actions) {
                 enabled = enabled,
                 types = character(),
                 strict = if (enabled) "warn" else "off"
-            )
+            ),
+            dispatch = NULL
+        ))
+    }
+
+    if (inherits(actions, "ts_widget_actions")) {
+        return(list(
+            actions = list(
+                enabled = isTRUE(actions$enabled),
+                types = actions$types,
+                strict = actions$strict
+            ),
+            dispatch = NULL
         ))
     }
 
     if (!is.list(actions)) {
-        stop("'actions' must be logical or a list")
+        stop("'actions' must be logical, widgetActions(...), or a list")
     }
 
     enabled <- if (is.null(actions$enabled)) TRUE else isTRUE(actions$enabled)
@@ -93,7 +154,8 @@ normalize_widget_actions <- function(actions) {
             enabled = enabled,
             types = types,
             strict = strict
-        )
+        ),
+        dispatch = NULL
     )
 }
 
@@ -106,13 +168,82 @@ createWidget <- function(
     auto_flush = TRUE,
     .env = parent.frame(),
     ...) {
+    methods_list <- eval(substitute(methods), envir = parent.frame())
+    if (is.null(methods_list)) {
+        methods_list <- list()
+    }
+    if (!is.list(methods_list)) {
+        stop("'methods' must evaluate to a list")
+    }
+
+    capabilities <- normalize_widget_actions(actions)
+    if (inherits(actions, "ts_widget_actions")) {
+        if ("dispatchAction" %in% names(methods_list)) {
+            stop("dispatchAction cannot be defined in methods when using widgetActions")
+        }
+
+        object_shapes <- vapply(actions$types, function(nm) {
+            payload <- actions$payload_types[[nm]]
+            sprintf(
+                "z.object({ type: z.literal(%s), payload: %s })",
+                sprintf("\"%s\"", nm),
+                payload$input_type
+            )
+        }, character(1))
+        action_input_type <- if (length(object_shapes) == 1) {
+            object_shapes[[1]]
+        } else {
+            sprintf("z.union([%s])", paste(object_shapes, collapse = ", "))
+        }
+        action_types <- actions$types
+        payload_types <- actions$payload_types
+        action_handlers <- lapply(actions$defs, \(def) def$f)
+
+        action_input <- ts_object(
+            input_type = action_input_type,
+            return_type = "Robj.list()",
+            check = eval(bquote(function(x) {
+                action_types <- .(action_types)
+                payload_types <- .(payload_types)
+                if (!is.list(x) || is.null(x$type) || is.null(x$payload)) {
+                    stop("Action must be a list with 'type' and 'payload'")
+                }
+                action_type <- as.character(x$type)[1]
+                if (!(action_type %in% action_types)) {
+                    stop("Unknown action type: ", action_type)
+                }
+                check_type(payload_types[[action_type]], x$payload)
+                x
+            }))
+        )
+
+        dispatch_fn <- eval(bquote(function(action) {
+            action_types <- .(action_types)
+            handlers <- .(action_handlers)
+            action_type <- as.character(action$type)[1]
+            payload <- action$payload
+            if (!(action_type %in% action_types)) {
+                stop("Unknown action type: ", action_type)
+            }
+            handler <- handlers[[action_type]]
+            environment(handler) <- environment()
+            handler(payload)
+            invisible(NULL)
+        }))
+
+        methods_list$dispatchAction <- ts_function(
+            dispatch_fn,
+            action = action_input,
+            result = ts_null()
+        )
+    }
+
     # setRefClass with contains tries to register class metadata in the base class's
     # namespace. To work around locked namespace issues, we need to ensure the
     # class definition can be registered. The .env parameter allows specifying
     # where the new class should be created, but inheritance metadata may still
     # need to be registered in the package namespace.
-    method_info <- widgetMethods(substitute(methods), auto_flush = auto_flush)
-    capabilities <- normalize_widget_actions(actions)
+    method_info <- widgetMethods(methods_list, auto_flush = auto_flush)
 
     rc <- setRefClass(name,
         properties(
@@ -376,7 +507,13 @@ wrap_auto_flush <- function(fn) {
 #   $observers - named list: method_name -> character vector of watched props
 #   $exported  - character vector of method names wrapped in ts_function
 widgetMethods <- function(methods, auto_flush = TRUE) {
-    methods <- as.list(methods)[-1]
+    if (is.call(methods)) {
+        methods <- as.list(methods)[-1]
+    } else if (is.list(methods)) {
+        methods <- methods
+    } else {
+        stop("Invalid methods definition")
+    }
 
     method_fns <- list()
     observers <- list()
@@ -388,13 +525,20 @@ widgetMethods <- function(methods, auto_flush = TRUE) {
         obs_props <- NULL
 
         # Unwrap observer() to get inner fn + watched props
-        if (is.call(x) && identical(x[[1]], quote(observer))) {
+        if (inherits(x, "ts_observer")) {
+            obs_props <- x$props
+            x <- x$fn
+        } else if (is.call(x) && identical(x[[1]], quote(observer))) {
             obs_props <- eval(x[[2]])
             x <- x[[3]] # inner function or ts_function call
         }
 
         # Extract raw function and determine if exported
-        if (is.call(x) && identical(x[[1]], quote(ts_function))) {
+        if (inherits(x, "ts_function")) {
+            fn <- x$f
+            exported <- c(exported, nm)
+            exported_defs[[nm]] <- x
+        } else if (is.call(x) && identical(x[[1]], quote(ts_function))) {
             fn <- eval(x[[2]])
             exported <- c(exported, nm)
             exported_defs[[nm]] <- eval(x)
