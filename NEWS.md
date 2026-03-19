@@ -1,3 +1,8 @@
+# RserveTS 0.8.2
+
+- fix `ts_compile()` app schema output by emitting a named `*AppSchema` object with typed default export.
+- add compile regression test coverage for named app schema and default export shape.
+
 # RserveTS 0.8.1
 
 - ts_compile() enhancements
