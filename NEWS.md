@@ -1,3 +1,9 @@
+# RserveTS 0.8.2.9000 (Unreleased)
+
+- add `widgetActions()` for typed widget action definitions used by `createWidget(actions = ...)`.
+- restore separate `createWidget()` and `widgetActions()` reference docs/exports and update pkgdown reference indexing.
+- stabilize widget observer tests by replacing parent-environment assignments with explicit test state environments.
+
 # RserveTS 0.8.2
 
 - fix `ts_compile()` app schema output by emitting a named `*AppSchema` object with typed default export.
