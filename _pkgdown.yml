@@ -12,6 +12,7 @@ reference:
       - ts_compile
       - ts_deploy
       - createWidget
+      - widgetActions
       - tsWidget
       - observer
   - title: Types
@@ -24,6 +25,7 @@ reference:
       - ts_character
       - ts_factor
       - ts_list
+      - ts_record
       - ts_dataframe
       - ts_null
       - ts_void

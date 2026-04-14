@@ -1,63 +1,15 @@
-#' Create a TypeScript-Compatible Widget
+#' Define actions for `createWidget()`
 #'
-#' Creates a reference class-based widget that can interact with TypeScript code.
-#' The widget supports reactive properties that can be observed from both R and
-#' TypeScript, with automatic state synchronization.
+#' Creates a typed action definition object used by `createWidget(actions = ...)`.
+#' Each action must be a named `ts_function` with exactly one payload argument.
 #'
-#' Note that the object constructed takes a Javascript setter function as argument, so calling `obj$call()` will fail.
+#' @param ... Named `ts_function` objects, one per action type.
+#' @param strict Character scalar controlling unknown action handling:
+#'   `"off"`, `"warn"`, or `"strict"`.
+#' @param enabled Logical; whether action support is enabled.
 #'
-#' @param name Character string specifying the name of the widget class
-#' @param properties Named list of typed properties for the widget. Each property
-#'   should be a TypeScript type object that defines the property's type
-#' @param initialize Optional initialization function that receives the widget
-#'   instance and sets up initial state
-#' @param methods Named list of methods to add to the widget class. Each method
-#'   should be a `ts_function` object
-#' @param actions Logical or list. If logical, toggles action mode with defaults.
-#'   If list, supports `enabled`, `types`, and `strict` (`off|warn|strict`).
-#' @param auto_flush Logical, if `TRUE` (default), widget methods automatically
-#'   flush state changes to TypeScript after execution. If `FALSE`, manual
-#'   `updateState()` calls are required.
-#' @param .env Environment where the ref class should be created. Defaults to
-#'   `parent.frame()` which is the caller's environment (typically unlocked).
-#'   Can be overridden (e.g., to `.GlobalEnv`) if needed.
-#' @param ... Additional arguments passed to the TypeScript function constructor
-#'
-#' @return A TypeScript function constructor that creates widget instances with
-#'   reactive properties and methods for TypeScript interoperability
-#'
-#' @details
-#' The created widget includes built-in methods:
-#' \itemize{
-#'   \item \code{set(prop, value)}: Set a property value and mark it as changed
-#'   \item \code{get(prop)}: Get a property value
-#'   \item \code{addPropHandler(prop, fn)}: Register a handler for property changes
-#'   \item \code{updateState(all = FALSE)}: Synchronize changed properties to TypeScript
-#' }
-#'
-#' Each property automatically gets TypeScript-accessible methods:
-#' \itemize{
-#'   \item \code{register(fn)}: Register a callback for property changes
-#'   \item \code{get()}: Get the current property value
-#'   \item \code{set(x)}: Set the property value
-#' }
-#'
-#' @import objectSignals
-#' @importFrom methods setRefClass new
-#' @importFrom objectProperties properties
+#' @return A `ts_widget_actions` object for use in `createWidget(actions = ...)`.
 #' @export
-#'
-#' @examples
-#' # Create a simple counter widget
-#' \dontrun{
-#' createWidget(
-#'     name = "Counter",
-#'     properties = list(count = ts_integer(1)),
-#'     initialize = function(widget) {
-#'         widget$set("count", 0)
-#'     }
-#' )
-#' }
 widgetActions <- function(..., strict = "warn", enabled = TRUE) {
     strict_levels <- c("off", "warn", "strict")
     if (!(strict %in% strict_levels)) {
@@ -159,6 +111,66 @@ normalize_widget_actions <- function(actions) {
     )
 }
 
+#' Create a TypeScript-Compatible Widget
+#'
+#' Creates a reference class-based widget that can interact with TypeScript code.
+#' The widget supports reactive properties that can be observed from both R and
+#' TypeScript, with automatic state synchronization.
+#'
+#' Note that the object constructed takes a Javascript setter function as argument, so calling `obj$call()` will fail.
+#'
+#' @param name Character string specifying the name of the widget class
+#' @param properties Named list of typed properties for the widget. Each property
+#'   should be a TypeScript type object that defines the property's type
+#' @param initialize Optional initialization function that receives the widget
+#'   instance and sets up initial state
+#' @param methods Named list of methods to add to the widget class. Each method
+#'   should be a `ts_function` object
+#' @param actions Logical or list. If logical, toggles action mode with defaults.
+#'   If list, supports `enabled`, `types`, and `strict` (`off|warn|strict`).
+#' @param auto_flush Logical, if `TRUE` (default), widget methods automatically
+#'   flush state changes to TypeScript after execution. If `FALSE`, manual
+#'   `updateState()` calls are required.
+#' @param .env Environment where the ref class should be created. Defaults to
+#'   `parent.frame()` which is the caller's environment (typically unlocked).
+#'   Can be overridden (e.g., to `.GlobalEnv`) if needed.
+#' @param ... Additional arguments passed to the TypeScript function constructor
+#'
+#' @return A TypeScript function constructor that creates widget instances with
+#'   reactive properties and methods for TypeScript interoperability
+#'
+#' @details
+#' The created widget includes built-in methods:
+#' \itemize{
+#'   \item \code{set(prop, value)}: Set a property value and mark it as changed
+#'   \item \code{get(prop)}: Get a property value
+#'   \item \code{addPropHandler(prop, fn)}: Register a handler for property changes
+#'   \item \code{updateState(all = FALSE)}: Synchronize changed properties to TypeScript
+#' }
+#'
+#' Each property automatically gets TypeScript-accessible methods:
+#' \itemize{
+#'   \item \code{register(fn)}: Register a callback for property changes
+#'   \item \code{get()}: Get the current property value
+#'   \item \code{set(x)}: Set the property value
+#' }
+#'
+#' @import objectSignals
+#' @importFrom methods setRefClass new
+#' @importFrom objectProperties properties
+#' @export
+#'
+#' @examples
+#' # Create a simple counter widget
+#' \dontrun{
+#' createWidget(
+#'     name = "Counter",
+#'     properties = list(count = ts_integer(1)),
+#'     initialize = function(widget) {
+#'         widget$set("count", 0)
+#'     }
+#' )
+#' }
 createWidget <- function(
     name,
     properties = list(),

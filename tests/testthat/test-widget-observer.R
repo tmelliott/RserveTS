@@ -33,7 +33,8 @@ test_that("observer(props, function) wires prop handlers", {
   tracker <- capture_state_updates()
   local_mocked_bindings(jsfun = tracker$mock)
 
-  handler_called <- FALSE
+  state <- new.env(parent = emptyenv())
+  state$handler_called <- FALSE
 
   w <- createWidget(
     "ObsPlainWidget",
@@ -43,7 +44,7 @@ test_that("observer(props, function) wires prop handlers", {
     ),
     methods = list(
       on_input = observer("input", function() {
-        handler_called <<- TRUE
+        state$handler_called <- TRUE
         .self$set("output", .self$input * 2L)
       })
     )
@@ -52,7 +53,7 @@ test_that("observer(props, function) wires prop handlers", {
   result <- w$call(mock_js_fn())
 
   # Handler shouldn't have fired yet (input hasn't changed since init)
-  expect_false(handler_called)
+  expect_false(state$handler_called)
 
   # Method should be on the ref class
   rc <- attr(w, ".__refclass")

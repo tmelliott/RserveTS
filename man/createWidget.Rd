@@ -9,6 +9,7 @@ createWidget(
   properties = list(),
   initialize = NULL,
   methods = list(),
+  actions = FALSE,
   auto_flush = TRUE,
   .env = parent.frame(),
   ...
@@ -25,6 +26,9 @@ instance and sets up initial state}
 
 \item{methods}{Named list of methods to add to the widget class. Each method
 should be a \code{ts_function} object}
+
+\item{actions}{Logical or list. If logical, toggles action mode with defaults.
+If list, supports \code{enabled}, \code{types}, and \code{strict} (\code{off|warn|strict}).}
 
 \item{auto_flush}{Logical, if \code{TRUE} (default), widget methods automatically
 flush state changes to TypeScript after execution. If \code{FALSE}, manual

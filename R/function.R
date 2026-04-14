@@ -90,7 +90,7 @@ ts_function <- function(f, ..., result = ts_void(), export = FALSE) {
                     identical(result$return_type, "Robj.null()")
 
     # If void-like, wrap the function body to automatically return invisible(NULL)
-    if (is_void_like) {
+    if (is_void_like && is.function(f)) {
         original_body <- body(f)
         # Wrap the body so it ends with invisible(NULL) if no explicit return
         body(f) <- bquote({

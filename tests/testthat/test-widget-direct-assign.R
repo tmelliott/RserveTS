@@ -78,7 +78,8 @@ test_that("direct assignment triggers observer handlers", {
   tracker <- capture_state_updates()
   local_mocked_bindings(jsfun = tracker$mock)
 
-  handler_called <- FALSE
+  state <- new.env(parent = emptyenv())
+  state$handler_called <- FALSE
   widget_ref <- NULL
 
   w <- createWidget(
@@ -92,19 +93,19 @@ test_that("direct assignment triggers observer handlers", {
     },
     methods = list(
       on_x = observer("x", function() {
-        handler_called <<- TRUE
+        state$handler_called <- TRUE
         .self$set("y", .self$x * 2L)
       })
     )
   )
 
   result <- w$call(mock_js_fn())
-  handler_called <- FALSE
+  state$handler_called <- FALSE
 
   # Direct assignment should trigger the observer
   widget_ref$x <- 5L
 
-  expect_true(handler_called)
+  expect_true(state$handler_called)
   expect_equal(widget_ref$y, 10L)
 })
 
