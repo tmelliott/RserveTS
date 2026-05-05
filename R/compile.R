@@ -97,17 +97,193 @@ ts_compile.character <- function(
     app_exports <- exports[!is_child_only]
     widget_exports <- exports[is_child_only]
 
+    capitalize_first <- function(x) {
+        paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
+    }
+
+    safe_js_id <- function(nm) {
+        is.character(nm) && length(nm) == 1L &&
+            grepl("^[A-Za-z_][A-Za-z0-9_]*$", nm)
+    }
+
+    recursive_widget_children <- function(w) {
+        if (!inherits(w, "ts_widget")) {
+            return(list())
+        }
+        out <- list()
+        wp <- attr(w, ".__props")$widgets
+        if (length(wp)) {
+            for (v in unname(wp)) {
+                out <- c(out, list(v), recursive_widget_children(v))
+            }
+        }
+        out
+    }
+
+    dedupe_widgets_first <- function(lst) {
+        out <- list()
+        for (x in lst) {
+            if (!inherits(x, "ts_widget")) {
+                next
+            }
+            if (any(vapply(out, identical, logical(1), x))) {
+                next
+            }
+            out <- c(out, list(x))
+        }
+        out
+    }
+
+    collect_hoist_widgets <- function() {
+        out <- list()
+        for (z in exports) {
+            obj <- lookup(z)
+            if (inherits(obj, "ts_widget")) {
+                out <- c(out, recursive_widget_children(obj))
+                mdefs <- attr(obj, ".__methods")$exported_defs
+                for (m in mdefs) {
+                    if (inherits(m$result, "ts_widget")) {
+                        r <- m$result
+                        out <- c(out, list(r), recursive_widget_children(r))
+                    }
+                }
+            }
+        }
+        dedupe_widgets_first(out)
+    }
+
+    topo_emit_order <- function(unique_widgets) {
+        out <- list()
+        walk <- function(w) {
+            if (!inherits(w, "ts_widget")) {
+                return()
+            }
+            if (any(vapply(out, identical, logical(1), w))) {
+                return()
+            }
+            wp <- attr(w, ".__props")$widgets
+            for (v in unname(wp)) {
+                walk(v)
+            }
+            out <<- c(out, list(w))
+        }
+        for (w in unique_widgets) {
+            walk(w)
+        }
+        out
+    }
+
+    resolve_hoist_id <- function(widget, taken) {
+        for (nm in candidates) {
+            obj <- lookup(nm)
+            if (is.null(obj) || !identical(obj, widget)) {
+                next
+            }
+            if (!safe_js_id(nm)) {
+                next
+            }
+            if (nm %in% taken) {
+                next
+            }
+            return(nm)
+        }
+        i <- 1L
+        repeat {
+            nm <- if (i == 1L) "hoistedChild" else sprintf("hoistedChild%d", i)
+            if (!nm %in% taken) {
+                return(nm)
+            }
+            i <- i + 1L
+        }
+    }
+
+    hoist_widgets <- collect_hoist_widgets()
+    hoist_topo <- topo_emit_order(hoist_widgets)
+
+    clear_widget_schema_refs <- function() {
+        for (w in hoist_topo) {
+            attr(w, ".__ts_schema_ref") <- NULL
+        }
+        for (nm in exports) {
+            obj <- lookup(nm)
+            if (inherits(obj, "ts_widget")) {
+                attr(obj, ".__ts_schema_ref") <- NULL
+            }
+        }
+    }
+    on.exit(clear_widget_schema_refs(), add = TRUE)
+
+    taken <- exports
+    hoist_const_lines <- character()
+    hoist_type_lines <- character()
+
+    for (w in hoist_topo) {
+        ex_name <- NULL
+        for (nm in exports) {
+            if (identical(lookup(nm), w)) {
+                ex_name <- nm
+                break
+            }
+        }
+        if (!is.null(ex_name)) {
+            next
+        }
+        id <- resolve_hoist_id(w, taken)
+        taken <- c(taken, id)
+        attr(w, ".__ts_schema_ref") <- NULL
+        hoist_const_lines <- c(
+            hoist_const_lines,
+            ts_compile(w, filename = "", name = id)
+        )
+        attr(w, ".__ts_schema_ref") <- id
+        hoist_type_lines <- c(
+            hoist_type_lines,
+            sprintf(
+                "export type T%s = z.infer<typeof %s>;",
+                capitalize_first(id),
+                id
+            )
+        )
+    }
+
+    exp_ws <- exports[vapply(exports, \(z) inherits(lookup(z), "ts_widget"), logical(1))]
+    exp_ws_ord <- if (length(exp_ws)) {
+        ord <- topo_emit_order(lapply(exp_ws, lookup))
+        mapped <- vapply(ord, \(w) {
+            hit <- exp_ws[vapply(exp_ws, \(nm) identical(lookup(nm), w), logical(1))]
+            if (length(hit) == 1L) {
+                return(hit[[1L]])
+            }
+            if (length(hit) > 1L) {
+                stop("internal: ambiguous export name for widget")
+            }
+            NA_character_
+        }, character(1))
+        mapped <- mapped[!is.na(mapped)]
+        unique(mapped, fromLast = FALSE)
+    } else {
+        character()
+    }
+    exports_emit_order <- c(exp_ws_ord, exports[!exports %in% exp_ws_ord])
+
     exportFns <- vapply(
-        exports,
-        \(z) ts_compile(lookup(z), filename = "", name = z),
+        exports_emit_order,
+        \(z) {
+            obj <- lookup(z)
+            if (inherits(obj, "ts_widget")) {
+                attr(obj, ".__ts_schema_ref") <- NULL
+                line <- ts_compile(obj, filename = "", name = z)
+                attr(obj, ".__ts_schema_ref") <- z
+                line
+            } else {
+                ts_compile(obj, filename = "", name = z)
+            }
+        },
         character(1)
     )
 
-    # Generate type aliases for each export
-    # Capitalize first letter: iNZDocument -> TINZDocument
-    capitalize_first <- function(x) paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
     type_aliases <- vapply(
-        exports,
+        exports_emit_order,
         \(z) sprintf("export type T%s = z.infer<typeof %s>;", capitalize_first(z), z),
         character(1)
     )
@@ -143,8 +319,10 @@ ts_compile.character <- function(
         "import { Robj } from 'rserve-ts';",
         "import { z } from 'zod';",
         "\n",
+        hoist_const_lines,
         exportFns,
         "\n",
+        hoist_type_lines,
         type_aliases,
         "\n",
         app_schema_block

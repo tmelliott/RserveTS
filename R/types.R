@@ -67,6 +67,30 @@ get_type.ts_object <- function(x, which = c("input", "return")) {
 }
 
 #' @export
+get_type.ts_ts_list <- function(x, which = c("input", "return")) {
+    which <- match.arg(which)
+    if (which == "input") {
+        return(x$input_type)
+    }
+    vals <- x$.__ts_list_values
+    if (!length(vals)) {
+        return(x$return_type)
+    }
+    type_funs <- vapply(vals, get_type, character(1), which = "return")
+    if (!is.null(names(vals))) {
+        type_fn <- sprintf(
+            "{ %s }",
+            paste(names(vals), type_funs, sep = ": ", collapse = ", ")
+        )
+        return(if (identical(type_fn, "{ }")) "Robj.list()" else sprintf("Robj.list(%s)", type_fn))
+    }
+    if (length(vals) == 1L) {
+        return(sprintf("Robj.list(%s)", type_funs[[1L]]))
+    }
+    sprintf("Robj.list([%s])", paste(type_funs, collapse = ", "))
+}
+
+#' @export
 get_type.ts_function <- function(x, which = c("input", "return")) {
     which <- match.arg(which)
     if (which == "input") {
@@ -75,6 +99,19 @@ get_type.ts_function <- function(x, which = c("input", "return")) {
 
     compile_fn(x)
     # "Robj.ocap()"
+}
+
+#' @export
+get_type.ts_widget <- function(x, which = c("input", "return")) {
+    which <- match.arg(which)
+    if (which == "input") {
+        return("z.function()")
+    }
+    ref <- attr(x, ".__ts_schema_ref", exact = TRUE)
+    if (is.character(ref) && length(ref) == 1L && nzchar(ref)) {
+        return(ref)
+    }
+    compile_fn(x)
 }
 
 #' @export
@@ -445,7 +482,7 @@ ts_list <- function(..., default = NULL) {
         }
     }
 
-    ts_object(
+    out <- ts_object(
         type,
         ifelse(type_fn == "", "Robj.list()",
             sprintf("Robj.list(%s)", type_fn)
@@ -469,6 +506,11 @@ ts_list <- function(..., default = NULL) {
             x
         }
     )
+    if (length(values)) {
+        out$.__ts_list_values <- values
+        class(out) <- c("ts_ts_list", class(out))
+    }
+    out
 }
 
 
