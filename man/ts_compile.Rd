@@ -4,20 +4,25 @@
 \alias{ts_compile}
 \title{Compile R functions}
 \usage{
-ts_compile(f, ..., name, filename)
+ts_compile(f, ...)
 }
 \arguments{
-\item{f}{A function or file path}
+\item{f}{A function or file path (length-one character string for file compilation).}
 
-\item{...}{Additional arguments (passed to ts_deploy)}
-
-\item{name}{The name of the function}
-
-\item{filename}{The base file path to write the TypeScript schema and R app to (optional, uses \verb{[path of f].rserve} by default). \code{.R} and \code{.ts} file extensions are appended automatically. If \code{""}, the output is printed to the standard output console (see \code{cat}).}
+\item{...}{Additional arguments. For the \strong{file path} method, named arguments passed to \code{\link[=ts_deploy]{ts_deploy()}} (e.g. \code{init}, \code{port}, \code{run}). For \code{ts_function} / \code{ts_widget} objects, further arguments are accepted and ignored by the current methods.}
 }
 \value{
 Character vector of TypeScript schema, or NULL if writing to file
 }
 \description{
 Generates TypeScript schema for the given R function or file path. If a path, the R app is also generated.
+}
+\details{
+\strong{\code{ts_function} method:} \code{name} defaults to \code{deparse(substitute(f))} and sets the generated \verb{export const} symbol.
+
+\strong{Character (file) method:} \code{filename} is the base path for output (default \verb{[path of f].rserve}); \code{.R} and \code{.ts} extensions are appended. Arguments \code{filename}, \code{format}, and \code{prettier_cmd} must be passed by name; they are not part of \code{...}.
+\itemize{
+\item \code{format} — If \code{TRUE}, format the generated \code{.ts} with Prettier before writing (default \code{FALSE}). Requires \href{https://prettier.io}{Prettier} or \verb{npx prettier} on \code{PATH} when \code{TRUE}, unless \code{prettier_cmd} or option/env overrides are set. See README.
+\item \code{prettier_cmd} — Optional character vector argv (executable first). If \code{NULL}, uses option \code{RserveTS.prettier_cmd}, then environment variable \code{RserveTS_PRETTIER_CMD} (space-separated tokens), then \code{prettier} or \verb{npx prettier} on \code{PATH}. A temporary \code{.ts} copy of the generated source is appended as the last argument (as with \verb{prettier --parser typescript path/to/file.ts}). Another formatter (e.g. Biome) can be used if it accepts that invocation pattern.
+}
 }

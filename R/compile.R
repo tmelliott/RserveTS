@@ -2,15 +2,21 @@
 #'
 #' Generates TypeScript schema for the given R function or file path. If a path, the R app is also generated.
 #'
-#' @param f A function or file path
-#' @param name The name of the function
-#' @param ... Additional arguments (passed to ts_deploy)
-#' @param filename The base file path to write the TypeScript schema and R app to (optional, uses `[path of f].rserve` by default). `.R` and `.ts` file extensions are appended automatically. If `""`, the output is printed to the standard output console (see `cat`).
+#' @param f A function or file path (length-one character string for file compilation).
+#' @param ... Additional arguments. For the **file path** method, named arguments passed to [ts_deploy()] (e.g. `init`, `port`, `run`). For `ts_function` / `ts_widget` objects, further arguments are accepted and ignored by the current methods.
 #' @return Character vector of TypeScript schema, or NULL if writing to file
+#' @details
+#' **`ts_function` method:** `name` defaults to `deparse(substitute(f))` and sets the generated `export const` symbol.
+#'
+#' **Character (file) method:** `filename` is the base path for output (default `[path of f].rserve`); `.R` and `.ts` extensions are appended. Arguments `filename`, `format`, and `prettier_cmd` must be passed by name; they are not part of `...`.
+#'
+#' * `format` — If `TRUE`, format the generated `.ts` with Prettier before writing (default `FALSE`). Requires [Prettier](https://prettier.io) or `npx prettier` on `PATH` when `TRUE`, unless `prettier_cmd` or option/env overrides are set. See README.
+#' * `prettier_cmd` — Optional character vector argv (executable first). If `NULL`, uses option `RserveTS.prettier_cmd`, then environment variable `RserveTS_PRETTIER_CMD` (space-separated tokens), then `prettier` or `npx prettier` on `PATH`. A temporary `.ts` copy of the generated source is appended as the last argument (as with `prettier --parser typescript path/to/file.ts`). Another formatter (e.g. Biome) can be used if it accepts that invocation pattern.
+#'
 #' @md
 #' @export
-ts_compile <- function(f, ..., name, filename) {
-    o <- UseMethod("ts_compile")
+ts_compile <- function(f, ...) {
+    UseMethod("ts_compile")
 }
 
 compile_fn <- function(f) {
@@ -42,9 +48,14 @@ ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
 ts_compile.character <- function(
     f,
     ...,
-    filename = sprintf("%s.rserve", tools::file_path_sans_ext(f))) {
-    if (length(f) > 1) {
-        return(sapply(f, ts_compile))
+    filename = sprintf("%s.rserve", tools::file_path_sans_ext(f)),
+    format = FALSE,
+    prettier_cmd = NULL) {
+    if (length(f) > 1L) {
+        for (path in f) {
+            ts_compile.character(path, ..., format = format, prettier_cmd = prettier_cmd)
+        }
+        return(invisible(NULL))
     }
 
     if (!file.exists(f)) {
@@ -328,7 +339,11 @@ ts_compile.character <- function(
         app_schema_block
     )
 
-    cat(src, file = sprintf("%s.ts", filename), sep = "\n")
+    ts_out <- sprintf("%s.ts", filename)
+    if (isTRUE(format)) {
+        src <- format_ts_source(src, prettier_cmd = prettier_cmd)
+    }
+    cat(src, file = ts_out, sep = "\n")
 
     # R file
     ts_deploy(f, file = sprintf("%s.R", filename), silent = TRUE, ...)
