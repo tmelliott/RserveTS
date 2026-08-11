@@ -48,8 +48,8 @@ test_that("new ocaps have the correct scope", {
 })
 
 test_that("functions that accept JS functions", {
-    # TODO: implement this
-    skip()
+    # See todo.md — JS function compile coverage not implemented yet
+    skip("JS function compile coverage not implemented yet")
     update <- NULL
     logger <- ts_function(
         function(f = ts_function(function() NULL, result = ts_void())) {

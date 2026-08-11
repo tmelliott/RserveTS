@@ -12,16 +12,10 @@ js_function(..., result = NULL)
 \item{result}{the type of value returned from JS to R}
 }
 \value{
-A ts object that accepts js functions (as input).
-Currently not able to pass as output (but should, in future ...).
+A ts object that accepts js functions as input.
+Using js functions as output (R to JS) is not supported yet.
 }
 \description{
-If result is NULL, it will be an oobSend (R process will continue),
-otherwise R process will wait for a response (oobMessage).
-}
-\details{
-TODO: when compiling, automatically wrap in self.oobMessage() or self.oobSend(), as necessary... ?
-\itemize{
-\item how about naked js functions? i.e., we might want to pass a function \emph{back} to javascript, for some reason?
-}
+If \code{result} is \code{NULL}, it will be an oobSend (R process will continue);
+otherwise the R process will wait for a response (oobMessage).
 }

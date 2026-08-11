@@ -349,7 +349,7 @@ ts_numeric <- function(n = -1L, default = NULL) {
         check = function(x) {
             if (!is.numeric(x)) stop("Expected a number", call. = FALSE)
             if (n > 0 && length(x) != n) {
-                stop("Expected a number of length ", n, , call. = FALSE)
+                stop("Expected a number of length ", n, call. = FALSE)
             }
             x
         }
@@ -532,7 +532,7 @@ ts_list <- function(..., default = NULL) {
 ts_record <- function(value_type, default = NULL) {
     stopifnot(is_ts_object(value_type))
 
-    input_type  <- sprintf("z.record(z.string(), %s)", value_type$input_type)
+    input_type <- sprintf("z.record(z.string(), %s)", value_type$input_type)
     return_type <- sprintf("Robj.list(z.record(z.string(), %s))", get_type(value_type, "return"))
 
     ts_object(
@@ -691,7 +691,6 @@ ts_recursive_list <- function(values, recur) {
         "const baseObjectSchema = z.object({\n  %s \n});",
         paste(names(values), types, sep = ": ", collapse = ",\n  ")
     )
-    # TODO: pass objects from TypeScript to R?
     # base_type_fn <- sprintf(
     #     "Robj.list({\n  %s \n})",
     #     paste(names(values), type_funs, sep = ": ", collapse = ",\n  ")
@@ -819,17 +818,13 @@ check_type.ts_self <- function(type, x) x
 
 #' JS functions callable from R
 #'
-#' If result is NULL, it will be an oobSend (R process will continue),
-#' otherwise R process will wait for a response (oobMessage).
-#'
-#' TODO: when compiling, automatically wrap in self.oobMessage() or self.oobSend(), as necessary... ?
-#' - how about naked js functions? i.e., we might want to pass a function *back* to javascript, for some reason?
-#'
+#' If `result` is `NULL`, it will be an oobSend (R process will continue);
+#' otherwise the R process will wait for a response (oobMessage).
 #'
 #' @param ... arguments passed to the function
 #' @param result the type of value returned from JS to R
-#' @return A ts object that accepts js functions (as input).
-#' Currently not able to pass as output (but should, in future ...).
+#' @return A ts object that accepts js functions as input.
+#'   Using js functions as output (R to JS) is not supported yet.
 #' @export
 js_function <- function(..., result = NULL) {
     input <- list(...)
@@ -843,7 +838,6 @@ js_function <- function(..., result = NULL) {
                 paste(",", get_type(result, which = "input"))
             )
         ),
-        # TODO: it is possible to return a javascript function from R ...
         NULL
     )
 }

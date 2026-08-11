@@ -40,7 +40,7 @@ ts_deploy <- function(f,
         x,
         sprintf("first.fns <- function() ts_app(%s)", init),
         "",
-        sprintf("oc.init <- function() Rserve:::ocap(first.fns)"),
+        sprintf("oc.init <- function() Rserve::ocap(first.fns)"),
         "",
         sprintf(
             paste(

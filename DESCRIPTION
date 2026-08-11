@@ -1,15 +1,14 @@
 Package: RserveTS
 Title: Deploy Rserve Applications Supporting TypeScript
-Version: 0.8.2.9000
+Version: 0.8.3
 Authors@R: c(
     person("Tom", "Elliott", , "tom@inzight.co.nz",
            role = c("aut", "cre"),
            comment = c(
-            ORCID = "0000-0002-7815-6318",
-            Funding = "Supported by the Ngā Puanga Pūtaiao Fellowships from Government funding, administered by the Royal Society Te Apārangi, New Zealand."
+            ORCID = "0000-0002-7815-6318"
            ))
     )
-Description: Tools for writing functions for TypeScript applications using Rserve, with methods for compilation and deployment of applications in the format expected by 'rserve-ts'. The package allows users to easily specify Javascript input types and Rserve output types for Ocap (object capability) functions. The companion library 'rserve-ts', available on npm <https://www.npmjs.com/package/rserve-ts>, provides the necessary infrastructure to run these functions in a Typescript environment.
+Description: Tools for writing functions for TypeScript applications using 'Rserve', with methods for compilation and deployment of applications in the format expected by 'rserve-ts'. The package allows users to easily specify JavaScript input types and 'Rserve' output types for Ocap (object capability) functions. The companion library 'rserve-ts', available on npm <https://www.npmjs.com/package/rserve-ts>, provides the necessary infrastructure to run these functions in a TypeScript environment.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -25,8 +24,7 @@ Imports:
     Rserve,
     stats
 Suggests:
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0)
-VignetteBuilder: knitr
-URL: http://tomelliott.co.nz/RserveTS/
+    testthat (>= 3.0.0),
+    withr
+URL: https://tomelliott.co.nz/RserveTS/, https://github.com/tmelliott/RserveTS
+BugReports: https://github.com/tmelliott/RserveTS/issues

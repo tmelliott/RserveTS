@@ -69,6 +69,20 @@ format_ts_source <- function(text, prettier_cmd = NULL) {
     argv <- resolve_prettier_argv(prettier_cmd)
     argv_tf <- c(argv, tf)
     cmd <- paste(vapply(argv_tf, shQuote, character(1)), collapse = " ")
+    # Node may create $TMPDIR/node-compile-cache (R CMD check TMPDIR), which
+    # triggers a detritus NOTE. Disable for this subprocess only.
+    old_disable <- Sys.getenv("NODE_DISABLE_COMPILE_CACHE", unset = NA_character_)
+    Sys.setenv(NODE_DISABLE_COMPILE_CACHE = "1")
+    on.exit(
+        {
+            if (is.na(old_disable)) {
+                Sys.unsetenv("NODE_DISABLE_COMPILE_CACHE")
+            } else {
+                Sys.setenv(NODE_DISABLE_COMPILE_CACHE = old_disable)
+            }
+        },
+        add = TRUE
+    )
     lines <- suppressWarnings(system(cmd, intern = TRUE))
     st <- attr(lines, "status", exact = TRUE)
     if (!is.null(st) && !identical(st, 0L)) {

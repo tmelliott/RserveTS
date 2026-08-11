@@ -58,9 +58,6 @@ app <- ts_function(
     sample = sampleFn
   )
 )
-
-# TODO: specify exactly which functions to export in the entry point
-# ts_export(app)
 ```
 
 Then use `ts_compile()` to generate the TypeScript schemas:

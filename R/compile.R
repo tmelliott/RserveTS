@@ -10,8 +10,8 @@
 #'
 #' **Character (file) method:** `filename` is the base path for output (default `[path of f].rserve`); `.R` and `.ts` extensions are appended. Arguments `filename`, `format`, and `prettier_cmd` must be passed by name; they are not part of `...`.
 #'
-#' * `format` — If `TRUE`, format the generated `.ts` with Prettier before writing (default `FALSE`). Requires [Prettier](https://prettier.io) or `npx prettier` on `PATH` when `TRUE`, unless `prettier_cmd` or option/env overrides are set. See README.
-#' * `prettier_cmd` — Optional character vector argv (executable first). If `NULL`, uses option `RserveTS.prettier_cmd`, then environment variable `RserveTS_PRETTIER_CMD` (space-separated tokens), then `prettier` or `npx prettier` on `PATH`. A temporary `.ts` copy of the generated source is appended as the last argument (as with `prettier --parser typescript path/to/file.ts`). Another formatter (e.g. Biome) can be used if it accepts that invocation pattern.
+#' * `format` <U+2014> If `TRUE`, format the generated `.ts` with Prettier before writing (default `FALSE`). Requires [Prettier](https://prettier.io) or `npx prettier` on `PATH` when `TRUE`, unless `prettier_cmd` or option/env overrides are set. See README.
+#' * `prettier_cmd` <U+2014> Optional character vector argv (executable first). If `NULL`, uses option `RserveTS.prettier_cmd`, then environment variable `RserveTS_PRETTIER_CMD` (space-separated tokens), then `prettier` or `npx prettier` on `PATH`. A temporary `.ts` copy of the generated source is appended as the last argument (as with `prettier --parser typescript path/to/file.ts`). Another formatter (e.g. Biome) can be used if it accepts that invocation pattern.
 #'
 #' @md
 #' @export
@@ -73,9 +73,13 @@ ts_compile.character <- function(
     candidates <- unique(c(ls(e), new_globals))
     # Look up each candidate from e first, then globalenv
     lookup <- function(name) {
-        if (exists(name, envir = e, inherits = FALSE)) e[[name]]
-        else if (exists(name, envir = globalenv(), inherits = FALSE)) get(name, envir = globalenv())
-        else NULL
+        if (exists(name, envir = e, inherits = FALSE)) {
+            e[[name]]
+        } else if (exists(name, envir = globalenv(), inherits = FALSE)) {
+            get(name, envir = globalenv())
+        } else {
+            NULL
+        }
     }
     is_exported <- vapply(candidates, \(z) {
         obj <- lookup(z)
@@ -353,5 +357,5 @@ ts_compile.character <- function(
 
 #' @export
 ts_compile.default <- function(f, ...) {
-    warning("Not supported")
+    stop("Not supported")
 }

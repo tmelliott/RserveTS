@@ -1,4 +1,4 @@
-# RserveTS 0.8.2.9000 (Unreleased)
+# RserveTS 0.8.3
 
 - `ts_compile()` hoists nested widget connectors to named top-level TypeScript exports (`export const` + `T*` aliases), ordered by child-widget dependencies.
 - `ts_compile.character()` gains `format` and `prettier_cmd` to run Prettier (or a compatible CLI) on generated `.ts` output; configure via `RserveTS.prettier_cmd` or `RserveTS_PRETTIER_CMD`.

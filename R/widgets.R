@@ -393,7 +393,8 @@ createWidget <- function(
                 init_params <- names(formals(initialize))
                 rts_log("Calling initialize for '", name,
                     "' (params: ", paste(init_params, collapse = ", "), ")",
-                    tag = "init")
+                    tag = "init"
+                )
                 if (length(init_params) > 0) {
                     initialize(widget)
                 } else {
@@ -706,7 +707,8 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
         function(fn) {
             rts_log("JS connecting child '", property_name, "'",
                 " (fn is ", if (is.null(fn)) "NULL" else "set", ")",
-                tag = "child")
+                tag = "child"
+            )
             child_instance$register(fn = if (is.null(fn)) NULL else fn)
 
             # Wire change-tracking: direct assignment auto-adds to changed list
@@ -721,7 +723,7 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
                 })
             }
             # Defaults already applied in add_child (before parent methods run).
-            # Do NOT re-apply here — parent may have set values between
+            # Do NOT re-apply here <U+2014> parent may have set values between
             # add_child and JS connection.
 
             # Wire observer methods to property signals
@@ -747,7 +749,8 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
                 init_params <- names(formals(child_init))
                 rts_log("Calling child init for '", property_name,
                     "' (params: ", paste(init_params, collapse = ", "), ")",
-                    tag = "init")
+                    tag = "init"
+                )
                 if ("parent" %in% init_params) {
                     child_init(child_instance, parent_instance)
                 } else if (length(init_params) > 0) {
@@ -856,7 +859,9 @@ tsWidget <- setRefClass("tsWidget",
             }
 
             rts_log("updateState: [", paste(chg, collapse = ", "), "]",
-                if (all) " (all)" else "", tag = "state")
+                if (all) " (all)" else "",
+                tag = "state"
+            )
             x <- lapply(chg, \(p) .self$get(p))
             names(x) <- chg
 

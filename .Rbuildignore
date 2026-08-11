@@ -1,9 +1,14 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^Makefile$
-node_modules
+^node_modules$
 ^\.github$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
 ^CLAUDE.md$
+^todo\.md$
+^cran-comments\.md$
+^vignettes$
+^tests/testthat/sampler/node_modules$
+^RserveTS_.*\.tar\.gz$
