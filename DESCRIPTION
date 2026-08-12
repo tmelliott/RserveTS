@@ -1,5 +1,5 @@
 Package: RserveTS
-Title: Deploy Rserve Applications Supporting TypeScript
+Title: Typed Application Contracts for 'Rserve'
 Version: 0.8.3
 Authors@R: c(
     person("Tom", "Elliott", , "tom@inzight.co.nz",
@@ -8,7 +8,13 @@ Authors@R: c(
             ORCID = "0000-0002-7815-6318"
            ))
     )
-Description: Tools for writing functions for TypeScript applications using 'Rserve', with methods for compilation and deployment of applications in the format expected by 'rserve-ts'. The package allows users to easily specify JavaScript input types and 'Rserve' output types for Ocap (object capability) functions. The companion library 'rserve-ts', available on npm <https://www.npmjs.com/package/rserve-ts>, provides the necessary infrastructure to run these functions in a TypeScript environment.
+Description: Defines a typed application contract between R backends and
+    'TypeScript' clients over 'Rserve'. Users specify the API architecture
+    with typed object capability (Ocap) functions and compile matching
+    'TypeScript' schemas and deployment scripts for the server. The companion
+    library 'rserve-ts', available on npm
+    <https://www.npmjs.com/package/rserve-ts>, provides the client-side
+    runtime that consumes those schemas.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
