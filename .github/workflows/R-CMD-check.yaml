@@ -28,6 +28,11 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      # r-lib/check-r-package defaults incoming off; enable on develop to
+      # approximate win-builder / CRAN incoming (URLs, DESCRIPTION aspell).
+      _R_CHECK_CRAN_INCOMING_: ${{ github.ref == 'refs/heads/develop' || github.base_ref == 'develop' }}
+      _R_CHECK_CRAN_INCOMING_REMOTE_: ${{ github.ref == 'refs/heads/develop' || github.base_ref == 'develop' }}
+      _R_CHECK_CRAN_INCOMING_USE_ASPELL_: ${{ github.ref == 'refs/heads/develop' || github.base_ref == 'develop' }}
 
     steps:
       - uses: actions/checkout@v6
@@ -40,6 +45,10 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
+      - name: Install aspell
+        if: runner.os == 'Linux' && (github.ref == 'refs/heads/develop' || github.base_ref == 'develop')
+        run: sudo apt-get update -y && sudo apt-get install -y aspell aspell-en
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
@@ -48,4 +57,5 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+          args: 'c("--no-manual", "--as-cran")'
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'

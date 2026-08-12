@@ -8,7 +8,7 @@ Authors@R: c(
             ORCID = "0000-0002-7815-6318"
            ))
     )
-Description: Defines a typed application contract between R servers and
+Description: Defines a typed application contract between R backends and
     'TypeScript' clients over 'Rserve'. Users specify the API architecture
     with typed object capability (Ocap) functions and compile matching
     'TypeScript' schemas and deployment scripts for the server. The companion
