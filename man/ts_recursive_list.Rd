@@ -45,3 +45,8 @@ person <- ts_recursive_list(
 echo_person <- ts_function(function() person, result = person)
 ts_compile(echo_person, name = "echo_person")
 }
+\seealso{
+Other type documentation: 
+\code{\link{type_objects}}
+}
+\concept{type documentation}

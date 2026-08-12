@@ -1,21 +1,5 @@
-#' Define actions for `createWidget()`
-#'
-#' Creates a typed action definition object used by `createWidget(actions = ...)`.
-#' Each action must be a named `ts_function()` with exactly one payload argument.
-#'
-#' @param ... Named `ts_function()` objects, one per action type.
-#' @param strict Character scalar controlling unknown action handling:
-#'   `"off"`, `"warn"`, or `"strict"`.
-#' @param enabled Logical; whether action support is enabled.
-#'
-#' @return A `ts_widget_actions` object for use in `createWidget(actions = ...)`.
+#' @rdname createWidget
 #' @export
-#' @examples
-#' acts <- widgetActions(
-#'     increment = ts_function(function(n = ts_integer(1)) NULL, result = ts_void()),
-#'     strict = "warn"
-#' )
-#' inherits(acts, "ts_widget_actions")
 widgetActions <- function(..., strict = "warn", enabled = TRUE) {
     strict_levels <- c("off", "warn", "strict")
     if (!(strict %in% strict_levels)) {
@@ -117,75 +101,11 @@ normalize_widget_actions <- function(actions) {
     )
 }
 
-#' Create a 'TypeScript'-Compatible Widget
-#'
-#' Creates a reference class-based widget that can interact with 'TypeScript' code.
-#' The widget supports reactive properties that can be observed from both R and
-#' 'TypeScript', with automatic state synchronization.
-#'
-#' Note that the object constructed takes a 'JavaScript' setter function as argument, so calling `obj$call()` will fail.
-#'
-#' @param name Character string specifying the name of the widget class
-#' @param properties Named list of typed properties for the widget. Each property
-#'   should be a 'TypeScript' type object that defines the property's type
-#' @param initialize Optional initialization function that receives the widget
-#'   instance and sets up initial state
-#' @param methods Named list of methods to add to the widget class. Each method
-#'   should be a `ts_function()` object
-#' @param actions Logical or list. If logical, toggles action mode with defaults.
-#'   If list, supports `enabled`, `types`, and `strict` (`off|warn|strict`).
-#' @param auto_flush Logical, if `TRUE` (default), widget methods automatically
-#'   flush state changes to 'TypeScript' after execution. If `FALSE`, manual
-#'   `updateState()` calls are required.
-#' @param .env Environment where the ref class should be created. Defaults to
-#'   `parent.frame()` which is the caller's environment (typically unlocked).
-#'   Can be overridden (e.g., to `.GlobalEnv`) if needed.
-#' @param ... Additional arguments passed to the 'TypeScript' function constructor
-#'
-#' @return A 'TypeScript' function constructor that creates widget instances with
-#'   reactive properties and methods for 'TypeScript' interoperability
-#'
-#' @details
-#' The created widget includes built-in methods:
-#' \itemize{
-#'   \item \code{set(prop, value)}: Set a property value and mark it as changed
-#'   \item \code{get(prop)}: Get a property value
-#'   \item \code{addPropHandler(prop, fn)}: Register a handler for property changes
-#'   \item \code{updateState(all = FALSE)}: Synchronize changed properties to 'TypeScript'
-#' }
-#'
-#' Each property automatically gets 'TypeScript'-accessible methods:
-#' \itemize{
-#'   \item \code{register(fn)}: Register a callback for property changes
-#'   \item \code{get()}: Get the current property value
-#'   \item \code{set(x)}: Set the property value
-#' }
-#'
 #' @import objectSignals
 #' @importFrom methods setRefClass new
 #' @importFrom objectProperties properties
+#' @rdname createWidget
 #' @export
-#'
-#' @examples
-#' # Define a widget with state, an exported method, and a reactive observer.
-#' # Instantiating via `$call()` needs a live 'Rserve' 'JavaScript' setter (OOB); locally
-#' # you can still inspect the definition and compile its 'TypeScript' schema.
-#' Counter <- createWidget(
-#'     name = "Counter",
-#'     properties = list(count = ts_integer(1L, default = 0L)),
-#'     initialize = function(widget) {
-#'         widget$set("count", 0L)
-#'     },
-#'     methods = list(
-#'         increment = ts_function(function(by = ts_integer(1L)) {
-#'             .self$count <- as.integer(.self$count + by)
-#'             .self$count
-#'         }, result = ts_integer(1)),
-#'         on_count = observer("count", function() NULL)
-#'     )
-#' )
-#' inherits(Counter, "ts_widget")
-#' ts_compile(Counter)
 createWidget <- function(
     name,
     properties = list(),
@@ -483,31 +403,8 @@ widgetProps <- function(properties) {
     })]
 }
 
-#' Create an Observer for Reactive Methods
-#'
-#' Wraps a method so it reacts to property changes. Used inside the
-#' \code{methods} list of \code{createWidget()} to declare which properties
-#' trigger the method.
-#'
-#' @param props Character vector of property names to observe.
-#' @param fn The method body: a plain \code{function} (internal) or a
-#'   \code{ts_function()} (exported to 'JavaScript').
-#' @return A \code{ts_observer} object used by \code{createWidget()}.
+#' @rdname createWidget
 #' @export
-#' @md
-#'
-#' @examples
-#' obs <- observer("x", function() NULL)
-#' inherits(obs, "ts_observer")
-#'
-#' Example <- createWidget(
-#'     "Example",
-#'     properties = list(x = ts_integer(1L, default = 0L)),
-#'     methods = list(
-#'         on_x = observer("x", function() NULL)
-#'     )
-#' )
-#' inherits(Example, "ts_widget")
 observer <- function(props, fn) {
     structure(
         list(props = props, fn = fn),
@@ -811,12 +708,7 @@ jsfun <- function(x) {
     function(...) Rserve::self.oobMessage(list(x, ...))
 }
 
-#' Base Widget Class
-#'
-#' Base reference class for all widgets created with \code{createWidget()}.
-#' This class provides the core functionality for reactive properties and
-#' state synchronization with 'TypeScript'.
-#'
+#' @rdname createWidget
 #' @export
 tsWidget <- setRefClass("tsWidget",
     properties(
