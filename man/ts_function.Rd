@@ -2,7 +2,7 @@
 % Please edit documentation in R/function.R
 \name{ts_function}
 \alias{ts_function}
-\title{TS function definition}
+\title{Define a typed function}
 \usage{
 ts_function(f, ..., result = ts_void(), export = FALSE)
 }
@@ -13,21 +13,21 @@ ts_function(f, ..., result = ts_void(), export = FALSE)
 
 \item{result}{return type (ignored if overloads are provided)}
 
-\item{export}{if \code{TRUE}, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to Rserve; otherwise it will need to be sent as the result of another ocap.}
+\item{export}{if \code{TRUE}, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to 'Rserve'; otherwise it will need to be sent as the result of another ocap.}
 }
 \value{
-a ts function object which has a \code{call} method that will call the function with the given arguments, which will be checked for type correctness.
+a \code{ts_function()} object which has a \code{call()} method that will call the function with the given arguments, which will be checked for type correctness.
 }
 \description{
-TS function definition
+Define a typed function
 }
 \details{
-Defining functions is the core of writing Rserve apps.
+Defining functions is the core of writing 'Rserve' apps.
 Functions are referred to as \emph{object capabilities} (ocaps),
-as they are 'objects' that allow Javascript to access capabilities
+as they are 'objects' that allow 'JavaScript' to access capabilities
 of R with a restricted interface. Only arguments can be adjusted.
 
-TS functions can be defined using existing (named) or anonymous functions.
+\code{ts_function()} objects can be defined using existing (named) or anonymous functions.
 Anonymous functions are useful in that the arguments to the functions
 can explicitly be defined with their types as formal arguments:
 

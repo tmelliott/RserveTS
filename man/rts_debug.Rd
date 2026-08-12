@@ -2,7 +2,7 @@
 % Please edit documentation in R/debug.R
 \name{rts_debug}
 \alias{rts_debug}
-\title{Debug logging for RserveTS}
+\title{Debug logging for 'RserveTS'}
 \description{
 Controlled via the \code{RSERVETS_DEBUG} environment variable.
 Set to \code{*} for all tags, or a comma-separated list of tags:

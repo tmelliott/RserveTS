@@ -1,19 +1,19 @@
-#' Deploy a ts Rserve app
+#' Deploy a typed 'Rserve' app
 #'
-#' Writes an Rserve launcher script for an app source file. By default the
+#' Writes an 'Rserve' launcher script for an app source file. By default the
 #' script is written beside `f` (same directory, `*.rserve.R`); pass `file`
 #' under [tempdir()] / [tempfile()] from examples and tests.
 #'
 #' @param f The path to the application files
 #' @param file The file to write the deployment script to
-#' @param init Names of objects (ts_functions) to make available to
+#' @param init Names of `ts_function()` objects to make available to
 #'             the initialisation function
 #' @param port The port to deploy the app on
 #' @param run Whether to run the deployment script,
 #'            takes values "no", "here", "background"
 #' @param silent Whether to print the deployment script
 #' @return `invisible(NULL)`. With `run = "no"` (default), only writes `file`.
-#'   With `run = "here"` or `"background"`, also starts Rserve as requested.
+#'   With `run = "here"` or `"background"`, also starts 'Rserve' as requested.
 #' @export
 #' @md
 #' @examples

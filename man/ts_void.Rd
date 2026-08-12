@@ -14,5 +14,5 @@ This is a type that accepts null values (this would typically be used for
 functions that return nothing).
 }
 \seealso{
-\code{\link{ts_null}}
+\code{\link{ts_null}()}
 }

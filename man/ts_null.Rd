@@ -10,7 +10,7 @@ ts_null()
 A ts object that only accepts \code{NULL}.
 }
 \description{
-This is a type that only accepts \code{NULL}. For function return types, use \code{ts_void}.
+This is a type that only accepts \code{NULL}. For function return types, use \code{ts_void()}.
 }
 \examples{
 x <- ts_null()

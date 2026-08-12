@@ -15,7 +15,7 @@ ts_numeric(n = -1L, default = NULL)
 A ts object that accepts numeric scalars or vectors of length \code{n}.
 }
 \description{
-Numbers are represented in Zod schema as either a number (\code{z.number()}),
+Numbers are represented in 'Zod' schema as either a number (\code{z.number()}),
 or a Float64Array (\code{z.instanceof(Float64Array)}).
 }
 \examples{

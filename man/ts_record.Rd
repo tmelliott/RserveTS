@@ -16,9 +16,9 @@ A ts object that accepts named lists with values of the given type.
 }
 \description{
 A list whose element names are unknown at compile time but whose values
-all have the same type. In TypeScript this is record<string, value_type>.
-Use this for e.g. getAvailablePlotTypes() returning list(default = "default", scatter = "scatter").
-For "named list of a single datatype" (case 4 in \code{ts_list}), use \code{ts_record(value_type)}.
+all have the same type. In 'TypeScript' this is \verb{Record<string, value_type>}.
+Use this for e.g. \code{getAvailablePlotTypes()} returning list(default = "default", scatter = "scatter").
+For "named list of a single datatype" (case 4 in \code{ts_list()}), use \code{ts_record(value_type)}.
 }
 \examples{
 x <- ts_record(ts_character(1))

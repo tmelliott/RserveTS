@@ -2,18 +2,18 @@
 % Please edit documentation in R/widgets.R
 \name{jsfun}
 \alias{jsfun}
-\title{Convert JavaScript Function to R Function}
+\title{Convert a 'JavaScript' Function to an R Function}
 \usage{
 jsfun(x)
 }
 \arguments{
-\item{x}{A JavaScript function object}
+\item{x}{A 'JavaScript' function object}
 }
 \value{
-An R function that sends messages via Rserve
+An R function that sends messages via 'Rserve'
 }
 \description{
-Converts a JavaScript function object to an R function that can be called
-to send messages via Rserve's out-of-band messaging.
+Converts a 'JavaScript' function object to an R function that can be called
+to send messages via 'Rserve' out-of-band messaging.
 }
 \keyword{internal}

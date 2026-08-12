@@ -2,7 +2,7 @@
 % Please edit documentation in R/widgets.R
 \name{createWidget}
 \alias{createWidget}
-\title{Create a TypeScript-Compatible Widget}
+\title{Create a 'TypeScript'-Compatible Widget}
 \usage{
 createWidget(
   name,
@@ -19,48 +19,48 @@ createWidget(
 \item{name}{Character string specifying the name of the widget class}
 
 \item{properties}{Named list of typed properties for the widget. Each property
-should be a TypeScript type object that defines the property's type}
+should be a 'TypeScript' type object that defines the property's type}
 
 \item{initialize}{Optional initialization function that receives the widget
 instance and sets up initial state}
 
 \item{methods}{Named list of methods to add to the widget class. Each method
-should be a \code{ts_function} object}
+should be a \code{ts_function()} object}
 
 \item{actions}{Logical or list. If logical, toggles action mode with defaults.
 If list, supports \code{enabled}, \code{types}, and \code{strict} (\code{off|warn|strict}).}
 
 \item{auto_flush}{Logical, if \code{TRUE} (default), widget methods automatically
-flush state changes to TypeScript after execution. If \code{FALSE}, manual
+flush state changes to 'TypeScript' after execution. If \code{FALSE}, manual
 \code{updateState()} calls are required.}
 
 \item{.env}{Environment where the ref class should be created. Defaults to
 \code{parent.frame()} which is the caller's environment (typically unlocked).
 Can be overridden (e.g., to \code{.GlobalEnv}) if needed.}
 
-\item{...}{Additional arguments passed to the TypeScript function constructor}
+\item{...}{Additional arguments passed to the 'TypeScript' function constructor}
 }
 \value{
-A TypeScript function constructor that creates widget instances with
-reactive properties and methods for TypeScript interoperability
+A 'TypeScript' function constructor that creates widget instances with
+reactive properties and methods for 'TypeScript' interoperability
 }
 \description{
-Creates a reference class-based widget that can interact with TypeScript code.
+Creates a reference class-based widget that can interact with 'TypeScript' code.
 The widget supports reactive properties that can be observed from both R and
-TypeScript, with automatic state synchronization.
+'TypeScript', with automatic state synchronization.
 }
 \details{
-Note that the object constructed takes a Javascript setter function as argument, so calling \code{obj$call()} will fail.
+Note that the object constructed takes a 'JavaScript' setter function as argument, so calling \code{obj$call()} will fail.
 
 The created widget includes built-in methods:
 \itemize{
 \item \code{set(prop, value)}: Set a property value and mark it as changed
 \item \code{get(prop)}: Get a property value
 \item \code{addPropHandler(prop, fn)}: Register a handler for property changes
-\item \code{updateState(all = FALSE)}: Synchronize changed properties to TypeScript
+\item \code{updateState(all = FALSE)}: Synchronize changed properties to 'TypeScript'
 }
 
-Each property automatically gets TypeScript-accessible methods:
+Each property automatically gets 'TypeScript'-accessible methods:
 \itemize{
 \item \code{register(fn)}: Register a callback for property changes
 \item \code{get()}: Get the current property value
@@ -69,8 +69,8 @@ Each property automatically gets TypeScript-accessible methods:
 }
 \examples{
 # Define a widget with state, an exported method, and a reactive observer.
-# Instantiating via `$call()` needs a live Rserve JS setter (OOB); locally
-# you can still inspect the definition and compile its TypeScript schema.
+# Instantiating via `$call()` needs a live 'Rserve' 'JavaScript' setter (OOB); locally
+# you can still inspect the definition and compile its 'TypeScript' schema.
 Counter <- createWidget(
     name = "Counter",
     properties = list(count = ts_integer(1L, default = 0L)),

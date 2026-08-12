@@ -17,7 +17,7 @@ parse_prettier_cmd_env <- function(x) {
     strsplit(x, "\\s+")[[1L]]
 }
 
-#' Resolve argv for Prettier (or compatible formatter): executable first, no file path.
+#' Resolve argv for 'Prettier' (or compatible formatter): executable first, no file path.
 #' The caller appends a temporary `.ts` path as the last argument.
 #'
 #' Resolution when `prettier_cmd` is `NULL` / empty:
@@ -50,7 +50,7 @@ resolve_prettier_argv <- function(prettier_cmd = getOption("RserveTS.prettier_cm
     )
 }
 
-#' Format generated TypeScript using an external CLI (writes a temp file, then runs
+#' Format generated 'TypeScript' using an external CLI (writes a temp file, then runs
 #' `executable ...flags path.ts` like `prettier --parser typescript path.ts`).
 #'
 #' @param text Character vector of source lines.

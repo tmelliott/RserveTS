@@ -2,7 +2,7 @@
 % Please edit documentation in R/deploy.R
 \name{ts_deploy}
 \alias{ts_deploy}
-\title{Deploy a ts Rserve app}
+\title{Deploy a typed 'Rserve' app}
 \usage{
 ts_deploy(
   f,
@@ -18,7 +18,7 @@ ts_deploy(
 
 \item{file}{The file to write the deployment script to}
 
-\item{init}{Names of objects (ts_functions) to make available to
+\item{init}{Names of \code{ts_function()} objects to make available to
 the initialisation function}
 
 \item{port}{The port to deploy the app on}
@@ -30,10 +30,10 @@ takes values "no", "here", "background"}
 }
 \value{
 \code{invisible(NULL)}. With \code{run = "no"} (default), only writes \code{file}.
-With \code{run = "here"} or \code{"background"}, also starts Rserve as requested.
+With \code{run = "here"} or \code{"background"}, also starts 'Rserve' as requested.
 }
 \description{
-Writes an Rserve launcher script for an app source file. By default the
+Writes an 'Rserve' launcher script for an app source file. By default the
 script is written beside \code{f} (same directory, \verb{*.rserve.R}); pass \code{file}
 under \code{\link[=tempdir]{tempdir()}} / \code{\link[=tempfile]{tempfile()}} from examples and tests.
 }

@@ -1,4 +1,4 @@
-#' Debug logging for RserveTS
+#' Debug logging for 'RserveTS'
 #'
 #' Controlled via the `RSERVETS_DEBUG` environment variable.
 #' Set to `*` for all tags, or a comma-separated list of tags:

@@ -15,7 +15,7 @@ ts_integer(n = -1L, default = NULL)
 A ts object that accepts integer scalars or vectors of length \code{n}.
 }
 \description{
-Integers are represented in Zod schema as either a number (\code{z.number()}),
+Integers are represented in 'Zod' schema as either a number (\code{z.number()}),
 or a Int32Array (\code{z.instanceof(Int32Array)}).
 }
 \examples{

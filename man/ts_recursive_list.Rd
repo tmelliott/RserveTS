@@ -33,9 +33,9 @@ Use \code{\link[=ts_self]{ts_self()}} inside \code{recur} to mark those self-ref
 By default \code{ts_self()} means an array of the parent type; use
 \code{ts_self(1)} for a single nested object.
 
-Defining this type in Zod is currently complicated, as the type has to be
+Defining this type in 'Zod' is currently complicated, as the type has to be
 pre-defined, and then extended after manually defining the Type. In an
-upcoming version of zod 4, this should be simplified. For now, it's tricky.
+upcoming version of 'zod' 4, this should be simplified. For now, it's tricky.
 }
 \examples{
 person <- ts_recursive_list(

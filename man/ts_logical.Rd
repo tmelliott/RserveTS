@@ -15,7 +15,7 @@ ts_logical(n = -1L, default = NULL)
 A ts object that accepts logical scalars or vectors of length \code{n}.
 }
 \description{
-Booleans are represented in Zod schema as either a boolean (\code{z.boolean()}),
+Booleans are represented in 'Zod' schema as either a boolean (\code{z.boolean()}),
 or a typed Uint8Array (\code{z.instanceof(Uint8Array)}).
 }
 \examples{

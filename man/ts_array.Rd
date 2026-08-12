@@ -7,14 +7,14 @@
 ts_array(type)
 }
 \arguments{
-\item{type}{The input type, either a zod-style string ("z.number()") or a ts_object.}
+\item{type}{The input type, either a 'zod'-style string ("z.number()") or a \code{ts_object}.}
 }
 \value{
 For a \code{ts_object} input, a \code{ts_object} wrapping \code{z.array(...)}.
-For a character Zod fragment, a character string schema.
+For a character 'Zod' fragment, a character string schema.
 }
 \description{
-An array of typed objects. In zod, these are represented
+An array of typed objects. In 'zod', these are represented
 by \code{z.array()}; returned objects must be R lists, \code{Robj.list()}.
 }
 \examples{

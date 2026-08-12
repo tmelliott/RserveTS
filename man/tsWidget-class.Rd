@@ -6,8 +6,8 @@
 \alias{tsWidget}
 \title{Base Widget Class}
 \description{
-Base reference class for all widgets created with \code{createWidget}.
+Base reference class for all widgets created with \code{createWidget()}.
 This class provides the core functionality for reactive properties and
-state synchronization with TypeScript.
+state synchronization with 'TypeScript'.
 }
 

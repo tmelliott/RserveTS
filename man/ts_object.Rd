@@ -22,9 +22,9 @@ get_type(x, which = c("input", "return"))
 check_type(type, x)
 }
 \arguments{
-\item{input_type}{The type of the object that Typescript expect to send to R.}
+\item{input_type}{The type of the object that 'TypeScript' expects to send to R.}
 
-\item{return_type}{The type of the object that Typescript expects to recieve from R.}
+\item{return_type}{The type of the object that 'TypeScript' expects to receive from R.}
 
 \item{default}{The default value of the object.}
 
@@ -39,7 +39,7 @@ check_type(type, x)
 \item{type}{A ts object}
 }
 \value{
-A \code{ts_object} environment with Zod input/return schema strings and a
+A \code{ts_object} environment with 'Zod' input/return schema strings and a
 \code{check()} helper. \code{is_ts_object()} returns a logical;
 \code{get_type()} returns a character schema string;
 \code{check_type()} returns \code{x} when valid (or errors).

@@ -3,12 +3,12 @@
 #' This is the base type for all typed objects, and can be used to define
 #' custom types.
 #'
-#' @param input_type The type of the object that Typescript expect to send to R.
-#' @param return_type The type of the object that Typescript expects to recieve from R.
+#' @param input_type The type of the object that 'TypeScript' expects to send to R.
+#' @param return_type The type of the object that 'TypeScript' expects to receive from R.
 #' @param default The default value of the object.
 #' @param check A function that checks the object and returns it if it is valid. This operates on the R side and is mostly for development and debugging purposes. It is up to the developer to ensure that all functions return the correct type of object always.
 #' @param generic logical, if `TRUE` then the object is a generic type.
-#' @return A `ts_object` environment with Zod input/return schema strings and a
+#' @return A `ts_object` environment with 'Zod' input/return schema strings and a
 #'   `check()` helper. `is_ts_object()` returns a logical;
 #'   `get_type()` returns a character schema string;
 #'   `check_type()` returns `x` when valid (or errors).
@@ -163,7 +163,7 @@ check_type.ts_function <- function(type, x) {
 #' Create a union of types. Currently this only accepts schemas as strings.
 #' @param ... Type objects to merge
 #' @param default Default value for the type (optional).
-#' @return A `ts_object` representing a Zod union of the given types.
+#' @return A `ts_object` representing a 'Zod' union of the given types.
 #' @export
 #' @md
 #' @examples
@@ -212,12 +212,12 @@ ts_optional <- function(type) {
 
 #' Array type
 #'
-#' An array of typed objects. In zod, these are represented
+#' An array of typed objects. In 'zod', these are represented
 #' by `z.array()`; returned objects must be R lists, `Robj.list()`.
 #'
-#' @param type The input type, either a zod-style string ("z.number()") or a ts_object.
+#' @param type The input type, either a 'zod'-style string ("z.number()") or a `ts_object`.
 #' @return For a `ts_object` input, a `ts_object` wrapping `z.array(...)`.
-#'   For a character Zod fragment, a character string schema.
+#'   For a character 'Zod' fragment, a character string schema.
 #' @md
 #' @export
 #' @examples
@@ -268,7 +268,7 @@ n_type_fun <- function(n, type) {
 
 #' Logical or boolean type
 #'
-#' Booleans are represented in Zod schema as either a boolean (`z.boolean()`),
+#' Booleans are represented in 'Zod' schema as either a boolean (`z.boolean()`),
 #' or a typed Uint8Array (`z.instanceof(Uint8Array)`).
 #'
 #' @param n The length of the boolean vector. If `n = 1` then a single boolean is expected. If `n = 0` then any length is expected. If `n > 1` then a boolean vector of length `n` is expected.
@@ -301,7 +301,7 @@ ts_logical <- function(n = -1L, default = NULL) {
 
 #' Integer type
 #'
-#' Integers are represented in Zod schema as either a number (`z.number()`),
+#' Integers are represented in 'Zod' schema as either a number (`z.number()`),
 #' or a Int32Array (`z.instanceof(Int32Array)`).
 #'
 #' @param n The length of the integer vector. If `n = 1` then a single integer is expected. If `n = 0` then any length is expected. If `n > 1` then an integer vector of length `n` is expected.
@@ -338,7 +338,7 @@ ts_integer <- function(n = -1L, default = NULL) {
 
 #' Numeric type
 #'
-#' Numbers are represented in Zod schema as either a number (`z.number()`),
+#' Numbers are represented in 'Zod' schema as either a number (`z.number()`),
 #' or a Float64Array (`z.instanceof(Float64Array)`).
 #'
 #' @param n The length of the numeric vector. If `n = 1` then a single number is expected. If `n = 0` then any length is expected. If `n > 1` then a numeric vector of length `n` is expected.
@@ -372,7 +372,7 @@ ts_numeric <- function(n = -1L, default = NULL) {
 
 #' Character or string type
 #'
-#' Strings are represented in Zod schema as either a string (`z.string()`),
+#' Strings are represented in 'Zod' schema as either a string (`z.string()`),
 #' or a string array (`z.array(z.string())`).
 #' @param n The length of the string vector. If `n = 1` then a single string is expected. If `n = 0` then any length is expected. If `n > 1` then a string vector of length `n` is expected.
 #' @param default Default value for the type (optional).
@@ -452,10 +452,10 @@ ts_factor <- function(levels = NULL, default = NULL) {
 #' There are five types of lists we can define:
 #'
 #' 1. Unknown list
-#' 2. Known, named list (e.g., list(x = 1:5, y = 'hello world')). This is an object in JS.
-#' 3. Known, unnamed list (e.g., list(1:5, 'hello world')). This is an array in JS.
-#' 4. Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record<string, type> in JS. Use \code{\link{ts_record}(value_type)} for this case.
-#' 5. Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an Array<type> in JS.
+#' 2. Known, named list (e.g., list(x = 1:5, y = 'hello world')). This is an object in 'JavaScript'.
+#' 3. Known, unnamed list (e.g., list(1:5, 'hello world')). This is an array in 'JavaScript'.
+#' 4. Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a `Record<string, type>` in 'JavaScript'. Use \code{\link{ts_record}(value_type)} for this case.
+#' 5. Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an `Array<type>` in 'JavaScript'.
 #'
 #' @param ... A list of types, named or unnamed.
 #' @param default Default value for the type (optional).
@@ -531,9 +531,9 @@ ts_list <- function(..., default = NULL) {
 #' Record type (named list of a single value type)
 #'
 #' A list whose element names are unknown at compile time but whose values
-#' all have the same type. In TypeScript this is record<string, value_type>.
-#' Use this for e.g. getAvailablePlotTypes() returning list(default = "default", scatter = "scatter").
-#' For "named list of a single datatype" (case 4 in \code{ts_list}), use \code{ts_record(value_type)}.
+#' all have the same type. In 'TypeScript' this is `Record<string, value_type>`.
+#' Use this for e.g. `getAvailablePlotTypes()` returning list(default = "default", scatter = "scatter").
+#' For "named list of a single datatype" (case 4 in \code{ts_list()}), use \code{ts_record(value_type)}.
 #'
 #' @param value_type A single ts type (e.g. ts_character(1), ts_integer(1)).
 #' @param default Default value for the type (optional).
@@ -611,7 +611,7 @@ ts_dataframe <- function(..., default = NULL) {
 
 #' Null type
 #'
-#' This is a type that only accepts `NULL`. For function return types, use `ts_void`.
+#' This is a type that only accepts `NULL`. For function return types, use `ts_void()`.
 #'
 #' @return A ts object that only accepts `NULL`.
 #' @export
@@ -638,7 +638,7 @@ ts_null <- function() {
 #' @return A ts object that accepts `NULL`.
 #' @export
 #' @md
-#' @seealso \code{\link{ts_null}}
+#' @seealso \code{\link{ts_null}()}
 ts_void <- function() {
     ts_object(
         "z.void()",
@@ -678,9 +678,9 @@ ts_undefined <- function() {
 #' By default `ts_self()` means an array of the parent type; use
 #' `ts_self(1)` for a single nested object.
 #'
-#' Defining this type in Zod is currently complicated, as the type has to be
+#' Defining this type in 'Zod' is currently complicated, as the type has to be
 #' pre-defined, and then extended after manually defining the Type. In an
-#' upcoming version of zod 4, this should be simplified. For now, it's tricky.
+#' upcoming version of 'zod' 4, this should be simplified. For now, it's tricky.
 #'
 #' @param values properties that define the base schema of the list;
 #'               must be a named list.
@@ -830,18 +830,18 @@ get_type.ts_self <- function(x, which) unclass(x)
 #' @export
 check_type.ts_self <- function(type, x) x
 
-#' JS functions callable from R
+#' 'JavaScript' functions callable from R
 #'
 #' If `result` is `NULL`, it will be an oobSend (R process will continue);
 #' otherwise the R process will wait for a response (oobMessage).
 #'
 #' @param ... arguments passed to the function
-#' @param result the type of value returned from JS to R
-#' @return A ts object that accepts js functions as input.
-#'   Using js functions as output (R to JS) is not supported yet.
+#' @param result the type of value returned from 'JavaScript' to R
+#' @return A ts object that accepts 'JavaScript' functions as input.
+#'   Using 'JavaScript' functions as output (R to 'JavaScript') is not supported yet.
 #' @export
 #' @examples
-#' # Fire-and-forget callback from JS (oobSend)
+#' # Fire-and-forget callback from 'JavaScript' (oobSend)
 #' cb <- js_function(ts_character(1))
 #'
 #' # Callback that returns a value to R (oobMessage)

@@ -1,9 +1,9 @@
 #' Define actions for `createWidget()`
 #'
 #' Creates a typed action definition object used by `createWidget(actions = ...)`.
-#' Each action must be a named `ts_function` with exactly one payload argument.
+#' Each action must be a named `ts_function()` with exactly one payload argument.
 #'
-#' @param ... Named `ts_function` objects, one per action type.
+#' @param ... Named `ts_function()` objects, one per action type.
 #' @param strict Character scalar controlling unknown action handling:
 #'   `"off"`, `"warn"`, or `"strict"`.
 #' @param enabled Logical; whether action support is enabled.
@@ -117,33 +117,33 @@ normalize_widget_actions <- function(actions) {
     )
 }
 
-#' Create a TypeScript-Compatible Widget
+#' Create a 'TypeScript'-Compatible Widget
 #'
-#' Creates a reference class-based widget that can interact with TypeScript code.
+#' Creates a reference class-based widget that can interact with 'TypeScript' code.
 #' The widget supports reactive properties that can be observed from both R and
-#' TypeScript, with automatic state synchronization.
+#' 'TypeScript', with automatic state synchronization.
 #'
-#' Note that the object constructed takes a Javascript setter function as argument, so calling `obj$call()` will fail.
+#' Note that the object constructed takes a 'JavaScript' setter function as argument, so calling `obj$call()` will fail.
 #'
 #' @param name Character string specifying the name of the widget class
 #' @param properties Named list of typed properties for the widget. Each property
-#'   should be a TypeScript type object that defines the property's type
+#'   should be a 'TypeScript' type object that defines the property's type
 #' @param initialize Optional initialization function that receives the widget
 #'   instance and sets up initial state
 #' @param methods Named list of methods to add to the widget class. Each method
-#'   should be a `ts_function` object
+#'   should be a `ts_function()` object
 #' @param actions Logical or list. If logical, toggles action mode with defaults.
 #'   If list, supports `enabled`, `types`, and `strict` (`off|warn|strict`).
 #' @param auto_flush Logical, if `TRUE` (default), widget methods automatically
-#'   flush state changes to TypeScript after execution. If `FALSE`, manual
+#'   flush state changes to 'TypeScript' after execution. If `FALSE`, manual
 #'   `updateState()` calls are required.
 #' @param .env Environment where the ref class should be created. Defaults to
 #'   `parent.frame()` which is the caller's environment (typically unlocked).
 #'   Can be overridden (e.g., to `.GlobalEnv`) if needed.
-#' @param ... Additional arguments passed to the TypeScript function constructor
+#' @param ... Additional arguments passed to the 'TypeScript' function constructor
 #'
-#' @return A TypeScript function constructor that creates widget instances with
-#'   reactive properties and methods for TypeScript interoperability
+#' @return A 'TypeScript' function constructor that creates widget instances with
+#'   reactive properties and methods for 'TypeScript' interoperability
 #'
 #' @details
 #' The created widget includes built-in methods:
@@ -151,10 +151,10 @@ normalize_widget_actions <- function(actions) {
 #'   \item \code{set(prop, value)}: Set a property value and mark it as changed
 #'   \item \code{get(prop)}: Get a property value
 #'   \item \code{addPropHandler(prop, fn)}: Register a handler for property changes
-#'   \item \code{updateState(all = FALSE)}: Synchronize changed properties to TypeScript
+#'   \item \code{updateState(all = FALSE)}: Synchronize changed properties to 'TypeScript'
 #' }
 #'
-#' Each property automatically gets TypeScript-accessible methods:
+#' Each property automatically gets 'TypeScript'-accessible methods:
 #' \itemize{
 #'   \item \code{register(fn)}: Register a callback for property changes
 #'   \item \code{get()}: Get the current property value
@@ -168,8 +168,8 @@ normalize_widget_actions <- function(actions) {
 #'
 #' @examples
 #' # Define a widget with state, an exported method, and a reactive observer.
-#' # Instantiating via `$call()` needs a live Rserve JS setter (OOB); locally
-#' # you can still inspect the definition and compile its TypeScript schema.
+#' # Instantiating via `$call()` needs a live 'Rserve' 'JavaScript' setter (OOB); locally
+#' # you can still inspect the definition and compile its 'TypeScript' schema.
 #' Counter <- createWidget(
 #'     name = "Counter",
 #'     properties = list(count = ts_integer(1L, default = 0L)),
@@ -491,7 +491,7 @@ widgetProps <- function(properties) {
 #'
 #' @param props Character vector of property names to observe.
 #' @param fn The method body: a plain \code{function} (internal) or a
-#'   \code{ts_function} (exported to JS).
+#'   \code{ts_function()} (exported to 'JavaScript').
 #' @return A \code{ts_observer} object used by \code{createWidget()}.
 #' @export
 #' @md
@@ -627,19 +627,19 @@ build_method_ocaps <- function(instance, method_defs) {
 #' Create Child Widget Connector
 #'
 #' Internal helper function to create connector functions for child widgets.
-#' Used by the \code{add_child} method of \code{tsWidget}.
+#' Used by the \code{add_child()} method of \code{tsWidget}.
 #'
 #' @param child_instance The child widget instance
 #' @param parent_instance The parent widget instance
 #' @param property_name Name of the property containing the child
 #' @param type_info Type information from the widget definition
 #' @param widget_def The widget definition object
-#' @return A TypeScript function constructor for the child widget
+#' @return A 'TypeScript' function constructor for the child widget
 #' @keywords internal
 #' @export
 create_child_connector <- function(child_instance, parent_instance, property_name, type_info, widget_def) {
     rts_log("Creating child connector for '", property_name, "'", tag = "child")
-    # Use raw TypeScript type definitions
+    # Use raw 'TypeScript' type definitions
     ts_raw <- type_info$ts_raw
     child_widget_props <- type_info$widgets
     child_capabilities <- if (!is.null(type_info$capabilities)) {
@@ -795,13 +795,13 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
     )
 }
 
-#' Convert JavaScript Function to R Function
+#' Convert a 'JavaScript' Function to an R Function
 #'
-#' Converts a JavaScript function object to an R function that can be called
-#' to send messages via Rserve's out-of-band messaging.
+#' Converts a 'JavaScript' function object to an R function that can be called
+#' to send messages via 'Rserve' out-of-band messaging.
 #'
-#' @param x A JavaScript function object
-#' @return An R function that sends messages via Rserve
+#' @param x A 'JavaScript' function object
+#' @return An R function that sends messages via 'Rserve'
 #' @keywords internal
 #' @export
 jsfun <- function(x) {
@@ -813,9 +813,9 @@ jsfun <- function(x) {
 
 #' Base Widget Class
 #'
-#' Base reference class for all widgets created with \code{createWidget}.
+#' Base reference class for all widgets created with \code{createWidget()}.
 #' This class provides the core functionality for reactive properties and
-#' state synchronization with TypeScript.
+#' state synchronization with 'TypeScript'.
 #'
 #' @export
 tsWidget <- setRefClass("tsWidget",

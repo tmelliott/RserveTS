@@ -10,7 +10,7 @@ observer(props, fn)
 \item{props}{Character vector of property names to observe.}
 
 \item{fn}{The method body: a plain \code{function} (internal) or a
-\code{ts_function} (exported to JS).}
+\code{ts_function()} (exported to 'JavaScript').}
 }
 \value{
 A \code{ts_observer} object used by \code{createWidget()}.

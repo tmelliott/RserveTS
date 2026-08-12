@@ -7,7 +7,7 @@
 widgetActions(..., strict = "warn", enabled = TRUE)
 }
 \arguments{
-\item{...}{Named \code{ts_function} objects, one per action type.}
+\item{...}{Named \code{ts_function()} objects, one per action type.}
 
 \item{strict}{Character scalar controlling unknown action handling:
 \code{"off"}, \code{"warn"}, or \code{"strict"}.}
@@ -19,7 +19,7 @@ A \code{ts_widget_actions} object for use in \code{createWidget(actions = ...)}.
 }
 \description{
 Creates a typed action definition object used by \code{createWidget(actions = ...)}.
-Each action must be a named \code{ts_function} with exactly one payload argument.
+Each action must be a named \code{ts_function()} with exactly one payload argument.
 }
 \examples{
 acts <- widgetActions(

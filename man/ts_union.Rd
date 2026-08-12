@@ -12,7 +12,7 @@ ts_union(..., default = NULL)
 \item{default}{Default value for the type (optional).}
 }
 \value{
-A \code{ts_object} representing a Zod union of the given types.
+A \code{ts_object} representing a 'Zod' union of the given types.
 }
 \description{
 Create a union of types. Currently this only accepts schemas as strings.
