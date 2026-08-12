@@ -19,4 +19,4 @@ test:
 	Rscript -e "devtools::test()"
 
 site: install
-	Rscript -e "pkgdown::build_site()"
+	Rscript -e "options(RserveTS.format = TRUE); pkgdown::build_site(lazy = FALSE)"

@@ -1,7 +1,8 @@
 # RserveTS 0.8.3
 
 - `ts_compile()` hoists nested widget connectors to named top-level TypeScript exports (`export const` + `T*` aliases), ordered by child-widget dependencies.
-- `ts_compile.character()` gains `format` and `prettier_cmd` to run Prettier (or a compatible CLI) on generated `.ts` output; configure via `RserveTS.prettier_cmd` or `RserveTS_PRETTIER_CMD`.
+- `ts_compile.character()` gains `format` and `prettier_cmd` to run Prettier (or a compatible CLI) on generated `.ts` output; `prettier_cmd` defaults to `getOption("RserveTS.prettier_cmd")` (`NULL` until set), with fallback to `RserveTS_PRETTIER_CMD` / `PATH`.
+- `ts_compile.ts_function()` also honours `format` / `prettier_cmd`; both methods default `format` to `getOption("RserveTS.format", FALSE)`.
 - `ts_compile()` roxygen documents `format` / `prettier_cmd` and clarifies file-path vs `ts_function` arguments.
 - add `widgetActions()` for typed widget action definitions used by `createWidget(actions = ...)`.
 - restore separate `createWidget()` and `widgetActions()` reference docs/exports and update pkgdown reference indexing.

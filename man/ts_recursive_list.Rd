@@ -2,34 +2,46 @@
 % Please edit documentation in R/types.R
 \name{ts_recursive_list}
 \alias{ts_recursive_list}
+\alias{ts_self}
 \title{Recursive list}
 \usage{
 ts_recursive_list(values, recur)
+
+ts_self(n = -1L)
 }
 \arguments{
 \item{values}{properties that define the base schema of the list;
 must be a named list.}
 
 \item{recur}{a named list of properties that are added.
-These can use the 'ts_self()' helper.}
+These can use \code{\link[=ts_self]{ts_self()}}.}
+
+\item{n}{For \code{ts_self()}: number of elements — \code{n = 1} for a single nested
+object, or \code{n != 1} (default \code{-1}) for an array of the parent type.}
 }
 \value{
-A ts object that accepts recursive lists.
+\code{ts_recursive_list()} returns a ts object that accepts recursive
+lists. \code{ts_self()} returns a marker used in \code{recur}.
 }
 \description{
-For complex recursive lists. These are objects that can contain subcomponents
-of the same (parent) type.
-e.g., Person can have name, dob, properties, and 'children' which is an
-(optional) array of Person objects.
+For complex recursive lists — objects that can contain subcomponents of the
+same (parent) type. For example, a Person with \code{name} and optional
+\code{children} that are themselves Person objects.
 }
 \details{
+Use \code{\link[=ts_self]{ts_self()}} inside \code{recur} to mark those self-referential fields.
+By default \code{ts_self()} means an array of the parent type; use
+\code{ts_self(1)} for a single nested object.
+
 Defining this type in Zod is currently complicated, as the type has to be
 pre-defined, and then extended after manually defining the Type. In an
 upcoming version of zod 4, this should be simplified. For now, it's tricky.
 }
 \examples{
-r_list <- ts_recursive_list(
+person <- ts_recursive_list(
     list(name = ts_character(1)),
     list(children = ts_self())
 )
+echo_person <- ts_function(function() person, result = person)
+ts_compile(echo_person, name = "echo_person")
 }

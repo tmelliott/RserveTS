@@ -1,4 +1,4 @@
-url: http://tomelliott.co.nz/RserveTS/
+url: https://tomelliott.co.nz/RserveTS/
 template:
   bootstrap: 5
   bootswatch: simplex
@@ -35,10 +35,10 @@ reference:
       - ts_optional
       - ts_undefined
       - ts_recursive_list
-      - ts_self
       - js_function
   - title: Debugging
     desc: Debugging utilities for RserveTS.
     contents:
+      - rts_debug
       - rts_debug_enabled
       - rts_log

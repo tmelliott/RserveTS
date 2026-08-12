@@ -19,7 +19,7 @@ to Rserve functions.
 Return types describe the \code{zod} schema of objects that Rserve functions,
 and most of these utilise the \code{Robj} utility types in the \code{rserve-ts}
 library. The return types have additional properties added,
-namedly \code{r_type} and \code{r_attributes}, handled by the \code{Robj} utility types.
+namely \code{r_type} and \code{r_attributes}, handled by the \code{Robj} utility types.
 
 \strong{Scalar versus array ("vector") types}:
 In R, almost all types are vectors. In the 'rserve-js' library,
@@ -28,7 +28,7 @@ leads to some issues with type checking when, for example, a return value
 has unknown length. \code{which(x > 5)} is one such example.
 
 To solve this, we add an \code{n} argument to the \verb{ts_*} functions. When \code{n = 1},
-the type takes the \emph{scalar} form of the alue. When \code{n != 1}, the type takes
+the type takes the \emph{scalar} form of the value. When \code{n != 1}, the type takes
 the \emph{array} form of the value (this includes 0). Otherwise, the type
 is the union of the scalar and array forms.
 
@@ -37,13 +37,13 @@ This is the case for numbers, strings, and booleans.
 
 \section{Available types}{
 \itemize{
-\item \code{ts_boolean}: A boolean value. The array type is \code{Int8Array}.
+\item \code{ts_logical}: A logical value. The array type is \code{Int8Array}.
 \item \code{ts_integer}: An integer value. The array type is \code{Int32Array}.
 Javascript does not have a native integer type,
 so scalars are represented as a number
 (the same as \code{ts_numeric}).
 \item \code{ts_numeric}: A numeric value. The array type is \code{Float64Array}.*
-\item \code{ts_string}: A string value. The array type is \code{string[]}.
+\item \code{ts_character}: A character value. The array type is \code{string[]}.
 \item \code{ts_factor}: A factor value. The array type is \code{(level1 | level2 | ... | levelN)[]}, and this type does not have a scalar form.
 \item \code{ts_list}: A list value, represented by a named object or an array.
 \item \code{ts_dataframe}: A data frame value, represented by a named object.

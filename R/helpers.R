@@ -19,14 +19,14 @@ parse_prettier_cmd_env <- function(x) {
 
 #' Resolve argv for Prettier (or compatible formatter): executable first, no file path.
 #' The caller appends a temporary `.ts` path as the last argument.
+#'
+#' Resolution when `prettier_cmd` is `NULL` / empty:
+#' option `RserveTS.prettier_cmd` (usually already applied as the formal default),
+#' then env `RserveTS_PRETTIER_CMD`, then `prettier` / `npx prettier` on `PATH`.
 #' @noRd
-resolve_prettier_argv <- function(prettier_cmd) {
+resolve_prettier_argv <- function(prettier_cmd = getOption("RserveTS.prettier_cmd")) {
     if (length(prettier_cmd) >= 1L && nzchar(prettier_cmd[[1L]])) {
         return(as.character(prettier_cmd))
-    }
-    opt <- getOption("RserveTS.prettier_cmd")
-    if (is.character(opt) && length(opt) >= 1L && nzchar(opt[[1L]])) {
-        return(as.character(opt))
     }
     env <- Sys.getenv("RserveTS_PRETTIER_CMD", "")
     if (nzchar(env)) {
@@ -43,7 +43,8 @@ resolve_prettier_argv <- function(prettier_cmd) {
     }
     stop(
         "Could not find Prettier or npx. Install Prettier with npm (see README) ",
-        "or set option 'RserveTS.prettier_cmd' or env var RserveTS_PRETTIER_CMD ",
+        "or set option 'RserveTS.prettier_cmd' (e.g. options(RserveTS.prettier_cmd = ",
+        "c(\"prettier\", \"--parser\", \"typescript\"))) or env var RserveTS_PRETTIER_CMD ",
         "to a character vector / space-separated argv (executable first).",
         call. = FALSE
     )
@@ -53,12 +54,12 @@ resolve_prettier_argv <- function(prettier_cmd) {
 #' `executable ...flags path.ts` like `prettier --parser typescript path.ts`).
 #'
 #' @param text Character vector of source lines.
-#' @param prettier_cmd Optional character vector argv (executable first); if
-#'   `NULL`, uses option `RserveTS.prettier_cmd`, then env `RserveTS_PRETTIER_CMD`,
-#'   then `Sys.which("prettier")`, then `npx prettier`.
+#' @param prettier_cmd Character vector argv (executable first). Defaults to
+#'   `getOption("RserveTS.prettier_cmd")`; when `NULL`, falls back to env /
+#'   `PATH` discovery.
 #' @return Character vector of formatted lines.
 #' @noRd
-format_ts_source <- function(text, prettier_cmd = NULL) {
+format_ts_source <- function(text, prettier_cmd = getOption("RserveTS.prettier_cmd")) {
     if (length(text) == 0L) {
         return(character())
     }

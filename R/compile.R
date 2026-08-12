@@ -3,7 +3,7 @@
 #' Generates TypeScript schema for the given R function or file path. If a path, the R app is also generated.
 #'
 #' @param f A function or file path (length-one character string for file compilation).
-#' @param ... Additional arguments. For the **file path** method, named arguments passed to [ts_deploy()] (e.g. `init`, `port`, `run`). For `ts_function` / `ts_widget` objects, further arguments are accepted and ignored by the current methods.
+#' @param ... Additional arguments. For the **file path** method, named arguments passed to [ts_deploy()] (e.g. `init`, `port`, `run`). For `ts_function` / `ts_widget` objects, `format` and `prettier_cmd` are supported (see details); other arguments are ignored.
 #' @return For a `ts_function` / `ts_widget`, a character string of TypeScript.
 #'   For a file path, writes `.ts` / `.R` beside `filename` and returns
 #'   `invisible(NULL)`.
@@ -13,8 +13,18 @@
 #' **Character (file) method:** `filename` is the base path for output (default `[path of f].rserve`); `.R` and `.ts` extensions are appended. Arguments `filename`, `format`, and `prettier_cmd` must be passed by name; they are not part of `...`.
 #' Output is written next to that base path (or next to `f` when `filename` is omitted), so pass a path under [tempdir()] / [tempfile()] from examples and tests.
 #'
-#' * `format` <U+2014> If `TRUE`, format the generated `.ts` with Prettier before writing (default `FALSE`). Requires [Prettier](https://prettier.io) or `npx prettier` on `PATH` when `TRUE`, unless `prettier_cmd` or option/env overrides are set. See README.
-#' * `prettier_cmd` <U+2014> Optional character vector argv (executable first). If `NULL`, uses option `RserveTS.prettier_cmd`, then environment variable `RserveTS_PRETTIER_CMD` (space-separated tokens), then `prettier` or `npx prettier` on `PATH`. A temporary `.ts` copy of the generated source is appended as the last argument (as with `prettier --parser typescript path/to/file.ts`). Another formatter (e.g. Biome) can be used if it accepts that invocation pattern.
+#' * `format` -- If `TRUE`, run Prettier (or a compatible CLI) on the generated TypeScript
+#'   (returned string for functions; written `.ts` for files). Defaults to
+#'   `getOption("RserveTS.format", FALSE)` so you can enable it once for a session
+#'   (e.g. pkgdown site builds) without changing call sites.
+#' * `prettier_cmd` -- Character vector argv (executable first). Defaults to
+#'   `getOption("RserveTS.prettier_cmd")` (`NULL` until you set it, e.g.
+#'   `options(RserveTS.prettier_cmd = c("prettier", "--parser", "typescript"))`).
+#'   When still `NULL`, falls back to environment variable `RserveTS_PRETTIER_CMD`
+#'   (space-separated tokens), then `prettier` or `npx prettier` on `PATH`.
+#'   A temporary `.ts` copy of the generated source is appended as the last
+#'   argument (as with `prettier --parser typescript path/to/file.ts`). Another
+#'   formatter (e.g. Biome) can be used if it accepts that invocation pattern.
 #'
 #' @md
 #' @export
@@ -23,7 +33,7 @@
 #' f <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1))
 #' ts_compile(f)
 #'
-#' # File compilation writes beside `filename` — use a temp path in examples/tests
+#' # File compilation writes beside `filename` -- use a temp path in examples/tests
 #' src <- tempfile(fileext = ".R")
 #' writeLines(
 #'     "add <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1), export = TRUE)",
@@ -53,13 +63,34 @@ compile_fn <- function(f) {
     )
 }
 
-#' @export
-ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
-    ocap_str <- compile_fn(f)
+#' Wrap compiled TypeScript so it prints with real newlines (not `\n` escapes).
+#' @noRd
+as_ts_source <- function(x) {
+    structure(paste(x, collapse = "\n"), class = c("ts_source", "character"))
+}
 
-    sprintf(
-        "export const %s = %s;", name, ocap_str
+#' @export
+print.ts_source <- function(x, ...) {
+    # Split on embedded newlines so help/pkgdown examples render as code,
+    # not as a length-1 character with escaped `\n`.
+    writeLines(strsplit(as.character(x), "\n", fixed = TRUE)[[1L]])
+    invisible(x)
+}
+
+#' @export
+ts_compile.ts_function <- function(
+    f,
+    ...,
+    name = deparse(substitute(f)),
+    format = getOption("RserveTS.format", FALSE),
+    prettier_cmd = getOption("RserveTS.prettier_cmd")) {
+    out <- sprintf(
+        "export const %s = %s;", name, compile_fn(f)
     )
+    if (isTRUE(format)) {
+        out <- paste(format_ts_source(out, prettier_cmd = prettier_cmd), collapse = "\n")
+    }
+    as_ts_source(out)
 }
 
 #' @export
@@ -67,8 +98,8 @@ ts_compile.character <- function(
     f,
     ...,
     filename = sprintf("%s.rserve", tools::file_path_sans_ext(f)),
-    format = FALSE,
-    prettier_cmd = NULL) {
+    format = getOption("RserveTS.format", FALSE),
+    prettier_cmd = getOption("RserveTS.prettier_cmd")) {
     if (length(f) > 1L) {
         for (path in f) {
             ts_compile.character(path, ..., format = format, prettier_cmd = prettier_cmd)

@@ -93,21 +93,26 @@ from that directory:
 npm install --save-dev prettier
 ```
 
-With `prettier` or `npx` on your `PATH`, pass `format = TRUE` when
-compiling a file:
+With `prettier` or `npx` on your `PATH`, enable formatting for a session
+(or pass `format = TRUE` per call):
 
 ``` r
-ts_compile("app.R", filename = "app.rserve", format = TRUE)
+options(RserveTS.format = TRUE)
+options(RserveTS.prettier_cmd = c("prettier", "--parser", "typescript"))
+# or: options(RserveTS.prettier_cmd = c("npx", "--yes", "prettier", "--parser", "typescript"))
+ts_compile(f) # returns a multi-line string
+ts_compile("app.R", filename = "app.rserve") # writes a formatted .ts file
 ```
 
-You can point to a specific formatter with `prettier_cmd` (full argv,
-executable first), the R option `RserveTS.prettier_cmd`, or the
-environment variable `RserveTS_PRETTIER_CMD` (space-separated tokens).
-The package writes the generated source to a temporary `.ts` file and
-runs your command with that path as the **last** argument, as Prettier
-does for `prettier file.ts`. Another CLI
-(e.g. [Biome](https://biomejs.dev)) can be used if it supports the same
-“format this file path” pattern.
+`make site` turns on `RserveTS.format` so reference examples render prettily.
+You can still override the CLI with `RserveTS_PRETTIER_CMD` (space-separated
+tokens) or `options(RserveTS.prettier_cmd = ...)`. When neither is set, the
+package looks for `prettier` / `npx prettier` on `PATH`.
+
+The package writes generated source to a temporary `.ts` file and runs your
+command with that path as the **last** argument, as Prettier does for
+`prettier file.ts`. Another CLI (e.g. [Biome](https://biomejs.dev)) can be
+used if it supports the same “format this file path” pattern.
 
 It is also possible to generate a sourceable file to deploy an Rserve
 instance with your app code using `ts_deploy()`:

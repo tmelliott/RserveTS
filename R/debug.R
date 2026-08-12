@@ -8,17 +8,24 @@
 #' @keywords internal
 #' @seealso [rts_debug_enabled()], [rts_log()]
 #' @examples
-#' # Enable all debug logging
-#' Sys.setenv(RSERVETS_DEBUG = "*")
-#' rts_debug_enabled("widget")
-#'
-#' # Enable specific tags
-#' Sys.setenv(RSERVETS_DEBUG = "widget,child,init")
-#' rts_debug_enabled("child")
-#'
-#' # Disable
-#' Sys.setenv(RSERVETS_DEBUG = "")
-#' rts_debug_enabled()
+#' withr::with_envvar(
+#'     c(RSERVETS_DEBUG = "*"),
+#'     {
+#'         rts_debug_enabled("widget")
+#'     }
+#' )
+#' withr::with_envvar(
+#'     c(RSERVETS_DEBUG = "widget,child,init"),
+#'     {
+#'         rts_debug_enabled("child")
+#'     }
+#' )
+#' withr::with_envvar(
+#'     c(RSERVETS_DEBUG = ""),
+#'     {
+#'         rts_debug_enabled()
+#'     }
+#' )
 NULL
 
 #' Check if debug logging is enabled for a tag
@@ -28,8 +35,12 @@ NULL
 #' @export
 rts_debug_enabled <- function(tag = "general") {
     debug_val <- Sys.getenv("RSERVETS_DEBUG", "")
-    if (debug_val == "") return(FALSE)
-    if (debug_val == "*") return(TRUE)
+    if (debug_val == "") {
+        return(FALSE)
+    }
+    if (debug_val == "*") {
+        return(TRUE)
+    }
     tag %in% strsplit(debug_val, ",", fixed = TRUE)[[1]]
 }
 
@@ -40,7 +51,9 @@ rts_debug_enabled <- function(tag = "general") {
 #' @keywords internal
 #' @export
 rts_log <- function(..., tag = "general") {
-    if (!rts_debug_enabled(tag)) return(invisible())
+    if (!rts_debug_enabled(tag)) {
+        return(invisible())
+    }
     msg <- paste0("[RserveTS:", tag, "] ", paste(...))
     message(msg)
 }

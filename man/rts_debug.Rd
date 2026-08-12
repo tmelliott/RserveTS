@@ -9,17 +9,24 @@ Set to \code{*} for all tags, or a comma-separated list of tags:
 \code{widget}, \code{ocap}, \code{init}, \code{state}, \code{child}.
 }
 \examples{
-# Enable all debug logging
-Sys.setenv(RSERVETS_DEBUG = "*")
-rts_debug_enabled("widget")
-
-# Enable specific tags
-Sys.setenv(RSERVETS_DEBUG = "widget,child,init")
-rts_debug_enabled("child")
-
-# Disable
-Sys.setenv(RSERVETS_DEBUG = "")
-rts_debug_enabled()
+withr::with_envvar(
+    c(RSERVETS_DEBUG = "*"),
+    {
+        rts_debug_enabled("widget")
+    }
+)
+withr::with_envvar(
+    c(RSERVETS_DEBUG = "widget,child,init"),
+    {
+        rts_debug_enabled("child")
+    }
+)
+withr::with_envvar(
+    c(RSERVETS_DEBUG = ""),
+    {
+        rts_debug_enabled()
+    }
+)
 }
 \seealso{
 \code{\link[=rts_debug_enabled]{rts_debug_enabled()}}, \code{\link[=rts_log]{rts_log()}}

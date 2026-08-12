@@ -10,7 +10,7 @@
 
 Local (Arch Linux, R 4.5.2): 0 errors | 0 warnings | 0 notes
 
-GitHub Actions multi-OS results: pending (see Actions for this release).
+GitHub Actions (all five matrix jobs): 0 errors | 0 warnings | 0 notes
 
 ## Downstream dependencies
 
@@ -24,3 +24,7 @@ This is a new submission (first release to CRAN).
 because `createWidget()` defines reference classes via `objectProperties`
 whose generated fields call `Signal()` unbound; those packages must be
 attached for widgets defined in user environments (e.g. `globalenv()`).
+
+URLs pointing at <https://www.npmjs.com/> (companion `rserve-ts` package)
+may be reported as inaccessible by automated checkers (HTTP 403) while
+remaining valid in a normal browser.

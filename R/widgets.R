@@ -167,14 +167,25 @@ normalize_widget_actions <- function(actions) {
 #' @export
 #'
 #' @examples
+#' # Define a widget with state, an exported method, and a reactive observer.
+#' # Instantiating via `$call()` needs a live Rserve JS setter (OOB); locally
+#' # you can still inspect the definition and compile its TypeScript schema.
 #' Counter <- createWidget(
 #'     name = "Counter",
-#'     properties = list(count = ts_integer(1)),
+#'     properties = list(count = ts_integer(1L, default = 0L)),
 #'     initialize = function(widget) {
 #'         widget$set("count", 0L)
-#'     }
+#'     },
+#'     methods = list(
+#'         increment = ts_function(function(by = ts_integer(1L)) {
+#'             .self$count <- as.integer(.self$count + by)
+#'             .self$count
+#'         }, result = ts_integer(1)),
+#'         on_count = observer("count", function() NULL)
+#'     )
 #' )
 #' inherits(Counter, "ts_widget")
+#' ts_compile(Counter)
 createWidget <- function(
     name,
     properties = list(),

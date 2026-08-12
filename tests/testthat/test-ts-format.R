@@ -30,6 +30,33 @@ test_that("format=TRUE produces more lines than unformatted output when Prettier
     expect_match(txt, "export const f")
 })
 
+test_that("format=TRUE formats ts_function return strings when Prettier available", {
+    skip_if_not(has_prettier_or_npx())
+
+    # Short schemas stay one line; use a nested widget so Prettier wraps
+    W <- createWidget(
+        "FmtWidget",
+        properties = list(count = ts_integer(1L, default = 0L))
+    )
+    plain <- as.character(ts_compile(W, name = "W", format = FALSE))
+    pretty <- as.character(ts_compile(W, name = "W", format = TRUE))
+    expect_false(identical(plain, pretty))
+    expect_match(pretty, "export const W")
+    expect_gt(length(strsplit(pretty, "\n", fixed = TRUE)[[1]]), 1L)
+})
+
+test_that("RserveTS.format option enables formatting without an argument", {
+    skip_if_not(has_prettier_or_npx())
+    withr::local_options(RserveTS.format = TRUE)
+
+    W <- createWidget(
+        "FmtOptWidget",
+        properties = list(count = ts_integer(1L, default = 0L))
+    )
+    out <- as.character(ts_compile(W, name = "W"))
+    expect_gt(length(strsplit(out, "\n", fixed = TRUE)[[1]]), 1L)
+})
+
 test_that("format=TRUE errors when formatter exits non-zero", {
     skip_if_not(.Platform$OS.type == "unix")
     false_bin <- Sys.which("false")
