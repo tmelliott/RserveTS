@@ -39,7 +39,7 @@
 #' ## Client apps ('rserve-ts' / React)
 #' Compile widgets with [ts_compile()] and import the generated schema into a
 #' client app that connects to 'Rserve' via the ['rserve-ts'](https://www.npmjs.com/package/rserve-ts)
-#' library. Obtain widget ocaps from the compiled app schema (for example
+#' library. Obtain widget Ocaps from the compiled app schema (for example
 #' `app.histogram` after connecting with `useRserve()` in React).
 #'
 #' In React, [`useWidget()`](https://www.npmjs.com/package/@tmelliott/react-rserve)

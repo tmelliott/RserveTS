@@ -111,7 +111,7 @@ All widget instances inherit \code{tsWidget} and include:
 
 Compile widgets with \code{\link[=ts_compile]{ts_compile()}} and import the generated schema into a
 client app that connects to 'Rserve' via the \href{https://www.npmjs.com/package/rserve-ts}{'rserve-ts'}
-library. Obtain widget ocaps from the compiled app schema (for example
+library. Obtain widget Ocaps from the compiled app schema (for example
 \code{app.histogram} after connecting with \code{useRserve()} in React).
 
 In React, \href{https://www.npmjs.com/package/@tmelliott/react-rserve}{\code{useWidget()}}

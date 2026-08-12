@@ -47,7 +47,7 @@ ts_result <- function(type, value) {
 #'
 #' @details
 #' Defining functions is the core of writing 'Rserve' apps.
-#' Functions are referred to as *object capabilities* (ocaps),
+#' Functions are referred to as *object capabilities* (Ocaps),
 #' as they are 'objects' that allow 'JavaScript' to access capabilities
 #' of R with a restricted interface. Only arguments can be adjusted.
 #'
@@ -62,7 +62,7 @@ ts_result <- function(type, value) {
 #' @param f an R function
 #' @param ... argument definitions (only required if f does not specify these in its formals)
 #' @param result return type (ignored if overloads are provided)
-#' @param export if `TRUE`, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to 'Rserve'; otherwise it will need to be sent as the result of another ocap.
+#' @param export if `TRUE`, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to 'Rserve'; otherwise it will need to be sent as the result of another Ocap.
 #' @export
 #' @md
 #'
@@ -86,8 +86,8 @@ ts_function <- function(f, ..., result = ts_void(), export = FALSE) {
     # Check if return type is void-like (ts_null, ts_void, ts_undefined)
     # All of these have return_type = "Robj.null()"
     is_void_like <- !is.null(result) &&
-                    is_ts_object(result) &&
-                    identical(result$return_type, "Robj.null()")
+        is_ts_object(result) &&
+        identical(result$return_type, "Robj.null()")
 
     # If void-like, wrap the function body to automatically return invisible(NULL)
     if (is_void_like && is.function(f)) {

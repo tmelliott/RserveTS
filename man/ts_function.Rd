@@ -13,7 +13,7 @@ ts_function(f, ..., result = ts_void(), export = FALSE)
 
 \item{result}{return type (ignored if overloads are provided)}
 
-\item{export}{if \code{TRUE}, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to 'Rserve'; otherwise it will need to be sent as the result of another ocap.}
+\item{export}{if \code{TRUE}, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to 'Rserve'; otherwise it will need to be sent as the result of another Ocap.}
 }
 \value{
 a \code{ts_function()} object which has a \code{call()} method that will call the function with the given arguments, which will be checked for type correctness.
@@ -23,7 +23,7 @@ Define a typed function
 }
 \details{
 Defining functions is the core of writing 'Rserve' apps.
-Functions are referred to as \emph{object capabilities} (ocaps),
+Functions are referred to as \emph{object capabilities} (Ocaps),
 as they are 'objects' that allow 'JavaScript' to access capabilities
 of R with a restricted interface. Only arguments can be adjusted.
 
