@@ -1,3 +1,6 @@
 inst/doc
 docs
 CLAUDE.md
+
+RserveTS.Rcheck/
+RserveTS*.tar.gz
