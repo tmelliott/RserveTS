@@ -10,9 +10,14 @@ ts_array(type)
 \item{type}{The input type, either a zod-style string ("z.number()") or a ts_object.}
 }
 \value{
-An array object
+For a \code{ts_object} input, a \code{ts_object} wrapping \code{z.array(...)}.
+For a character Zod fragment, a character string schema.
 }
 \description{
 An array of typed objects. In zod, these are represented
 by \code{z.array()}; returned objects must be R lists, \code{Robj.list()}.
+}
+\examples{
+x <- ts_array(ts_numeric(1))
+x$check(list(1, 2, 3))
 }

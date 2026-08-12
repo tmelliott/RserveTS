@@ -10,6 +10,12 @@
 #'
 #' @return A `ts_widget_actions` object for use in `createWidget(actions = ...)`.
 #' @export
+#' @examples
+#' acts <- widgetActions(
+#'     increment = ts_function(function(n = ts_integer(1)) NULL, result = ts_void()),
+#'     strict = "warn"
+#' )
+#' inherits(acts, "ts_widget_actions")
 widgetActions <- function(..., strict = "warn", enabled = TRUE) {
     strict_levels <- c("off", "warn", "strict")
     if (!(strict %in% strict_levels)) {
@@ -161,16 +167,14 @@ normalize_widget_actions <- function(actions) {
 #' @export
 #'
 #' @examples
-#' # Create a simple counter widget
-#' \dontrun{
-#' createWidget(
+#' Counter <- createWidget(
 #'     name = "Counter",
 #'     properties = list(count = ts_integer(1)),
 #'     initialize = function(widget) {
-#'         widget$set("count", 0)
+#'         widget$set("count", 0L)
 #'     }
 #' )
-#' }
+#' inherits(Counter, "ts_widget")
 createWidget <- function(
     name,
     properties = list(),
@@ -482,16 +486,17 @@ widgetProps <- function(properties) {
 #' @md
 #'
 #' @examples
-#' \dontrun{
-#' createWidget("Example",
+#' obs <- observer("x", function() NULL)
+#' inherits(obs, "ts_observer")
+#'
+#' Example <- createWidget(
+#'     "Example",
 #'     properties = list(x = ts_integer(1L, default = 0L)),
 #'     methods = list(
-#'         on_x = observer("x", function() {
-#'             cat("x changed to", .self$x, "\n")
-#'         })
+#'         on_x = observer("x", function() NULL)
 #'     )
 #' )
-#' }
+#' inherits(Example, "ts_widget")
 observer <- function(props, fn) {
     structure(
         list(props = props, fn = fn),

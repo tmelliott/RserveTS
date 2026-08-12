@@ -8,8 +8,16 @@
 #' @param default The default value of the object.
 #' @param check A function that checks the object and returns it if it is valid. This operates on the R side and is mostly for development and debugging purposes. It is up to the developer to ensure that all functions return the correct type of object always.
 #' @param generic logical, if `TRUE` then the object is a generic type.
+#' @return A `ts_object` environment with Zod input/return schema strings and a
+#'   `check()` helper. `is_ts_object()` returns a logical;
+#'   `get_type()` returns a character schema string;
+#'   `check_type()` returns `x` when valid (or errors).
 #'
 #' @md
+#' @examples
+#' x <- ts_numeric(1)
+#' is_ts_object(x)
+#' get_type(x, "input")
 ts_object <- function(input_type = "any",
                       return_type = "any",
                       default = NULL,
@@ -155,6 +163,7 @@ check_type.ts_function <- function(type, x) {
 #' Create a union of types. Currently this only accepts schemas as strings.
 #' @param ... Type objects to merge
 #' @param default Default value for the type (optional).
+#' @return A `ts_object` representing a Zod union of the given types.
 #' @export
 #' @md
 #' @examples
@@ -192,6 +201,7 @@ ts_union <- function(..., default = NULL) {
 #'
 #' A wrapper around union of a type and undefined
 #' @param type Type that is optional
+#' @return A `ts_object` that accepts either `type` or undefined.
 #' @export
 #' @md
 #' @examples
@@ -206,9 +216,13 @@ ts_optional <- function(type) {
 #' by `z.array()`; returned objects must be R lists, `Robj.list()`.
 #'
 #' @param type The input type, either a zod-style string ("z.number()") or a ts_object.
-#' @return An array object
+#' @return For a `ts_object` input, a `ts_object` wrapping `z.array(...)`.
+#'   For a character Zod fragment, a character string schema.
 #' @md
 #' @export
+#' @examples
+#' x <- ts_array(ts_numeric(1))
+#' x$check(list(1, 2, 3))
 ts_array <- function(type) {
     UseMethod("ts_array")
 }
@@ -826,6 +840,12 @@ check_type.ts_self <- function(type, x) x
 #' @return A ts object that accepts js functions as input.
 #'   Using js functions as output (R to JS) is not supported yet.
 #' @export
+#' @examples
+#' # Fire-and-forget callback from JS (oobSend)
+#' cb <- js_function(ts_character(1))
+#'
+#' # Callback that returns a value to R (oobMessage)
+#' ask <- js_function(ts_integer(1), result = ts_logical(1))
 js_function <- function(..., result = NULL) {
     input <- list(...)
     types <- sapply(input, get_type, which = "input")

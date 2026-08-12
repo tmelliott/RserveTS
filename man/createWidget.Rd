@@ -68,14 +68,12 @@ Each property automatically gets TypeScript-accessible methods:
 }
 }
 \examples{
-# Create a simple counter widget
-\dontrun{
-createWidget(
+Counter <- createWidget(
     name = "Counter",
     properties = list(count = ts_integer(1)),
     initialize = function(widget) {
-        widget$set("count", 0)
+        widget$set("count", 0L)
     }
 )
-}
+inherits(Counter, "ts_widget")
 }

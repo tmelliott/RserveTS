@@ -21,14 +21,15 @@ Wraps a method so it reacts to property changes. Used inside the
 trigger the method.
 }
 \examples{
-\dontrun{
-createWidget("Example",
+obs <- observer("x", function() NULL)
+inherits(obs, "ts_observer")
+
+Example <- createWidget(
+    "Example",
     properties = list(x = ts_integer(1L, default = 0L)),
     methods = list(
-        on_x = observer("x", function() {
-            cat("x changed to", .self$x, "\n")
-        })
+        on_x = observer("x", function() NULL)
     )
 )
-}
+inherits(Example, "ts_widget")
 }

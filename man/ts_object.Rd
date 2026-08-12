@@ -38,6 +38,12 @@ check_type(type, x)
 
 \item{type}{A ts object}
 }
+\value{
+A \code{ts_object} environment with Zod input/return schema strings and a
+\code{check()} helper. \code{is_ts_object()} returns a logical;
+\code{get_type()} returns a character schema string;
+\code{check_type()} returns \code{x} when valid (or errors).
+}
 \description{
 This is the base type for all typed objects, and can be used to define
 custom types.
@@ -51,3 +57,8 @@ custom types.
 \item \code{check_type()}: Check if an object has the correct type
 
 }}
+\examples{
+x <- ts_numeric(1)
+is_ts_object(x)
+get_type(x, "input")
+}

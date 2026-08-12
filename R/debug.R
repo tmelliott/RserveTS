@@ -1,28 +1,29 @@
-#' Debug Logging for RserveTS
+#' Debug logging for RserveTS
 #'
 #' Controlled via the `RSERVETS_DEBUG` environment variable.
 #' Set to `*` for all tags, or a comma-separated list of tags:
 #' `widget`, `ocap`, `init`, `state`, `child`.
 #'
+#' @name rts_debug
+#' @keywords internal
+#' @seealso [rts_debug_enabled()], [rts_log()]
 #' @examples
-#' \dontrun{
 #' # Enable all debug logging
 #' Sys.setenv(RSERVETS_DEBUG = "*")
+#' rts_debug_enabled("widget")
 #'
 #' # Enable specific tags
 #' Sys.setenv(RSERVETS_DEBUG = "widget,child,init")
+#' rts_debug_enabled("child")
 #'
 #' # Disable
 #' Sys.setenv(RSERVETS_DEBUG = "")
-#' }
-#'
-#' @keywords internal
-#' @name debug
+#' rts_debug_enabled()
 NULL
 
 #' Check if debug logging is enabled for a tag
 #' @param tag Character tag to check
-#' @return Logical
+#' @return Logical scalar; `TRUE` when `RSERVETS_DEBUG` enables `tag`.
 #' @keywords internal
 #' @export
 rts_debug_enabled <- function(tag = "general") {
@@ -35,6 +36,7 @@ rts_debug_enabled <- function(tag = "general") {
 #' Log a debug message
 #' @param ... Message parts (passed to paste0)
 #' @param tag Character tag for filtering
+#' @return `invisible(NULL)`. Emits a [message()] when the tag is enabled.
 #' @keywords internal
 #' @export
 rts_log <- function(..., tag = "general") {

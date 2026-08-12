@@ -29,8 +29,21 @@ takes values "no", "here", "background"}
 \item{silent}{Whether to print the deployment script}
 }
 \value{
-NULL, called to open an Rserve instance
+\code{invisible(NULL)}. With \code{run = "no"} (default), only writes \code{file}.
+With \code{run = "here"} or \code{"background"}, also starts Rserve as requested.
 }
 \description{
-Deploy a ts Rserve app
+Writes an Rserve launcher script for an app source file. By default the
+script is written beside \code{f} (same directory, \verb{*.rserve.R}); pass \code{file}
+under \code{\link[=tempdir]{tempdir()}} / \code{\link[=tempfile]{tempfile()}} from examples and tests.
+}
+\examples{
+src <- tempfile(fileext = ".R")
+writeLines(
+    "add <- ts_function(function(x = ts_integer(1)) x, result = ts_integer(1), export = TRUE)",
+    src
+)
+out <- tempfile(fileext = ".rserve.R")
+ts_deploy(src, file = out, silent = TRUE, run = "no")
+file.exists(out)
 }

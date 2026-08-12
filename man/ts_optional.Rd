@@ -9,6 +9,9 @@ ts_optional(type)
 \arguments{
 \item{type}{Type that is optional}
 }
+\value{
+A \code{ts_object} that accepts either \code{type} or undefined.
+}
 \description{
 A wrapper around union of a type and undefined
 }

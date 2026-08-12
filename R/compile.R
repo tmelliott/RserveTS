@@ -4,17 +4,35 @@
 #'
 #' @param f A function or file path (length-one character string for file compilation).
 #' @param ... Additional arguments. For the **file path** method, named arguments passed to [ts_deploy()] (e.g. `init`, `port`, `run`). For `ts_function` / `ts_widget` objects, further arguments are accepted and ignored by the current methods.
-#' @return Character vector of TypeScript schema, or NULL if writing to file
+#' @return For a `ts_function` / `ts_widget`, a character string of TypeScript.
+#'   For a file path, writes `.ts` / `.R` beside `filename` and returns
+#'   `invisible(NULL)`.
 #' @details
 #' **`ts_function` method:** `name` defaults to `deparse(substitute(f))` and sets the generated `export const` symbol.
 #'
 #' **Character (file) method:** `filename` is the base path for output (default `[path of f].rserve`); `.R` and `.ts` extensions are appended. Arguments `filename`, `format`, and `prettier_cmd` must be passed by name; they are not part of `...`.
+#' Output is written next to that base path (or next to `f` when `filename` is omitted), so pass a path under [tempdir()] / [tempfile()] from examples and tests.
 #'
 #' * `format` <U+2014> If `TRUE`, format the generated `.ts` with Prettier before writing (default `FALSE`). Requires [Prettier](https://prettier.io) or `npx prettier` on `PATH` when `TRUE`, unless `prettier_cmd` or option/env overrides are set. See README.
 #' * `prettier_cmd` <U+2014> Optional character vector argv (executable first). If `NULL`, uses option `RserveTS.prettier_cmd`, then environment variable `RserveTS_PRETTIER_CMD` (space-separated tokens), then `prettier` or `npx prettier` on `PATH`. A temporary `.ts` copy of the generated source is appended as the last argument (as with `prettier --parser typescript path/to/file.ts`). Another formatter (e.g. Biome) can be used if it accepts that invocation pattern.
 #'
 #' @md
 #' @export
+#' @examples
+#' # Compile a typed function to a TypeScript schema string (no files written)
+#' f <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1))
+#' ts_compile(f)
+#'
+#' # File compilation writes beside `filename` — use a temp path in examples/tests
+#' src <- tempfile(fileext = ".R")
+#' writeLines(
+#'     "add <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1), export = TRUE)",
+#'     src
+#' )
+#' out <- tempfile(fileext = ".rserve")
+#' ts_compile(src, filename = out)
+#' file.exists(paste0(out, ".ts"))
+#' file.exists(paste0(out, ".R"))
 ts_compile <- function(f, ...) {
     UseMethod("ts_compile")
 }

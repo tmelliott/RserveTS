@@ -19,3 +19,10 @@ Using js functions as output (R to JS) is not supported yet.
 If \code{result} is \code{NULL}, it will be an oobSend (R process will continue);
 otherwise the R process will wait for a response (oobMessage).
 }
+\examples{
+# Fire-and-forget callback from JS (oobSend)
+cb <- js_function(ts_character(1))
+
+# Callback that returns a value to R (oobMessage)
+ask <- js_function(ts_integer(1), result = ts_logical(1))
+}

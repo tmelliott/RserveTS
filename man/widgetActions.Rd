@@ -21,3 +21,10 @@ A \code{ts_widget_actions} object for use in \code{createWidget(actions = ...)}.
 Creates a typed action definition object used by \code{createWidget(actions = ...)}.
 Each action must be a named \code{ts_function} with exactly one payload argument.
 }
+\examples{
+acts <- widgetActions(
+    increment = ts_function(function(n = ts_integer(1)) NULL, result = ts_void()),
+    strict = "warn"
+)
+inherits(acts, "ts_widget_actions")
+}
