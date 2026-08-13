@@ -5,12 +5,15 @@
   * macos-latest (R release)
   * windows-latest (R release)
   * ubuntu-latest (R devel, release, oldrel-1)
+* win-builder (R-release, R-devel)
 
 ## R CMD check results
 
 Local (Arch Linux, R 4.5.2): 0 errors | 0 warnings | 0 notes
 
 GitHub Actions (all five matrix jobs): 0 errors | 0 warnings | 0 notes
+
+win-builder (R-release, R-devel): 0 errors | 0 warnings | 0 notes
 
 ## Downstream dependencies
 
