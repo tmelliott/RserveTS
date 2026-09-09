@@ -1,8 +1,8 @@
 # --- Shared fixtures ---
+# Ref classes register in the test-file environment (createWidget's default
+# .env = parent.frame()).
 mock_setState <- structure(list("fn"), class = "javascript_function")
 
-# Widget definitions must be in globalenv so widgetMethods' eval()
-# can find cross-references (same as real apps using source()).
 DynChildWidget <- createWidget(
   "DynChildWidget",
   properties = list(
@@ -20,10 +20,8 @@ DynChildWidget <- createWidget(
         .self$value <- .self$value + 1L
       }
     )
-  ),
-  .env = globalenv()
+  )
 )
-assign("DynChildWidget", DynChildWidget, envir = globalenv())
 
 DynParentWidget <- createWidget(
   "DynParentWidget",
@@ -44,15 +42,8 @@ DynParentWidget <- createWidget(
       },
       result = DynChildWidget
     )
-  ),
-  .env = globalenv()
+  )
 )
-
-withr::defer({
-  for (nm in c("DynChildWidget", "DynParentWidget")) {
-    if (exists(nm, envir = globalenv())) rm(list = nm, envir = globalenv())
-  }
-}, envir = parent.frame())
 
 # --- Tests ---
 
@@ -158,10 +149,8 @@ test_that("dynamic child inherits explicit action capabilities", {
       enabled = TRUE,
       types = c("SetValue"),
       strict = "warn"
-    ),
-    .env = globalenv()
+    )
   )
-  assign("DynActionChildWidget", DynActionChildWidget, envir = globalenv())
 
   DynActionParentWidget <- createWidget(
     "DynActionParentWidget",
@@ -179,16 +168,8 @@ test_that("dynamic child inherits explicit action capabilities", {
         },
         result = DynActionChildWidget
       )
-    ),
-    .env = globalenv()
+    )
   )
-  assign("DynActionParentWidget", DynActionParentWidget, envir = globalenv())
-
-  withr::defer({
-    for (nm in c("DynActionChildWidget", "DynActionParentWidget")) {
-      if (exists(nm, envir = globalenv())) rm(list = nm, envir = globalenv())
-    }
-  }, envir = parent.frame())
 
   parent_result <- DynActionParentWidget$call(mock_setState)
   connector <- parent_result$methods$addChild$call()
@@ -225,7 +206,7 @@ test_that("compile_fn handles ts_function result type (widget connector)", {
 test_that("register handles NULL fn without calling jsfun", {
   # Test directly on the base ref class
   instance <- tsWidget$new()
-  instance$setState <- NULL  # initialize properly
+  instance$setState <- NULL # initialize properly
   expect_null(instance$setState)
 
   # register with NULL should not call jsfun or error
