@@ -1,4 +1,4 @@
-#' Typed object (internal use only)
+#' Typed object
 #'
 #' This is the base type for all typed objects, and can be used to define
 #' custom types.
@@ -14,6 +14,7 @@
 #'   `check_type()` returns `x` when valid (or errors).
 #'
 #' @md
+#' @export
 #' @examples
 #' x <- ts_numeric(1)
 #' is_ts_object(x)

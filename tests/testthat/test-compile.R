@@ -19,6 +19,46 @@ test_that("Compile files", {
     expect_true(file.exists(f))
 })
 
+test_that("Compile files default to tempdir / RSERVETS_COMPILE_DIR", {
+    src <- tempfile(fileext = ".R")
+    writeLines(
+        "add <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1), export = TRUE)",
+        src
+    )
+    on.exit(unlink(src), add = TRUE)
+
+    withr::local_options(RserveTS.compile_dir = NULL)
+    withr::local_envvar(RSERVETS_COMPILE_DIR = "")
+
+    out <- ts_compile(src)
+    expect_equal(
+        normalizePath(dirname(out), winslash = "/", mustWork = FALSE),
+        normalizePath(tempdir(), winslash = "/", mustWork = FALSE)
+    )
+    expect_true(file.exists(paste0(out, ".ts")))
+    expect_true(file.exists(paste0(out, ".R")))
+    on.exit(unlink(paste0(out, c(".ts", ".R"))), add = TRUE)
+
+    compile_dir <- tempfile("compile-dir-")
+    dir.create(compile_dir)
+    on.exit(unlink(compile_dir, recursive = TRUE), add = TRUE)
+    withr::local_envvar(RSERVETS_COMPILE_DIR = compile_dir)
+    out2 <- ts_compile(src)
+    expect_equal(
+        normalizePath(dirname(out2), winslash = "/", mustWork = TRUE),
+        normalizePath(compile_dir, winslash = "/", mustWork = TRUE)
+    )
+    expect_true(file.exists(paste0(out2, ".ts")))
+
+    withr::local_options(RserveTS.compile_dir = compile_dir)
+    withr::local_envvar(RSERVETS_COMPILE_DIR = tempfile("ignored-"))
+    out3 <- ts_compile(src)
+    expect_equal(
+        normalizePath(dirname(out3), winslash = "/", mustWork = TRUE),
+        normalizePath(compile_dir, winslash = "/", mustWork = TRUE)
+    )
+})
+
 test_that("functions that return new ocaps", {
     f1 <- ts_function(function() print("x1"), return = ts_void())
     f2 <- ts_function(function(x = ts_numeric(1)) x + 1,

@@ -12,3 +12,4 @@
 ^vignettes$
 ^tests/testthat/sampler/node_modules$
 ^RserveTS_.*\.tar\.gz$
+^CRAN-SUBMISSION$

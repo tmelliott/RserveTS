@@ -1,5 +1,8 @@
 # RserveTS 0.8.3
 
+- `ts_compile.character()` and `ts_deploy()` default output to under `tempdir()` (or
+  `options(RserveTS.compile_dir = ...)` / env `RSERVETS_COMPILE_DIR`) instead of
+  writing beside the source file; pass `filename` / `file` to choose an explicit path.
 - Consolidate `ts_*()` type constructors onto a single `type_objects` help page (`?ts_numeric`, `?ts_dataframe`, etc.).
 - Consolidate widget docs onto a single `createWidget` help page (`?widgetActions`, `?observer`, `?tsWidget`).
 - `ts_compile()` hoists nested widget connectors to named top-level TypeScript exports (`export const` + `T*` aliases), ordered by child-widget dependencies.

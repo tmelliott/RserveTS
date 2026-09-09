@@ -1,19 +1,22 @@
 #' Deploy a typed 'Rserve' app
 #'
 #' Writes an 'Rserve' launcher script for an app source file. By default the
-#' script is written beside `f` (same directory, `*.rserve.R`); pass `file`
-#' under [tempdir()] / [tempfile()] from examples and tests.
+#' script is written under the same directory as [ts_compile()] file output
+#' (`RserveTS.compile_dir` / `RSERVETS_COMPILE_DIR` / [tempdir()]) as
+#' `{basename(f)}.rserve.R`. Pass `file` explicitly to choose another path.
 #'
 #' @param f The path to the application files
-#' @param file The file to write the deployment script to
+#' @param file The file to write the deployment script to. When `NULL` (default),
+#'   uses `{basename(f)}.rserve.R` under the default compile directory (see
+#'   [ts_compile()]).
 #' @param init Names of `ts_function()` objects to make available to
 #'             the initialisation function
 #' @param port The port to deploy the app on
 #' @param run Whether to run the deployment script,
 #'            takes values "no", "here", "background"
 #' @param silent Whether to print the deployment script
-#' @return `invisible(NULL)`. With `run = "no"` (default), only writes `file`.
-#'   With `run = "here"` or `"background"`, also starts 'Rserve' as requested.
+#' @return The path written to (`file`), invisibly. With `run = "here"` or
+#'   `"background"`, also starts 'Rserve' as requested.
 #' @export
 #' @md
 #' @examples
@@ -22,17 +25,20 @@
 #'     "add <- ts_function(function(x = ts_integer(1)) x, result = ts_integer(1), export = TRUE)",
 #'     src
 #' )
-#' out <- tempfile(fileext = ".rserve.R")
-#' ts_deploy(src, file = out, silent = TRUE, run = "no")
+#' out <- ts_deploy(src, silent = TRUE, run = "no")
 #' file.exists(out)
 ts_deploy <- function(f,
-                      file = sprintf("%s.rserve.R", tools::file_path_sans_ext(f)),
+                      file = NULL,
                       init = NULL,
                       port = 6311,
                       run = c("no", "here", "background"),
                       silent = FALSE) {
     if (length(f) != 1) stop("Expected a single path")
     if (!file.exists(f)) stop("File not found")
+
+    if (is.null(file)) {
+        file <- default_deploy_file(f)
+    }
 
     x <- readLines(f)
 
@@ -71,6 +77,10 @@ ts_deploy <- function(f,
         )
     )
 
+    out_dir <- dirname(file)
+    if (!dir.exists(out_dir)) {
+        dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+    }
     writeLines(src, file)
 
     run <- match.arg(run)
@@ -84,6 +94,14 @@ ts_deploy <- function(f,
         "here" = source(file),
         "background" = system(sprintf("Rscript %s", file))
     )
+    invisible(file)
+}
+
+#' Default deployment script path for an app source file.
+#' @noRd
+default_deploy_file <- function(f) {
+    base <- paste0(tools::file_path_sans_ext(basename(f)), ".rserve.R")
+    file.path(resolve_compile_dir(), base)
 }
 
 ls_ocaps <- function(f) {

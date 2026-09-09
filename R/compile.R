@@ -6,12 +6,24 @@
 #' @param ... Additional arguments. For the **file path** method, named arguments passed to [ts_deploy()] (e.g. `init`, `port`, `run`). For `ts_function()` / `ts_widget` objects, `format` and `prettier_cmd` are supported (see details); other arguments are ignored.
 #' @return For a `ts_function()` / `ts_widget`, a character string of 'TypeScript'.
 #'   For a file path, writes `.ts` / `.R` beside `filename` and returns
-#'   `invisible(NULL)`.
+#'   the output base path invisibly.
 #' @details
 #' **`ts_function()` method:** `name` defaults to `deparse(substitute(f))` and sets the generated `export const` symbol.
 #'
-#' **Character (file) method:** `filename` is the base path for output (default `[path of f].rserve`); `.R` and `.ts` extensions are appended. Arguments `filename`, `format`, and `prettier_cmd` must be passed by name; they are not part of `...`.
-#' Output is written next to that base path (or next to `f` when `filename` is omitted), so pass a path under [tempdir()] / [tempfile()] from examples and tests.
+#' **Character (file) method:** `filename` is the base path for output; `.R` and `.ts`
+#' extensions are appended. When omitted, output goes under the default compile
+#' directory (see below) as `{basename(f)}.rserve`.
+#' Arguments `filename`, `format`, and `prettier_cmd` must be passed by name;
+#' they are not part of `...`.
+#'
+#' Default output directory (CRAN-safe; does not write beside the source by default):
+#' 1. option `RserveTS.compile_dir` if set to a non-empty path;
+#' 2. else environment variable `RSERVETS_COMPILE_DIR` if set;
+#' 3. else [tempdir()].
+#'
+#' For local development, set e.g. `options(RserveTS.compile_dir = ".")` or
+#' `RSERVETS_COMPILE_DIR=.` so `ts_compile("app.R")` writes `app.rserve.ts` /
+#' `app.rserve.R` in the working directory; or pass `filename` explicitly.
 #'
 #' * `format` -- If `TRUE`, run 'Prettier' (or a compatible CLI) on the generated 'TypeScript'
 #'   (returned string for functions; written `.ts` for files). Defaults to
@@ -33,18 +45,44 @@
 #' f <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1))
 #' ts_compile(f)
 #'
-#' # File compilation writes beside `filename` -- use a temp path in examples/tests
+#' # File compilation writes under tempdir() by default (or RSERVETS_COMPILE_DIR)
 #' src <- tempfile(fileext = ".R")
 #' writeLines(
 #'     "add <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1), export = TRUE)",
 #'     src
 #' )
-#' out <- tempfile(fileext = ".rserve")
-#' ts_compile(src, filename = out)
+#' out <- ts_compile(src)
 #' file.exists(paste0(out, ".ts"))
 #' file.exists(paste0(out, ".R"))
 ts_compile <- function(f, ...) {
     UseMethod("ts_compile")
+}
+
+#' Resolve default directory for `ts_compile()` / `ts_deploy()` file output.
+#'
+#' Order: option `RserveTS.compile_dir`, then env `RSERVETS_COMPILE_DIR`,
+#' then [tempdir()].
+#' @noRd
+resolve_compile_dir <- function() {
+    opt <- getOption("RserveTS.compile_dir", NULL)
+    if (!is.null(opt)) {
+        opt <- as.character(opt)
+        if (length(opt) == 1L && nzchar(opt)) {
+            return(opt)
+        }
+    }
+    env <- Sys.getenv("RSERVETS_COMPILE_DIR", "")
+    if (nzchar(env)) {
+        return(env)
+    }
+    tempdir()
+}
+
+#' Default output base path for compiling a source file.
+#' @noRd
+default_compile_filename <- function(f) {
+    base <- paste0(tools::file_path_sans_ext(basename(f)), ".rserve")
+    file.path(resolve_compile_dir(), base)
 }
 
 compile_fn <- function(f) {
@@ -97,7 +135,7 @@ ts_compile.ts_function <- function(
 ts_compile.character <- function(
     f,
     ...,
-    filename = sprintf("%s.rserve", tools::file_path_sans_ext(f)),
+    filename = NULL,
     format = getOption("RserveTS.format", FALSE),
     prettier_cmd = getOption("RserveTS.prettier_cmd")) {
     if (length(f) > 1L) {
@@ -105,6 +143,10 @@ ts_compile.character <- function(
             ts_compile.character(path, ..., format = format, prettier_cmd = prettier_cmd)
         }
         return(invisible(NULL))
+    }
+
+    if (is.null(filename)) {
+        filename <- default_compile_filename(f)
     }
 
     if (!file.exists(f)) {
@@ -393,6 +435,10 @@ ts_compile.character <- function(
     )
 
     ts_out <- sprintf("%s.ts", filename)
+    out_dir <- dirname(filename)
+    if (!dir.exists(out_dir)) {
+        dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+    }
     if (isTRUE(format)) {
         src <- format_ts_source(src, prettier_cmd = prettier_cmd)
     }
@@ -401,7 +447,7 @@ ts_compile.character <- function(
     # R file
     ts_deploy(f, file = sprintf("%s.R", filename), silent = TRUE, ...)
 
-    invisible()
+    invisible(filename)
 }
 
 #' @export
