@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Building Interactive Widgets with RserveTS • RserveTS</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Building Interactive Widgets with RserveTS">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RserveTS</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,6 +43,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/tmelliott/RserveTS/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -59,7 +60,7 @@
       <h1>Building Interactive Widgets with RserveTS</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/tmelliott/RserveTS/blob/main/vignettes/widgets.Rmd" class="external-link"><code>vignettes/widgets.Rmd</code></a></small>
       <div class="d-none name"><code>widgets.Rmd</code></div>
     </div>
 
@@ -122,11 +123,11 @@ selection of histogram bars to filter data.</p>
 <code class="sourceCode R"><span><span class="va">histogramWidget</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createWidget.html">createWidget</a></span><span class="op">(</span></span>
 <span>    <span class="st">"HistogramWidget"</span>,</span>
 <span>    properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>        vars <span class="op">=</span> <span class="fu"><a href="../reference/ts_character.html">ts_character</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,           <span class="co"># Available variable names</span></span>
-<span>        var <span class="op">=</span> <span class="fu"><a href="../reference/ts_character.html">ts_character</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span>,             <span class="co"># Currently selected variable</span></span>
-<span>        nBin <span class="op">=</span> <span class="fu"><a href="../reference/ts_integer.html">ts_integer</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span>,              <span class="co"># Number of bins</span></span>
-<span>        counts <span class="op">=</span> <span class="fu"><a href="../reference/ts_numeric.html">ts_numeric</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,            <span class="co"># Histogram counts</span></span>
-<span>        selectedBar <span class="op">=</span> <span class="fu"><a href="../reference/ts_integer.html">ts_integer</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span>,      <span class="co"># Currently selected bar index</span></span>
+<span>        vars <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_character</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,           <span class="co"># Available variable names</span></span>
+<span>        var <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_character</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span>,             <span class="co"># Currently selected variable</span></span>
+<span>        nBin <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_integer</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span>,              <span class="co"># Number of bins</span></span>
+<span>        counts <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_numeric</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,            <span class="co"># Histogram counts</span></span>
+<span>        selectedBar <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_integer</a></span><span class="op">(</span><span class="fl">1L</span><span class="op">)</span>,      <span class="co"># Currently selected bar index</span></span>
 <span>        controller <span class="op">=</span> <span class="st">"ANY"</span>                 <span class="co"># Parent controller widget</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    initialize <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">widget</span>, <span class="va">parent</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
@@ -214,8 +215,8 @@ filtering from the controller.</p>
 <code class="sourceCode R"><span><span class="va">barchartWidget</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createWidget.html">createWidget</a></span><span class="op">(</span></span>
 <span>    <span class="st">"BarchartWidget"</span>,</span>
 <span>    properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>        data <span class="op">=</span> <span class="fu"><a href="../reference/ts_dataframe.html">ts_dataframe</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="../reference/ts_character.html">ts_character</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>, count <span class="op">=</span> <span class="fu"><a href="../reference/ts_integer.html">ts_integer</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>        subset <span class="op">=</span> <span class="fu"><a href="../reference/ts_integer.html">ts_integer</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Row indices to include</span></span>
+<span>        data <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_dataframe</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_character</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>, count <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_integer</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>        subset <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_integer</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Row indices to include</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    initialize <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">widget</span><span class="op">)</span> <span class="op">{</span></span>
 <span>        <span class="va">widget</span><span class="op">$</span><span class="fu">set</span><span class="op">(</span><span class="st">"subset"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">iris</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -238,7 +239,7 @@ filtering from the controller.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>Key features:</strong></p>
 <ul>
-<li>Uses <code><a href="../reference/ts_dataframe.html">ts_dataframe()</a></code> to define structured data with
+<li>Uses <code><a href="../reference/type_objects.html">ts_dataframe()</a></code> to define structured data with
 typed columns</li>
 <li>Automatically updates when the <code>subset</code> property
 changes</li>
@@ -255,7 +256,7 @@ managing row selection.</p>
 <code class="sourceCode R"><span><span class="va">ctrlWidget</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createWidget.html">createWidget</a></span><span class="op">(</span></span>
 <span>    <span class="st">"CtrlWidget"</span>,</span>
 <span>    properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>        selectedRows <span class="op">=</span> <span class="fu"><a href="../reference/ts_integer.html">ts_integer</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,      <span class="co"># Selected row indices</span></span>
+<span>        selectedRows <span class="op">=</span> <span class="fu"><a href="../reference/type_objects.html">ts_integer</a></span><span class="op">(</span><span class="fl">0L</span><span class="op">)</span>,      <span class="co"># Selected row indices</span></span>
 <span>        histogram <span class="op">=</span> <span class="va">histogramWidget</span>,        <span class="co"># Child histogram widget</span></span>
 <span>        barchart <span class="op">=</span> <span class="va">barchartWidget</span>           <span class="co"># Child barplot widget</span></span>
 <span>    <span class="op">)</span>,</span>
@@ -341,7 +342,7 @@ support</li>
 </h3>
 <p>Here’s a complete workflow:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://tomelliott.co.nz/RserveTS/">RserveTS</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tomelliott.co.nz/RserveTS/">RserveTS</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 1. Define your widgets in widgets.R</span></span>
 <span><span class="co"># (See widget definitions above)</span></span>
@@ -428,7 +429,7 @@ vignette.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

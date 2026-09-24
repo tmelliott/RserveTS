@@ -9,6 +9,7 @@ with a front-end application.
 ## Install the RserveTS package
 
 ``` r
+
 devtools::install_github('tmelliott/RserveTS')
 ```
 
@@ -18,6 +19,7 @@ The code is saved in a file called `faithful-app.R`, and we can preview
 the results by calling the functions:
 
 ``` r
+
 cat(readLines('faithful-app.R'), sep = '\n')
 #> library(RserveTS)
 #> 
@@ -57,7 +59,7 @@ get_hist$call(10)
 ```
 
 That’s it! We’ll use
-[`ts_compile()`](http://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
 later to create the server code and Typescript schema for the app.
 
 ## Create the React app
@@ -85,7 +87,7 @@ pnpm install rserve-ts zod
 ### Create the server code
 
 We now use the
-[`ts_compile()`](http://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
 function to create two files:
 
 - `faithful-app.rserve.R` is the file that will start the Rserve
@@ -97,6 +99,7 @@ function to create two files:
 We’ll send these straight to the `faithful-demo/src` directory.
 
 ``` r
+
 ts_compile('faithful-app.R', filename = 'faithful-demo/src/faithful-app.rserve')
 ```
 

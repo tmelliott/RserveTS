@@ -16,4 +16,4 @@ rts_debug_enabled(tag = "general")
 
 ## Value
 
-Logical
+Logical scalar; `TRUE` when `RSERVETS_DEBUG` enables `tag`.

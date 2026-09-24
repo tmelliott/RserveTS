@@ -1,4 +1,4 @@
-# Typed object (internal use only)
+# Typed object
 
 This is the base type for all typed objects, and can be used to define
 custom types.
@@ -25,11 +25,11 @@ check_type(type, x)
 
 - input_type:
 
-  The type of the object that Typescript expect to send to R.
+  The type of the object that 'TypeScript' expects to send to R.
 
 - return_type:
 
-  The type of the object that Typescript expects to recieve from R.
+  The type of the object that 'TypeScript' expects to receive from R.
 
 - default:
 
@@ -58,6 +58,13 @@ check_type(type, x)
 
   A ts object
 
+## Value
+
+A `ts_object` environment with 'Zod' input/return schema strings and a
+`check()` helper. `is_ts_object()` returns a logical; `get_type()`
+returns a character schema string; `check_type()` returns `x` when valid
+(or errors).
+
 ## Functions
 
 - `is_ts_object()`: Check if an object is a ts object
@@ -65,3 +72,13 @@ check_type(type, x)
 - `get_type()`: Get the input type of a ts object
 
 - `check_type()`: Check if an object has the correct type
+
+## Examples
+
+``` r
+x <- ts_numeric(1)
+is_ts_object(x)
+#> [1] TRUE
+get_type(x, "input")
+#> [1] "z.number()"
+```

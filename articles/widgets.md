@@ -39,6 +39,7 @@ bins, and displays the resulting histogram. It also supports interactive
 selection of histogram bars to filter data.
 
 ``` r
+
 histogramWidget <- createWidget(
     "HistogramWidget",
     properties = list(
@@ -129,6 +130,7 @@ The barplot widget displays species counts and updates based on row
 filtering from the controller.
 
 ``` r
+
 barchartWidget <- createWidget(
     "BarchartWidget",
     properties = list(
@@ -159,7 +161,7 @@ barchartWidget <- createWidget(
 **Key features:**
 
 - Uses
-  [`ts_dataframe()`](http://tomelliott.co.nz/RserveTS/reference/ts_dataframe.md)
+  [`ts_dataframe()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
   to define structured data with typed columns
 - Automatically updates when the `subset` property changes
 - The [`update()`](https://rdrr.io/r/stats/update.html) method
@@ -171,6 +173,7 @@ The control widget coordinates the histogram and barplot widgets,
 managing row selection.
 
 ``` r
+
 ctrlWidget <- createWidget(
     "CtrlWidget",
     properties = list(
@@ -211,10 +214,11 @@ Once you’ve defined your widgets, you need to:
 ### Compiling
 
 Use
-[`ts_compile()`](http://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
 to generate both the TypeScript schema and the Rserve deployment script:
 
 ``` r
+
 # Compile widgets.R to generate:
 # - widgets.rserve.ts (TypeScript schema)
 # - widgets.rserve.R (Rserve deployment script)
@@ -222,14 +226,14 @@ ts_compile("widgets.R", filename = "widgets.rserve")
 ```
 
 The
-[`ts_compile()`](http://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
 function:
 
 - Reads your R file and identifies exported widgets (those with
   `export = TRUE`)
 - Generates TypeScript type definitions using Zod schemas
 - Creates an Rserve deployment script using
-  [`ts_deploy()`](http://tomelliott.co.nz/RserveTS/reference/ts_deploy.md)
+  [`ts_deploy()`](https://tomelliott.co.nz/RserveTS/reference/ts_deploy.md)
 
 ### Deploying
 
@@ -251,7 +255,7 @@ The deployment script:
 - Loads required libraries (`Rserve` and `RserveTS`)
 - Sources your widget definitions
 - Exports widgets via the
-  [`ts_app()`](http://tomelliott.co.nz/RserveTS/reference/ts_app.md)
+  [`ts_app()`](https://tomelliott.co.nz/RserveTS/reference/ts_app.md)
   function
 - Starts an Rserve instance on port 6311 (configurable) with WebSocket
   support
@@ -261,6 +265,7 @@ The deployment script:
 Here’s a complete workflow:
 
 ``` r
+
 library(RserveTS)
 
 # 1. Define your widgets in widgets.R
@@ -308,7 +313,7 @@ Key concepts:
 - **Property Handlers**: React to property changes automatically
 - **Child Widgets**: Build hierarchical widget structures
 - **Compilation**: Generate TypeScript schemas with
-  [`ts_compile()`](http://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+  [`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
 - **Deployment**: Run Rserve server with `Rscript` on the generated
   `.rserve.R` file
 

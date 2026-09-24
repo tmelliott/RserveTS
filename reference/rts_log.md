@@ -17,3 +17,9 @@ rts_log(..., tag = "general")
 - tag:
 
   Character tag for filtering
+
+## Value
+
+`invisible(NULL)`. Emits a
+[`message()`](https://rdrr.io/r/base/message.html) when the tag is
+enabled.

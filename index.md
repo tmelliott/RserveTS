@@ -6,10 +6,16 @@ applications.
 
 ## Installation
 
+``` r
+
+install.packages("RserveTS")
+```
+
 You can install the development version of `RserveTS` from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("devtools")
 devtools::install_github("tmelliott/RserveTS")
 ```
@@ -20,6 +26,7 @@ Writing functions is easy, just use the `ts_*()` functions to define
 formals and return types.
 
 ``` r
+
 # demo.R
 library(RserveTS)
 addFn <- ts_function(
@@ -42,13 +49,10 @@ app <- ts_function(
     sample = sampleFn
   )
 )
-
-# TODO: specify exactly which functions to export in the entry point
-# ts_export(app)
 ```
 
 Then use
-[`ts_compile()`](http://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
 to generate the TypeScript schemas:
 
 ``` typescript
@@ -78,11 +82,40 @@ You can then import this into your
 [rserve-ts](https://www.npmjs.com/package/rserve-ts) application. See
 `tests/testthat/sampler` for an example.
 
-It is also possible to generate a sourceable file to deploy an Rserve
-instance with your app code using
-[`ts_deploy()`](http://tomelliott.co.nz/RserveTS/reference/ts_deploy.md):
+## Formatting generated TypeScript
+
+Generated `.ts` files are a single long line per export by default. If
+you have **npm** available, install [Prettier](https://prettier.io) in
+your app project (recommended: dev dependency) so `npx prettier` works
+from that directory:
+
+``` bash
+npm install --save-dev prettier
+```
+
+With `prettier` or `npx` on your `PATH`, pass `format = TRUE` when
+compiling a file:
 
 ``` r
+
+ts_compile("app.R", filename = "app.rserve", format = TRUE)
+```
+
+You can point to a specific formatter with `prettier_cmd` (full argv,
+executable first), the R option `RserveTS.prettier_cmd`, or the
+environment variable `RserveTS_PRETTIER_CMD` (space-separated tokens).
+The package writes the generated source to a temporary `.ts` file and
+runs your command with that path as the **last** argument, as Prettier
+does for `prettier file.ts`. Another CLI
+(e.g. [Biome](https://biomejs.dev)) can be used if it supports the same
+“format this file path” pattern.
+
+It is also possible to generate a sourceable file to deploy an Rserve
+instance with your app code using
+[`ts_deploy()`](https://tomelliott.co.nz/RserveTS/reference/ts_deploy.md):
+
+``` r
+
 ts_deploy(app)
 # run with: Rscript app.rserve.R
 ```

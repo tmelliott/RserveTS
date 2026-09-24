@@ -1,102 +1,230 @@
-# Create a TypeScript-Compatible Widget
+# Create 'TypeScript'-compatible widgets
 
-Creates a reference class-based widget that can interact with TypeScript
-code. The widget supports reactive properties that can be observed from
-both R and TypeScript, with automatic state synchronization.
+Widgets are stateful reference classes shared between R and
+'TypeScript'. Use `createWidget()` to define one, wrap reactive methods
+with `observer()`, and optionally declare typed actions with
+`widgetActions()`. Instances inherit from the `tsWidget` reference
+class.
 
 ## Usage
 
 ``` r
+widgetActions(..., strict = "warn", enabled = TRUE)
+
 createWidget(
   name,
   properties = list(),
   initialize = NULL,
   methods = list(),
+  actions = FALSE,
   auto_flush = TRUE,
   .env = parent.frame(),
   ...
 )
+
+observer(props, fn)
 ```
 
 ## Arguments
 
+- ...:
+
+  For `createWidget()`: passed to the underlying
+  [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+  constructor. For `widgetActions()`: named
+  [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+  action definitions.
+
+- strict:
+
+  For `widgetActions()`: unknown action handling (`"off"`, `"warn"`, or
+  `"strict"`).
+
+- enabled:
+
+  For `widgetActions()`: whether action support is enabled.
+
 - name:
 
-  Character string specifying the name of the widget class
+  Widget class name (character).
 
 - properties:
 
-  Named list of typed properties for the widget. Each property should be
-  a TypeScript type object that defines the property's type
+  Named list of typed properties (`ts_*()` objects, or nested widget
+  constructors).
 
 - initialize:
 
-  Optional initialization function that receives the widget instance and
-  sets up initial state
+  Optional function run after defaults are applied; receives the widget
+  instance when it has a parameter.
 
 - methods:
 
-  Named list of methods to add to the widget class. Each method should
-  be a `ts_function` object
+  Named list of
+  [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+  methods and/or `observer()` reactive methods.
+
+- actions:
+
+  `FALSE`/`TRUE`, a list with `enabled`/`types`/`strict`, or a
+  `widgetActions()` object.
 
 - auto_flush:
 
-  Logical, if `TRUE` (default), widget methods automatically flush state
-  changes to TypeScript after execution. If `FALSE`, manual
-  `updateState()` calls are required.
+  If `TRUE` (default), methods flush state to 'TypeScript' after they
+  return; if `FALSE`, call `updateState()` manually.
 
 - .env:
 
-  Environment where the ref class should be created. Defaults to
-  [`parent.frame()`](https://rdrr.io/r/base/sys.parent.html) which is
-  the caller's environment (typically unlocked). Can be overridden
-  (e.g., to `.GlobalEnv`) if needed.
+  Environment for the ref class definition (default
+  [`parent.frame()`](https://rdrr.io/r/base/sys.parent.html)).
 
-- ...:
+- props:
 
-  Additional arguments passed to the TypeScript function constructor
+  For `observer()`: property names that trigger the method.
+
+- fn:
+
+  For `observer()`: method body (`function` or
+  [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)).
 
 ## Value
 
-A TypeScript function constructor that creates widget instances with
-reactive properties and methods for TypeScript interoperability
+`createWidget()` returns a `ts_widget` constructor. `widgetActions()`
+returns a `ts_widget_actions` object. `observer()` returns a
+`ts_observer` object. `tsWidget` is the base reference class generator.
 
 ## Details
 
-Note that the object constructed takes a Javascript setter function as
-argument, so calling `obj$call()` will fail.
+`createWidget()` returns a
+[`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)-like
+constructor (class `ts_widget`) that 'JavaScript' calls with a state
+setter. Locally you can inspect or compile it with
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+without a live 'Rserve' session; calling `$call()` needs an out-of-band
+'JavaScript' setter.
 
-The created widget includes built-in methods:
+### Properties and methods
 
-- `set(prop, value)`: Set a property value and mark it as changed
+Each entry in `properties` is a `ts_*()` type (optionally with
+`default`). Child widgets can be nested by passing another
+`createWidget()` result as a property value.
 
-- `get(prop)`: Get a property value
+Each entry in `methods` is usually a
+[`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+exported to 'JavaScript'. Use `observer()` to run a method when
+properties change (internal-only if the body is a plain `function`).
 
-- `addPropHandler(prop, fn)`: Register a handler for property changes
+### Actions
 
-- `updateState(all = FALSE)`: Synchronize changed properties to
-  TypeScript
+Pass `actions = widgetActions(...)` to enable typed, named actions
+dispatched from 'JavaScript'. Each action must be a named
+[`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+with exactly one payload argument. `strict` controls unknown action
+handling (`"off"`, `"warn"`, or `"strict"`).
 
-Each property automatically gets TypeScript-accessible methods:
+### `tsWidget` reference class
 
-- `register(fn)`: Register a callback for property changes
+All widget instances inherit `tsWidget` and include:
 
-- [`get()`](https://rdrr.io/r/base/get.html): Get the current property
-  value
+- `set(prop, value)`, `get(prop)` – field access with change tracking
 
-- `set(x)`: Set the property value
+- `updateState(all = FALSE)` – push changed properties to 'TypeScript'
+
+- `addPropHandler(prop, fn)` – react to property changes
+
+- `batch(props, expr)` – batch updates into one state flush
+
+- `add_child(property, widget_def)` – attach a nested widget
+
+- `create_dynamic_child(widget_def)` – runtime child widget
+
+- `destroy()` – tear down the widget
+
+### Client apps ('rserve-ts' / React)
+
+Compile widgets with
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+and import the generated schema into a client app that connects to
+'Rserve' via the ['rserve-ts'](https://www.npmjs.com/package/rserve-ts)
+library. Obtain widget Ocaps from the compiled app schema (for example
+`app.histogram` after connecting with `useRserve()` in React).
+
+In React,
+[`useWidget()`](https://www.npmjs.com/package/@tmelliott/react-rserve)
+from `@tmelliott/react-rserve` wraps a compiled widget constructor and
+keeps 'JavaScript' state in sync with R:
+
+- `state` – current property values (from R `updateState()`)
+
+- `set` – update properties from the client
+
+- `methods` – call exported
+  [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+  methods on the widget
+
+- `children` – nested widget connectors when properties include child
+  widgets
+
+Action-enabled widgets (`actions = widgetActions(...)`) also expose
+`capabilities`, `dispatchAction`, `undo`, and `redo` on the hook return
+value.
+
+## See also
+
+[`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md),
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md),
+[type_objects](https://tomelliott.co.nz/RserveTS/reference/type_objects.md),
+[Package
+'@tmelliott/react-rserve'](https://www.npmjs.com/package/@tmelliott/react-rserve)
 
 ## Examples
 
 ``` r
-# Create a simple counter widget
-if (FALSE) { # \dontrun{
-createWidget(
+Counter <- createWidget(
     name = "Counter",
-    properties = list(count = ts_integer(1)),
-    initialize = function(widget) {
-        widget$set("count", 0)
-    }
+    properties = list(count = ts_integer(1L, default = 0L)),
+    methods = list(
+        increment = ts_function(function(by = ts_integer(1L)) {
+            .self$count <- as.integer(.self$count + by)
+            .self$count
+        }, result = ts_integer(1)),
+        on_count = observer("count", function() NULL)
+    )
 )
-} # }
+inherits(Counter, "ts_widget")
+#> [1] TRUE
+ts_compile(Counter)
+#> export const Counter = Robj.ocap(
+#>   [
+#>     z.union([
+#>       Robj.js_function(
+#>         [z.object({ count: z.union([z.number(), z.undefined()]) })],
+#>         z.null(),
+#>       ),
+#>       z.undefined(),
+#>     ]),
+#>   ],
+#>   Robj.list({
+#>     properties: Robj.list({
+#>       count: Robj.list({
+#>         register: Robj.ocap(
+#>           [Robj.js_function([z.number()], z.null()), z.string()],
+#>           Robj.character(1),
+#>         ),
+#>         get: Robj.ocap([], Robj.integer(1)),
+#>         set: Robj.ocap([z.number()], Robj.null()),
+#>       }),
+#>     }),
+#>     children: Robj.list(),
+#>     capabilities: Robj.list({
+#>       actions: Robj.list({
+#>         enabled: Robj.logical(1),
+#>         types: Robj.character(0),
+#>         strict: Robj.character(1),
+#>       }),
+#>     }),
+#>     methods: Robj.list({ increment: Robj.ocap([z.number()], Robj.integer(1)) }),
+#>   }),
+#> );
 ```

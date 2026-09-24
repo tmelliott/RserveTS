@@ -1,13 +1,18 @@
-# Deploy a ts Rserve app
+# Deploy a typed 'Rserve' app
 
-Deploy a ts Rserve app
+Writes an 'Rserve' launcher script for an app source file. By default
+the script is written under the same directory as
+[`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+file output (`RserveTS.compile_dir` / `RSERVETS_COMPILE_DIR` /
+[`tempdir()`](https://rdrr.io/r/base/tempfile.html)) as
+`{basename(f)}.rserve.R`. Pass `file` explicitly to choose another path.
 
 ## Usage
 
 ``` r
 ts_deploy(
   f,
-  file = sprintf("%s.rserve.R", tools::file_path_sans_ext(f)),
+  file = NULL,
   init = NULL,
   port = 6311,
   run = c("no", "here", "background"),
@@ -23,12 +28,15 @@ ts_deploy(
 
 - file:
 
-  The file to write the deployment script to
+  The file to write the deployment script to. When `NULL` (default),
+  uses `{basename(f)}.rserve.R` under the default compile directory (see
+  [`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)).
 
 - init:
 
-  Names of objects (ts_functions) to make available to the
-  initialisation function
+  Names of
+  [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+  objects to make available to the initialisation function
 
 - port:
 
@@ -45,4 +53,18 @@ ts_deploy(
 
 ## Value
 
-NULL, called to open an Rserve instance
+The path written to (`file`), invisibly. With `run = "here"` or
+`"background"`, also starts 'Rserve' as requested.
+
+## Examples
+
+``` r
+src <- tempfile(fileext = ".R")
+writeLines(
+    "add <- ts_function(function(x = ts_integer(1)) x, result = ts_integer(1), export = TRUE)",
+    src
+)
+out <- ts_deploy(src, silent = TRUE, run = "no")
+file.exists(out)
+#> [1] TRUE
+```

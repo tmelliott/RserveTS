@@ -1,57 +1,222 @@
-# Types in R and TypeScript
+# Types in R and 'TypeScript'
 
-This document provides an overview of the main types available to app
-developers, which includes the main types in R and their TypeScript
-counterparts.
+Constructors for typed values used in 'RserveTS' app contracts. Each
+`ts_*()` helper returns a `ts_object` that describes the 'zod' / `Robj`
+schema 'TypeScript' clients should expect for inputs and returns.
+
+## Usage
+
+``` r
+ts_union(..., default = NULL)
+
+ts_optional(type)
+
+ts_array(type)
+
+ts_logical(n = -1L, default = NULL)
+
+ts_integer(n = -1L, default = NULL)
+
+ts_numeric(n = -1L, default = NULL)
+
+ts_character(n = -1L, default = NULL)
+
+ts_factor(levels = NULL, default = NULL)
+
+ts_list(..., default = NULL)
+
+ts_record(value_type, default = NULL)
+
+ts_dataframe(..., default = NULL)
+
+ts_null()
+
+ts_void()
+
+ts_undefined()
+```
+
+## Arguments
+
+- ...:
+
+  For `ts_list()` / `ts_dataframe()`: member types (named or unnamed for
+  lists; named for data frames). For `ts_union()`: type objects to
+  merge.
+
+- default:
+
+  Default value for the type (optional).
+
+- type:
+
+  For `ts_optional()` / `ts_array()`: the inner type. For `ts_array()`,
+  may also be a 'zod'-style string such as `"z.number()"`.
+
+- n:
+
+  Length of the vector for atomic types. If `n = 1`, a single value is
+  expected; if `n = 0`, any length; if `n > 1`, a vector of that length.
+  The default (`-1`) accepts scalar or array form.
+
+- levels:
+
+  For `ts_factor()`: character vector of allowed levels (optional).
+
+- value_type:
+
+  For `ts_record()`: a single ts type for all values (e.g.
+  `ts_character(1)`).
+
+## Value
+
+A `ts_object` describing the type (except `ts_array()` on a character
+'Zod' fragment, which returns a character schema string).
 
 ## TS objects
 
-The basic object in `RserveTS` is a `ts_object` class. This is
-represented by input and return types, an optional default value, and a
-checking function.
+The basic object in 'RserveTS' is a `ts_object`. It carries an input
+type, a return type, an optional default, and a `check()` helper used on
+the R side during development.
 
-Input types describe the `zod` schema of objects that TypeScript can
-pass to Rserve functions.
+Input types describe the 'zod' schema of objects that 'TypeScript' can
+pass to 'Rserve' functions. Return types describe the 'zod' schema of
+objects that 'Rserve' functions return; most utilise the `Robj` helpers
+in the 'rserve-ts' library (with `r_type` and `r_attributes`).
 
-Return types describe the `zod` schema of objects that Rserve functions,
-and most of these utilise the `Robj` utility types in the `rserve-ts`
-library. The return types have additional properties added, namedly
-`r_type` and `r_attributes`, handled by the `Robj` utility types.
+## Scalar versus array ("vector") types
 
-**Scalar versus array ("vector") types**: In R, almost all types are
-vectors. In the 'rserve-js' library, primitive arrays of length one are
-converted into scalars, which leads to some issues with type checking
-when, for example, a return value has unknown length. `which(x > 5)` is
-one such example.
+In R, almost all types are vectors. In the 'rserve-js' library,
+primitive arrays of length one are converted into scalars, which leads
+to type checking issues when a return value has unknown length (e.g.
+`which(x > 5)`).
 
-To solve this, we add an `n` argument to the `ts_*` functions. When
-`n = 1`, the type takes the *scalar* form of the alue. When `n != 1`,
-the type takes the *array* form of the value (this includes 0).
-Otherwise, the type is the union of the scalar and array forms.
+For vectors that support this distinction, pass `n`:
 
-This is the case for numbers, strings, and booleans.
+- `n = 1` – scalar form
 
-## Available types
+- `n != 1` (including `0`) – array form
 
-- `ts_boolean`: A boolean value. The array type is `Int8Array`.
+- default (`n = -1`) – union of scalar and array forms
 
-- `ts_integer`: An integer value. The array type is `Int32Array`.
-  Javascript does not have a native integer type, so scalars are
-  represented as a number (the same as `ts_numeric`).
+This applies to logicals, integers, numerics, and characters.
 
-- `ts_numeric`: A numeric value. The array type is `Float64Array`.\*
+## Atomic types
 
-- `ts_string`: A string value. The array type is `string[]`.
+- `ts_logical()`: logical / boolean. Array form: `Int8Array` /
+  `Uint8Array`.
 
-- `ts_factor`: A factor value. The array type is
-  `(level1 | level2 | ... | levelN)[]`, and this type does not have a
-  scalar form.
+- `ts_integer()`: integer. Array form: `Int32Array`. 'JavaScript' has no
+  native integer type, so scalars are numbers (same as `ts_numeric()`).
 
-- `ts_list`: A list value, represented by a named object or an array.
+- `ts_numeric()`: numeric / double. Array form: `Float64Array`.
 
-- `ts_dataframe`: A data frame value, represented by a named object.
+- `ts_character()`: character / string. Array form: `string[]`.
 
-- `ts_null`: A null value.
+- `ts_factor()`: factor. Always a string array on the 'JavaScript' side
+  (even for a single value); optional `levels` constrain the labels.
 
-- `ts_void`: A void value, used for specifying return types of functions
-  that do not return a value.
+## Structured types
+
+- `ts_list()`: a list (named object or array in 'JavaScript'). Forms:
+
+  1.  Unknown list – `ts_list()`
+
+  2.  Known named list – `ts_list(x = ts_integer(), y = ts_character())`
+      (object in 'JavaScript')
+
+  3.  Known unnamed list – `ts_list(ts_integer(), ts_character())`
+      (array in 'JavaScript')
+
+  4.  Named list of one value type with unknown keys – use
+      `ts_record(value_type)` (`Record<string, type>` in 'TypeScript')
+
+  5.  Unnamed list of one value type with unknown length –
+      `ts_list(ts_integer())`-style homogeneous arrays (`Array<type>`)
+
+- `ts_record()`: named list whose values share one type
+  (`Record<string, value_type>`).
+
+- `ts_dataframe()`: data frame; named columns of equal length.
+
+## Nullish and combinators
+
+- `ts_null()`: only `NULL`.
+
+- `ts_void()`: return type for functions that return nothing (prefer
+  this over `ts_null()` for return types).
+
+- `ts_undefined()`: 'JavaScript' `undefined`.
+
+- `ts_union()`: union of several types.
+
+- `ts_optional()`: `type` or undefined (wrapper around `ts_union()` /
+  `ts_undefined()`).
+
+- `ts_array()`: array of a typed element (or a 'zod' fragment string).
+
+See
+[`ts_recursive_list()`](https://tomelliott.co.nz/RserveTS/reference/ts_recursive_list.md)
+for self-referential list schemas, and
+[`js_function()`](https://tomelliott.co.nz/RserveTS/reference/js_function.md)
+for 'JavaScript' callbacks callable from R.
+
+## See also
+
+[`ts_object()`](https://tomelliott.co.nz/RserveTS/reference/ts_object.md),
+[`ts_recursive_list()`](https://tomelliott.co.nz/RserveTS/reference/ts_recursive_list.md),
+[`js_function()`](https://tomelliott.co.nz/RserveTS/reference/js_function.md)
+
+Other type documentation:
+[`ts_recursive_list()`](https://tomelliott.co.nz/RserveTS/reference/ts_recursive_list.md)
+
+## Examples
+
+``` r
+(x <- ts_numeric(1))
+#> 
+#> --- Input type:  
+#> z.number() 
+#> 
+#> --- Return type:  
+#> Robj.numeric(1) 
+#> 
+(person <- ts_list(name = ts_character(1), age = ts_integer(1)))
+#> 
+#> --- Input type:  
+#> z.object({ name: z.string(), age: z.number() }) 
+#> 
+#> --- Return type:  
+#> Robj.list({ name: Robj.character(1), age: Robj.integer(1) }) 
+#> 
+(df <- ts_dataframe(a = ts_integer(1), b = ts_character(1)))
+#> 
+#> --- Input type:  
+#> z.object({
+#>   a: z.number(),
+#>   b: z.string()
+#> }) 
+#> 
+#> --- Return type:  
+#> Robj.dataframe({
+#>   a: Robj.integer(1),
+#>   b: Robj.character(1)
+#> }) 
+#> 
+(labels <- ts_record(ts_character(1)))
+#> 
+#> --- Input type:  
+#> z.record(z.string(), z.string()) 
+#> 
+#> --- Return type:  
+#> Robj.list(z.record(z.string(), Robj.character(1))) 
+#> 
+(ts_union(ts_numeric(1), ts_character(1)))
+#> 
+#> --- Input type:  
+#> z.union([z.number(), z.string()]) 
+#> 
+#> --- Return type:  
+#> z.union([Robj.numeric(1), Robj.character(1)]) 
+#> 
+```

@@ -3,20 +3,20 @@
 ## Authors
 
 - **Tom Elliott**. Author, maintainer.
-  [](https://orcid.org/0000-0002-7815-6318)  
-  Supported by the Ngā Puanga Pūtaiao Fellowships from Government
-  funding, administered by the Royal Society Te Apārangi, New Zealand.
+  [](https://orcid.org/0000-0002-7815-6318)
 
 ## Citation
 
-Elliott T (2026). *RserveTS: Deploy Rserve Applications Supporting
-TypeScript*. R package version 0.8.1,
-<http://tomelliott.co.nz/RserveTS/>.
+Source:
+[`DESCRIPTION`](https://github.com/tmelliott/RserveTS/blob/main/DESCRIPTION)
+
+Elliott T (2026). *RserveTS: Typed Application Contracts for 'Rserve'*.
+R package version 0.8.3, <https://tomelliott.co.nz/RserveTS/>.
 
     @Manual{,
-      title = {RserveTS: Deploy Rserve Applications Supporting TypeScript},
+      title = {RserveTS: Typed Application Contracts for 'Rserve'},
       author = {Tom Elliott},
       year = {2026},
-      note = {R package version 0.8.1},
-      url = {http://tomelliott.co.nz/RserveTS/},
+      note = {R package version 0.8.3},
+      url = {https://tomelliott.co.nz/RserveTS/},
     }

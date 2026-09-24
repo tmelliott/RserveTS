@@ -1,7 +1,7 @@
-# Convert JavaScript Function to R Function
+# Convert a 'JavaScript' Function to an R Function
 
-Converts a JavaScript function object to an R function that can be
-called to send messages via Rserve's out-of-band messaging.
+Converts a 'JavaScript' function object to an R function that can be
+called to send messages via 'Rserve' out-of-band messaging.
 
 ## Usage
 
@@ -13,8 +13,8 @@ jsfun(x)
 
 - x:
 
-  A JavaScript function object
+  A 'JavaScript' function object
 
 ## Value
 
-An R function that sends messages via Rserve
+An R function that sends messages via 'Rserve'

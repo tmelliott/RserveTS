@@ -4,71 +4,62 @@
 
 Writing and compiling functions into Rserve apps.
 
-- [`ts_function()`](http://tomelliott.co.nz/RserveTS/reference/ts_function.md)
-  : TS function definition
-- [`ts_app()`](http://tomelliott.co.nz/RserveTS/reference/ts_app.md) :
-  Generate an Rserve app from a ts function
-- [`ts_compile()`](http://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
+- [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+  : Define a typed function
+
+- [`ts_app()`](https://tomelliott.co.nz/RserveTS/reference/ts_app.md) :
+
+  Generate an 'Rserve' app from a
+  [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+
+- [`ts_compile()`](https://tomelliott.co.nz/RserveTS/reference/ts_compile.md)
   : Compile R functions
-- [`ts_deploy()`](http://tomelliott.co.nz/RserveTS/reference/ts_deploy.md)
-  : Deploy a ts Rserve app
-- [`createWidget()`](http://tomelliott.co.nz/RserveTS/reference/createWidget.md)
-  : Create a TypeScript-Compatible Widget
-- [`tsWidget-class`](http://tomelliott.co.nz/RserveTS/reference/tsWidget-class.md)
-  [`tsWidget`](http://tomelliott.co.nz/RserveTS/reference/tsWidget-class.md)
-  : Base Widget Class
-- [`observer()`](http://tomelliott.co.nz/RserveTS/reference/observer.md)
-  : Create an Observer for Reactive Methods
+
+- [`ts_deploy()`](https://tomelliott.co.nz/RserveTS/reference/ts_deploy.md)
+  : Deploy a typed 'Rserve' app
+
+- [`widgetActions()`](https://tomelliott.co.nz/RserveTS/reference/createWidget.md)
+  [`createWidget()`](https://tomelliott.co.nz/RserveTS/reference/createWidget.md)
+  [`observer()`](https://tomelliott.co.nz/RserveTS/reference/createWidget.md)
+  : Create 'TypeScript'-compatible widgets
 
 ## Types
 
 Type helper functions for defining argument and return types.
 
-- [`type_objects`](http://tomelliott.co.nz/RserveTS/reference/type_objects.md)
-  : Types in R and TypeScript
-- [`ts_logical()`](http://tomelliott.co.nz/RserveTS/reference/ts_logical.md)
-  : Logical or boolean type
-- [`ts_integer()`](http://tomelliott.co.nz/RserveTS/reference/ts_integer.md)
-  : Integer type
-- [`ts_numeric()`](http://tomelliott.co.nz/RserveTS/reference/ts_numeric.md)
-  : Numeric type
-- [`ts_character()`](http://tomelliott.co.nz/RserveTS/reference/ts_character.md)
-  : Character or string type
-- [`ts_factor()`](http://tomelliott.co.nz/RserveTS/reference/ts_factor.md)
-  : Typed factor
-- [`ts_list()`](http://tomelliott.co.nz/RserveTS/reference/ts_list.md) :
-  Typed list
-- [`ts_dataframe()`](http://tomelliott.co.nz/RserveTS/reference/ts_dataframe.md)
-  : Typed dataframe
-- [`ts_null()`](http://tomelliott.co.nz/RserveTS/reference/ts_null.md) :
-  Null type
-- [`ts_void()`](http://tomelliott.co.nz/RserveTS/reference/ts_void.md) :
-  Void type
-- [`ts_object()`](http://tomelliott.co.nz/RserveTS/reference/ts_object.md)
-  [`is_ts_object()`](http://tomelliott.co.nz/RserveTS/reference/ts_object.md)
-  [`get_type()`](http://tomelliott.co.nz/RserveTS/reference/ts_object.md)
-  [`check_type()`](http://tomelliott.co.nz/RserveTS/reference/ts_object.md)
-  : Typed object (internal use only)
-- [`ts_union()`](http://tomelliott.co.nz/RserveTS/reference/ts_union.md)
-  : Union type
-- [`ts_array()`](http://tomelliott.co.nz/RserveTS/reference/ts_array.md)
-  : Array type
-- [`ts_optional()`](http://tomelliott.co.nz/RserveTS/reference/ts_optional.md)
-  : Optional type
-- [`ts_undefined()`](http://tomelliott.co.nz/RserveTS/reference/ts_undefined.md)
-  : Undefined type
-- [`ts_recursive_list()`](http://tomelliott.co.nz/RserveTS/reference/ts_recursive_list.md)
+- [`ts_union()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_optional()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_array()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_logical()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_integer()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_numeric()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_character()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_factor()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_list()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_record()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_dataframe()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_null()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_void()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  [`ts_undefined()`](https://tomelliott.co.nz/RserveTS/reference/type_objects.md)
+  : Types in R and 'TypeScript'
+- [`ts_object()`](https://tomelliott.co.nz/RserveTS/reference/ts_object.md)
+  [`is_ts_object()`](https://tomelliott.co.nz/RserveTS/reference/ts_object.md)
+  [`get_type()`](https://tomelliott.co.nz/RserveTS/reference/ts_object.md)
+  [`check_type()`](https://tomelliott.co.nz/RserveTS/reference/ts_object.md)
+  : Typed object
+- [`ts_recursive_list()`](https://tomelliott.co.nz/RserveTS/reference/ts_recursive_list.md)
+  [`ts_self()`](https://tomelliott.co.nz/RserveTS/reference/ts_recursive_list.md)
   : Recursive list
-- [`ts_self()`](http://tomelliott.co.nz/RserveTS/reference/ts_self.md) :
-  Self object
-- [`js_function()`](http://tomelliott.co.nz/RserveTS/reference/js_function.md)
-  : JS functions callable from R
+- [`js_function()`](https://tomelliott.co.nz/RserveTS/reference/js_function.md)
+  : 'JavaScript' functions callable from R
 
 ## Debugging
 
 Debugging utilities for RserveTS.
 
-- [`rts_debug_enabled()`](http://tomelliott.co.nz/RserveTS/reference/rts_debug_enabled.md)
+- [`rts_debug`](https://tomelliott.co.nz/RserveTS/reference/rts_debug.md)
+  : Debug logging for 'RserveTS'
+- [`rts_debug_enabled()`](https://tomelliott.co.nz/RserveTS/reference/rts_debug_enabled.md)
   : Check if debug logging is enabled for a tag
-- [`rts_log()`](http://tomelliott.co.nz/RserveTS/reference/rts_log.md) :
-  Log a debug message
+- [`rts_log()`](https://tomelliott.co.nz/RserveTS/reference/rts_log.md)
+  : Log a debug message

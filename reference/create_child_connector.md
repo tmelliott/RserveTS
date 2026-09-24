@@ -1,7 +1,7 @@
 # Create Child Widget Connector
 
 Internal helper function to create connector functions for child
-widgets. Used by the `add_child` method of `tsWidget`.
+widgets. Used by the `add_child()` method of `tsWidget`.
 
 ## Usage
 
@@ -39,4 +39,4 @@ create_child_connector(
 
 ## Value
 
-A TypeScript function constructor for the child widget
+A 'TypeScript' function constructor for the child widget

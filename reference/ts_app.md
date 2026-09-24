@@ -1,4 +1,4 @@
-# Generate an Rserve app from a ts function
+# Generate an 'Rserve' app from a `ts_function()`
 
 Anything that is not a function simply returns itself. However,
 functions are wrapped with
@@ -15,8 +15,9 @@ ts_app(x)
 
 - x:
 
-  A ts function object
-  ([`ts_function()`](http://tomelliott.co.nz/RserveTS/reference/ts_function.md))
+  A
+  [`ts_function()`](https://tomelliott.co.nz/RserveTS/reference/ts_function.md)
+  object
 
 ## Value
 
@@ -30,5 +31,5 @@ f <- ts_function(function(x = ts_integer(1), y = ts_character(1)) {
     x + nchar(y)
 }, result = ts_integer(1))
 app <- ts_app(f) # class of 'OCref'
-# this can now be used in an Rserve application, for example
+# this can now be used in an 'Rserve' application, for example
 ```
