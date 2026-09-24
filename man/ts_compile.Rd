@@ -4,20 +4,67 @@
 \alias{ts_compile}
 \title{Compile R functions}
 \usage{
-ts_compile(f, ..., name, filename)
+ts_compile(f, ...)
 }
 \arguments{
-\item{f}{A function or file path}
+\item{f}{A function or file path (length-one character string for file compilation).}
 
-\item{...}{Additional arguments (passed to ts_deploy)}
-
-\item{name}{The name of the function}
-
-\item{filename}{The base file path to write the TypeScript schema and R app to (optional, uses \verb{[path of f].rserve} by default). \code{.R} and \code{.ts} file extensions are appended automatically. If \code{""}, the output is printed to the standard output console (see \code{cat}).}
+\item{...}{Additional arguments. For the \strong{file path} method, named arguments passed to \code{\link[=ts_deploy]{ts_deploy()}} (e.g. \code{init}, \code{port}, \code{run}). For \code{ts_function()} / \code{ts_widget} objects, \code{format} and \code{prettier_cmd} are supported (see details); other arguments are ignored.}
 }
 \value{
-Character vector of TypeScript schema, or NULL if writing to file
+For a \code{ts_function()} / \code{ts_widget}, a character string of 'TypeScript'.
+For a file path, writes \code{.ts} / \code{.R} beside \code{filename} and returns
+the output base path invisibly.
 }
 \description{
-Generates TypeScript schema for the given R function or file path. If a path, the R app is also generated.
+Generates 'TypeScript' schema for the given R function or file path. If a path, the R app is also generated.
+}
+\details{
+\strong{\code{ts_function()} method:} \code{name} defaults to \code{deparse(substitute(f))} and sets the generated \verb{export const} symbol.
+
+\strong{Character (file) method:} \code{filename} is the base path for output; \code{.R} and \code{.ts}
+extensions are appended. When omitted, output goes under the default compile
+directory (see below) as \verb{\{basename(f)\}.rserve}.
+Arguments \code{filename}, \code{format}, and \code{prettier_cmd} must be passed by name;
+they are not part of \code{...}.
+
+Default output directory (CRAN-safe; does not write beside the source by default):
+\enumerate{
+\item option \code{RserveTS.compile_dir} if set to a non-empty path;
+\item else environment variable \code{RSERVETS_COMPILE_DIR} if set;
+\item else \code{\link[=tempdir]{tempdir()}}.
+}
+
+For local development, set e.g. \code{options(RserveTS.compile_dir = ".")} or
+\code{RSERVETS_COMPILE_DIR=.} so \code{ts_compile("app.R")} writes \code{app.rserve.ts} /
+\code{app.rserve.R} in the working directory; or pass \code{filename} explicitly.
+\itemize{
+\item \code{format} -- If \code{TRUE}, run 'Prettier' (or a compatible CLI) on the generated 'TypeScript'
+(returned string for functions; written \code{.ts} for files). Defaults to
+\code{getOption("RserveTS.format", FALSE)} so you can enable it once for a session
+(e.g. 'pkgdown' site builds) without changing call sites.
+\item \code{prettier_cmd} -- Character vector argv (executable first). Defaults to
+\code{getOption("RserveTS.prettier_cmd")} (\code{NULL} until you set it, e.g.
+\code{options(RserveTS.prettier_cmd = c("prettier", "--parser", "typescript"))}).
+When still \code{NULL}, falls back to environment variable \code{RserveTS_PRETTIER_CMD}
+(space-separated tokens), then \code{prettier} or \verb{npx prettier} on \code{PATH}.
+A temporary \code{.ts} copy of the generated source is appended as the last
+argument (as with \verb{prettier --parser typescript path/to/file.ts}). Another
+formatter (e.g. 'Biome') can be used if it accepts that invocation pattern.
+}
+}
+\examples{
+# Compile a typed function to a 'TypeScript' schema string (no files written)
+f <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1))
+ts_compile(f)
+
+# File compilation writes under tempdir() by default (or RSERVETS_COMPILE_DIR)
+src <- tempfile(fileext = ".R")
+writeLines(
+    "add <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1), export = TRUE)",
+    src
+)
+out <- ts_compile(src)
+file.exists(paste0(out, ".ts"))
+file.exists(paste0(out, ".R"))
 }

@@ -19,7 +19,8 @@ test_that("batch() suppresses signal handlers during block", {
   tracker <- capture_state_updates()
   local_mocked_bindings(jsfun = tracker$mock)
 
-  handler_count <- 0L
+  state <- new.env(parent = emptyenv())
+  state$handler_count <- 0L
 
   w <- createWidget(
     "BatchSuppressWidget",
@@ -30,7 +31,7 @@ test_that("batch() suppresses signal handlers during block", {
     ),
     methods = list(
       compute = observer(c("a", "b"), function() {
-        handler_count <<- handler_count + 1L
+        state$handler_count <- state$handler_count + 1L
         .self$set("total", .self$a + .self$b)
       })
     )
@@ -39,7 +40,7 @@ test_that("batch() suppresses signal handlers during block", {
   result <- w$call(mock_js_fn())
 
   # Reset counter after initial setup
-  handler_count <- 0L
+  state$handler_count <- 0L
 
   # Get the widget instance from the ref class
   rc <- attr(w, ".__refclass")
@@ -55,7 +56,8 @@ test_that("batch() blocks signals, runs expr, unblocks, and flushes once", {
   tracker <- capture_state_updates()
   local_mocked_bindings(jsfun = tracker$mock)
 
-  handler_calls <- 0L
+  state <- new.env(parent = emptyenv())
+  state$handler_calls <- 0L
 
   w <- createWidget(
     "BatchFlushWidget",
@@ -65,16 +67,16 @@ test_that("batch() blocks signals, runs expr, unblocks, and flushes once", {
     ),
     methods = list(
       on_x = observer("x", function() {
-        handler_calls <<- handler_calls + 1L
+        state$handler_calls <- state$handler_calls + 1L
       }),
       on_y = observer("y", function() {
-        handler_calls <<- handler_calls + 1L
+        state$handler_calls <- state$handler_calls + 1L
       })
     )
   )
 
   result <- w$call(mock_js_fn())
-  handler_calls <- 0L
+  state$handler_calls <- 0L
 
   # Get the widget instance by calling set on it via props
   # We access the widget through the property set function
@@ -85,14 +87,15 @@ test_that("batch() blocks signals, runs expr, unblocks, and flushes once", {
   result$properties$y$set$call(10L)
 
   # Each set triggers its observer handler
-  expect_equal(handler_calls, 2L)
+  expect_equal(state$handler_calls, 2L)
 })
 
 test_that("batch() on widget blocks handlers and flushes state once", {
   tracker <- capture_state_updates()
   local_mocked_bindings(jsfun = tracker$mock)
 
-  handler_calls <- 0L
+  state <- new.env(parent = emptyenv())
+  state$handler_calls <- 0L
   widget_ref <- NULL
 
   w <- createWidget(
@@ -106,16 +109,16 @@ test_that("batch() on widget blocks handlers and flushes state once", {
     },
     methods = list(
       on_x = observer("x", function() {
-        handler_calls <<- handler_calls + 1L
+        state$handler_calls <- state$handler_calls + 1L
       }),
       on_y = observer("y", function() {
-        handler_calls <<- handler_calls + 1L
+        state$handler_calls <- state$handler_calls + 1L
       })
     )
   )
 
   result <- w$call(mock_js_fn())
-  handler_calls <- 0L
+  state$handler_calls <- 0L
   updates_before <- length(tracker$get())
 
   # Use batch to set both properties without triggering handlers
@@ -125,7 +128,7 @@ test_that("batch() on widget blocks handlers and flushes state once", {
   })
 
   # Handlers should NOT have fired (signals were blocked)
-  expect_equal(handler_calls, 0L)
+  expect_equal(state$handler_calls, 0L)
 
   # But state should have been flushed once at the end
   updates_after <- length(tracker$get())
@@ -140,7 +143,8 @@ test_that("batch() unblocks signals even if expr errors", {
   tracker <- capture_state_updates()
   local_mocked_bindings(jsfun = tracker$mock)
 
-  handler_calls <- 0L
+  state <- new.env(parent = emptyenv())
+  state$handler_calls <- 0L
   widget_ref <- NULL
 
   w <- createWidget(
@@ -153,13 +157,13 @@ test_that("batch() unblocks signals even if expr errors", {
     },
     methods = list(
       on_x = observer("x", function() {
-        handler_calls <<- handler_calls + 1L
+        state$handler_calls <- state$handler_calls + 1L
       })
     )
   )
 
   result <- w$call(mock_js_fn())
-  handler_calls <- 0L
+  state$handler_calls <- 0L
 
   # batch() with an error — signals should still be unblocked
   expect_error(
@@ -171,14 +175,15 @@ test_that("batch() unblocks signals even if expr errors", {
 
   # After error, signal should be unblocked — setting x triggers handler
   widget_ref$set("x", 42L)
-  expect_equal(handler_calls, 1L)
+  expect_equal(state$handler_calls, 1L)
 })
 
 test_that("batch() with single property works", {
   tracker <- capture_state_updates()
   local_mocked_bindings(jsfun = tracker$mock)
 
-  handler_calls <- 0L
+  state <- new.env(parent = emptyenv())
+  state$handler_calls <- 0L
   widget_ref <- NULL
 
   w <- createWidget(
@@ -191,13 +196,13 @@ test_that("batch() with single property works", {
     },
     methods = list(
       on_x = observer("x", function() {
-        handler_calls <<- handler_calls + 1L
+        state$handler_calls <- state$handler_calls + 1L
       })
     )
   )
 
   result <- w$call(mock_js_fn())
-  handler_calls <- 0L
+  state$handler_calls <- 0L
 
   widget_ref$batch("x", {
     widget_ref$set("x", 1L)
@@ -206,7 +211,7 @@ test_that("batch() with single property works", {
   })
 
   # Handler should not have fired during batch
-  expect_equal(handler_calls, 0L)
+  expect_equal(state$handler_calls, 0L)
   # Final value should be 3
   expect_equal(widget_ref$x, 3L)
 })

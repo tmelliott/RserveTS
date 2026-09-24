@@ -2,26 +2,27 @@
 % Please edit documentation in R/types.R
 \name{js_function}
 \alias{js_function}
-\title{JS functions callable from R}
+\title{'JavaScript' functions callable from R}
 \usage{
 js_function(..., result = NULL)
 }
 \arguments{
 \item{...}{arguments passed to the function}
 
-\item{result}{the type of value returned from JS to R}
+\item{result}{the type of value returned from 'JavaScript' to R}
 }
 \value{
-A ts object that accepts js functions (as input).
-Currently not able to pass as output (but should, in future ...).
+A ts object that accepts 'JavaScript' functions as input.
+Using 'JavaScript' functions as output (R to 'JavaScript') is not supported yet.
 }
 \description{
-If result is NULL, it will be an oobSend (R process will continue),
-otherwise R process will wait for a response (oobMessage).
+If \code{result} is \code{NULL}, it will be an oobSend (R process will continue);
+otherwise the R process will wait for a response (oobMessage).
 }
-\details{
-TODO: when compiling, automatically wrap in self.oobMessage() or self.oobSend(), as necessary... ?
-\itemize{
-\item how about naked js functions? i.e., we might want to pass a function \emph{back} to javascript, for some reason?
-}
+\examples{
+# Fire-and-forget callback from 'JavaScript' (oobSend)
+cb <- js_function(ts_character(1))
+
+# Callback that returns a value to R (oobMessage)
+ask <- js_function(ts_integer(1), result = ts_logical(1))
 }

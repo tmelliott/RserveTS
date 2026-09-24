@@ -2,11 +2,11 @@
 % Please edit documentation in R/deploy.R
 \name{ts_deploy}
 \alias{ts_deploy}
-\title{Deploy a ts Rserve app}
+\title{Deploy a typed 'Rserve' app}
 \usage{
 ts_deploy(
   f,
-  file = sprintf("\%s.rserve.R", tools::file_path_sans_ext(f)),
+  file = NULL,
   init = NULL,
   port = 6311,
   run = c("no", "here", "background"),
@@ -16,9 +16,11 @@ ts_deploy(
 \arguments{
 \item{f}{The path to the application files}
 
-\item{file}{The file to write the deployment script to}
+\item{file}{The file to write the deployment script to. When \code{NULL} (default),
+uses \verb{\{basename(f)\}.rserve.R} under the default compile directory (see
+\code{\link[=ts_compile]{ts_compile()}}).}
 
-\item{init}{Names of objects (ts_functions) to make available to
+\item{init}{Names of \code{ts_function()} objects to make available to
 the initialisation function}
 
 \item{port}{The port to deploy the app on}
@@ -29,8 +31,21 @@ takes values "no", "here", "background"}
 \item{silent}{Whether to print the deployment script}
 }
 \value{
-NULL, called to open an Rserve instance
+The path written to (\code{file}), invisibly. With \code{run = "here"} or
+\code{"background"}, also starts 'Rserve' as requested.
 }
 \description{
-Deploy a ts Rserve app
+Writes an 'Rserve' launcher script for an app source file. By default the
+script is written under the same directory as \code{\link[=ts_compile]{ts_compile()}} file output
+(\code{RserveTS.compile_dir} / \code{RSERVETS_COMPILE_DIR} / \code{\link[=tempdir]{tempdir()}}) as
+\verb{\{basename(f)\}.rserve.R}. Pass \code{file} explicitly to choose another path.
+}
+\examples{
+src <- tempfile(fileext = ".R")
+writeLines(
+    "add <- ts_function(function(x = ts_integer(1)) x, result = ts_integer(1), export = TRUE)",
+    src
+)
+out <- ts_deploy(src, silent = TRUE, run = "no")
+file.exists(out)
 }

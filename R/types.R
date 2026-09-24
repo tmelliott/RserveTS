@@ -1,15 +1,24 @@
-#' Typed object (internal use only)
+#' Typed object
 #'
 #' This is the base type for all typed objects, and can be used to define
 #' custom types.
 #'
-#' @param input_type The type of the object that Typescript expect to send to R.
-#' @param return_type The type of the object that Typescript expects to recieve from R.
+#' @param input_type The type of the object that 'TypeScript' expects to send to R.
+#' @param return_type The type of the object that 'TypeScript' expects to receive from R.
 #' @param default The default value of the object.
 #' @param check A function that checks the object and returns it if it is valid. This operates on the R side and is mostly for development and debugging purposes. It is up to the developer to ensure that all functions return the correct type of object always.
 #' @param generic logical, if `TRUE` then the object is a generic type.
+#' @return A `ts_object` environment with 'Zod' input/return schema strings and a
+#'   `check()` helper. `is_ts_object()` returns a logical;
+#'   `get_type()` returns a character schema string;
+#'   `check_type()` returns `x` when valid (or errors).
 #'
 #' @md
+#' @export
+#' @examples
+#' x <- ts_numeric(1)
+#' is_ts_object(x)
+#' get_type(x, "input")
 ts_object <- function(input_type = "any",
                       return_type = "any",
                       default = NULL,
@@ -67,6 +76,30 @@ get_type.ts_object <- function(x, which = c("input", "return")) {
 }
 
 #' @export
+get_type.ts_ts_list <- function(x, which = c("input", "return")) {
+    which <- match.arg(which)
+    if (which == "input") {
+        return(x$input_type)
+    }
+    vals <- x$.__ts_list_values
+    if (!length(vals)) {
+        return(x$return_type)
+    }
+    type_funs <- vapply(vals, get_type, character(1), which = "return")
+    if (!is.null(names(vals))) {
+        type_fn <- sprintf(
+            "{ %s }",
+            paste(names(vals), type_funs, sep = ": ", collapse = ", ")
+        )
+        return(if (identical(type_fn, "{ }")) "Robj.list()" else sprintf("Robj.list(%s)", type_fn))
+    }
+    if (length(vals) == 1L) {
+        return(sprintf("Robj.list(%s)", type_funs[[1L]]))
+    }
+    sprintf("Robj.list([%s])", paste(type_funs, collapse = ", "))
+}
+
+#' @export
 get_type.ts_function <- function(x, which = c("input", "return")) {
     which <- match.arg(which)
     if (which == "input") {
@@ -75,6 +108,19 @@ get_type.ts_function <- function(x, which = c("input", "return")) {
 
     compile_fn(x)
     # "Robj.ocap()"
+}
+
+#' @export
+get_type.ts_widget <- function(x, which = c("input", "return")) {
+    which <- match.arg(which)
+    if (which == "input") {
+        return("z.function()")
+    }
+    ref <- attr(x, ".__ts_schema_ref", exact = TRUE)
+    if (is.character(ref) && length(ref) == 1L && nzchar(ref)) {
+        return(ref)
+    }
+    compile_fn(x)
 }
 
 #' @export
@@ -113,15 +159,8 @@ check_type.ts_function <- function(type, x) {
     )
 }
 
-#' Union type
-#'
-#' Create a union of types. Currently this only accepts schemas as strings.
-#' @param ... Type objects to merge
-#' @param default Default value for the type (optional).
+#' @rdname type_objects
 #' @export
-#' @md
-#' @examples
-#' x <- ts_union(ts_numeric(1), ts_character(1))
 ts_union <- function(..., default = NULL) {
     types <- list(...)
 
@@ -151,26 +190,13 @@ ts_union <- function(..., default = NULL) {
     )
 }
 
-#' Optional type
-#'
-#' A wrapper around union of a type and undefined
-#' @param type Type that is optional
+#' @rdname type_objects
 #' @export
-#' @md
-#' @examples
-#' x <- ts_optional(ts_numeric(1))
 ts_optional <- function(type) {
     ts_union(type, ts_undefined())
 }
 
-#' Array type
-#'
-#' An array of typed objects. In zod, these are represented
-#' by `z.array()`; returned objects must be R lists, `Robj.list()`.
-#'
-#' @param type The input type, either a zod-style string ("z.number()") or a ts_object.
-#' @return An array object
-#' @md
+#' @rdname type_objects
 #' @export
 ts_array <- function(type) {
     UseMethod("ts_array")
@@ -215,24 +241,8 @@ n_type_fun <- function(n, type) {
     sprintf("%s(%s)", type, ifelse(n < 0, "", n))
 }
 
-#' Logical or boolean type
-#'
-#' Booleans are represented in Zod schema as either a boolean (`z.boolean()`),
-#' or a typed Uint8Array (`z.instanceof(Uint8Array)`).
-#'
-#' @param n The length of the boolean vector. If `n = 1` then a single boolean is expected. If `n = 0` then any length is expected. If `n > 1` then a boolean vector of length `n` is expected.
-#' @param default Default value for the type (optional).
-#' @return A ts object that accepts logical scalars or vectors of length `n`.
+#' @rdname type_objects
 #' @export
-#' @md
-#' @examples
-#' x <- ts_logical(1)
-#' x$check(TRUE)
-#'
-#' \dontrun{
-#' # this will fail
-#' x$check(5)
-#' }
 ts_logical <- function(n = -1L, default = NULL) {
     ts_object(
         n_type(n, "z.boolean()"),
@@ -248,24 +258,8 @@ ts_logical <- function(n = -1L, default = NULL) {
     )
 }
 
-#' Integer type
-#'
-#' Integers are represented in Zod schema as either a number (`z.number()`),
-#' or a Int32Array (`z.instanceof(Int32Array)`).
-#'
-#' @param n The length of the integer vector. If `n = 1` then a single integer is expected. If `n = 0` then any length is expected. If `n > 1` then an integer vector of length `n` is expected.
-#' @param default Default value for the type (optional).
-#' @return A ts object that accepts integer scalars or vectors of length `n`.
+#' @rdname type_objects
 #' @export
-#' @md
-#' @examples
-#' x <- ts_integer(1)
-#' x$check(1L)
-#'
-#' \dontrun{
-#' # this will fail
-#' x$check(1:10)
-#' }
 ts_integer <- function(n = -1L, default = NULL) {
     ts_object(
         n_type(n, "z.number()", "z.instanceof(Int32Array)"),
@@ -285,25 +279,8 @@ ts_integer <- function(n = -1L, default = NULL) {
     )
 }
 
-#' Numeric type
-#'
-#' Numbers are represented in Zod schema as either a number (`z.number()`),
-#' or a Float64Array (`z.instanceof(Float64Array)`).
-#'
-#' @param n The length of the numeric vector. If `n = 1` then a single number is expected. If `n = 0` then any length is expected. If `n > 1` then a numeric vector of length `n` is expected.
-#' @param default Default value for the type (optional).
-#' @return A ts object that accepts numeric scalars or vectors of length `n`.
+#' @rdname type_objects
 #' @export
-#' @md
-#' @examples
-#' x <- ts_numeric(1)
-#' x$check(1)
-#'
-#' \dontrun{
-#' # this will fail
-#' x$check(c(1, 2, 3))
-#' x$check("a")
-#' }
 ts_numeric <- function(n = -1L, default = NULL) {
     ts_object(
         n_type(n, "z.number()"),
@@ -312,25 +289,15 @@ ts_numeric <- function(n = -1L, default = NULL) {
         check = function(x) {
             if (!is.numeric(x)) stop("Expected a number", call. = FALSE)
             if (n > 0 && length(x) != n) {
-                stop("Expected a number of length ", n, , call. = FALSE)
+                stop("Expected a number of length ", n, call. = FALSE)
             }
             x
         }
     )
 }
 
-#' Character or string type
-#'
-#' Strings are represented in Zod schema as either a string (`z.string()`),
-#' or a string array (`z.array(z.string())`).
-#' @param n The length of the string vector. If `n = 1` then a single string is expected. If `n = 0` then any length is expected. If `n > 1` then a string vector of length `n` is expected.
-#' @param default Default value for the type (optional).
-#' @return A ts object that accepts strings or string vectors of length `n`.
+#' @rdname type_objects
 #' @export
-#' @md
-#' @examples
-#' x <- ts_character(1)
-#' x$check("a")
 ts_character <- function(n = -1L, default = NULL) {
     ts_object(
         n_type(n, "z.string()"),
@@ -348,25 +315,8 @@ vector_as_ts_array <- function(x) {
     paste("[\"", paste(x, collapse = "\", \""), "\"]", sep = "")
 }
 
-#' Typed factor
-#'
-#' Factors are integers with labels. On the JS side, these are *always* represented as a string array (even if only one value - yay!).
-#'
-#' @param levels A character vector of levels (optional).
-#' @param default Default value for the type (optional).
-#' @return A ts object that accepts factors with the specified levels.
-#'
+#' @rdname type_objects
 #' @export
-#' @md
-#' @examples
-#' x <- ts_factor(levels = c("a", "b"))
-#' x$check(factor("a", levels = c("a", "b")))
-#'
-#' \dontrun{
-#' # this will fail
-#' x$check("a")
-#' x$check(factor("c", levels = c("a", "b", "c")))
-#' }
 ts_factor <- function(levels = NULL, default = NULL) {
     ts_object(
         ifelse(is.null(levels),
@@ -394,28 +344,8 @@ ts_factor <- function(levels = NULL, default = NULL) {
 
 # table?
 
-#' Typed list
-#'
-#' A list is a vector of other robjects, which may or may not be named.
-#'
-#' There are five types of lists we can define:
-#'
-#' 1. Unknown list
-#' 2. Known, named list (e.g., list(x = 1:5, y = 'hello world')). This is an object in JS.
-#' 3. Known, unnamed list (e.g., list(1:5, 'hello world')). This is an array in JS.
-#' 4. Named list of a single datatype (e.g., list(fit1 = lm(...), fit2 = lm(...), ...)), where the names and length are not known ahead of time. This is a record<string, type> in JS.
-#' 5. Unnamed list of a single datatype (e.g., list(lm(...), lm(...), ...)), where the length is unknown ahead of time. This is an Array<type> in JS.
-#'
-#' @param ... A list of types, named or unnamed.
-#' @param default Default value for the type (optional).
-#' @return A ts object that accepts lists with the specified types.
-#'
+#' @rdname type_objects
 #' @export
-#' @md
-#'
-#' @examples
-#' x <- ts_list(a = ts_integer(1), b = ts_character(1))
-#' x$check(list(a = 1L, b = "a"))
 ts_list <- function(..., default = NULL) {
     values <- list(...)
 
@@ -445,7 +375,7 @@ ts_list <- function(..., default = NULL) {
         }
     }
 
-    ts_object(
+    out <- ts_object(
         type,
         ifelse(type_fn == "", "Robj.list()",
             sprintf("Robj.list(%s)", type_fn)
@@ -469,23 +399,40 @@ ts_list <- function(..., default = NULL) {
             x
         }
     )
+    if (length(values)) {
+        out$.__ts_list_values <- values
+        class(out) <- c("ts_ts_list", class(out))
+    }
+    out
 }
 
 
-#' Typed dataframe
-#'
-#' This is essentially a list, but the elements must have names and are all the same length.
-#'
-#' @param ... Named types.
-#' @param default Default value for the type (optional).
-#' @return A ts object that accepts data frames with the specified types.
-#'
+#' @rdname type_objects
 #' @export
-#' @md
-#'
-#' @examples
-#' x <- ts_dataframe(a = ts_integer(1), b = ts_character(1))
-#' x$check(data.frame(a = 1L, b = "a"))
+ts_record <- function(value_type, default = NULL) {
+    stopifnot(is_ts_object(value_type))
+
+    input_type <- sprintf("z.record(z.string(), %s)", value_type$input_type)
+    return_type <- sprintf("Robj.list(z.record(z.string(), %s))", get_type(value_type, "return"))
+
+    ts_object(
+        input_type,
+        return_type,
+        default = default,
+        check = function(x) {
+            if (!is.list(x)) stop("Expected a list")
+            if (is.null(names(x))) stop("Expected a named list")
+            for (i in seq_along(x)) {
+                x[[i]] <- check_type(value_type, x[[i]])
+            }
+            x
+        }
+    )
+}
+
+
+#' @rdname type_objects
+#' @export
 ts_dataframe <- function(..., default = NULL) {
     values <- list(...)
     type <- "z.record(z.string(), z.any())"
@@ -516,17 +463,8 @@ ts_dataframe <- function(..., default = NULL) {
     )
 }
 
-#' Null type
-#'
-#' This is a type that only accepts `NULL`. For function return types, use `ts_void`.
-#'
-#' @return A ts object that only accepts `NULL`.
+#' @rdname type_objects
 #' @export
-#'
-#' @md
-#' @examples
-#' x <- ts_null()
-#' x$check(NULL)
 ts_null <- function() {
     ts_object(
         "z.null()",
@@ -538,14 +476,8 @@ ts_null <- function() {
     )
 }
 
-#' Void type
-#'
-#' This is a type that accepts null values (this would typically be used for
-#' functions that return nothing).
-#' @return A ts object that accepts `NULL`.
+#' @rdname type_objects
 #' @export
-#' @md
-#' @seealso \code{\link{ts_null}}
 ts_void <- function() {
     ts_object(
         "z.void()",
@@ -556,12 +488,8 @@ ts_void <- function() {
     )
 }
 
-#' Undefined type
-#'
-#' For the undefined type.
-#' @return A ts object that accepts 'undefined'.
+#' @rdname type_objects
 #' @export
-#' @md
 ts_undefined <- function() {
     ts_object(
         "z.undefined()",
@@ -577,28 +505,36 @@ ts_undefined <- function() {
 
 #' Recursive list
 #'
-#' For complex recursive lists. These are objects that can contain subcomponents
-#' of the same (parent) type.
-#' e.g., Person can have name, dob, properties, and 'children' which is an
-#' (optional) array of Person objects.
+#' For complex recursive lists — objects that can contain subcomponents of the
+#' same (parent) type. For example, a Person with `name` and optional
+#' `children` that are themselves Person objects.
 #'
-#' Defining this type in Zod is currently complicated, as the type has to be
+#' Use [ts_self()] inside `recur` to mark those self-referential fields.
+#' By default `ts_self()` means an array of the parent type; use
+#' `ts_self(1)` for a single nested object.
+#'
+#' Defining this type in 'Zod' is currently complicated, as the type has to be
 #' pre-defined, and then extended after manually defining the Type. In an
-#' upcoming version of zod 4, this should be simplified. For now, it's tricky.
+#' upcoming version of 'zod' 4, this should be simplified. For now, it's tricky.
 #'
 #' @param values properties that define the base schema of the list;
 #'               must be a named list.
 #' @param recur a named list of properties that are added.
-#'              These can use the 'ts_self()' helper.
-#' @return A ts object that accepts recursive lists.
+#'              These can use [ts_self()].
+#' @param n For `ts_self()`: number of elements — `n = 1` for a single nested
+#'   object, or `n != 1` (default `-1`) for an array of the parent type.
+#' @return `ts_recursive_list()` returns a ts object that accepts recursive
+#'   lists. `ts_self()` returns a marker used in `recur`.
 #' @export
 #' @md
-#'
+#' @family type documentation
 #' @examples
-#' r_list <- ts_recursive_list(
+#' person <- ts_recursive_list(
 #'     list(name = ts_character(1)),
 #'     list(children = ts_self())
 #' )
+#' echo_person <- ts_function(function() person, result = person)
+#' ts_compile(echo_person, name = "echo_person")
 ts_recursive_list <- function(values, recur) {
     if (length(values) == 0) stop("Must specify values")
     if (is.null(names(values))) stop("Input must be named")
@@ -612,7 +548,6 @@ ts_recursive_list <- function(values, recur) {
         "const baseObjectSchema = z.object({\n  %s \n});",
         paste(names(values), types, sep = ": ", collapse = ",\n  ")
     )
-    # TODO: pass objects from TypeScript to R?
     # base_type_fn <- sprintf(
     #     "Robj.list({\n  %s \n})",
     #     paste(names(values), type_funs, sep = ": ", collapse = ",\n  ")
@@ -716,15 +651,8 @@ ts_recursive_list <- function(values, recur) {
     SELF
 }
 
-#' Self object
-#'
-#' Representation of the 'self' property, used by recursive list definitions
-#'
-#' @param n number of elements, either n = 1 (for singular) or
-#'          n != 0 (for array)
-#' @return a representation of 'self'
+#' @rdname ts_recursive_list
 #' @export
-#' @md
 ts_self <- function(n = -1L) {
     structure(
         ifelse(n == 1, "__self", "__self[]"),
@@ -738,20 +666,22 @@ get_type.ts_self <- function(x, which) unclass(x)
 #' @export
 check_type.ts_self <- function(type, x) x
 
-#' JS functions callable from R
+#' 'JavaScript' functions callable from R
 #'
-#' If result is NULL, it will be an oobSend (R process will continue),
-#' otherwise R process will wait for a response (oobMessage).
-#'
-#' TODO: when compiling, automatically wrap in self.oobMessage() or self.oobSend(), as necessary... ?
-#' - how about naked js functions? i.e., we might want to pass a function *back* to javascript, for some reason?
-#'
+#' If `result` is `NULL`, it will be an oobSend (R process will continue);
+#' otherwise the R process will wait for a response (oobMessage).
 #'
 #' @param ... arguments passed to the function
-#' @param result the type of value returned from JS to R
-#' @return A ts object that accepts js functions (as input).
-#' Currently not able to pass as output (but should, in future ...).
+#' @param result the type of value returned from 'JavaScript' to R
+#' @return A ts object that accepts 'JavaScript' functions as input.
+#'   Using 'JavaScript' functions as output (R to 'JavaScript') is not supported yet.
 #' @export
+#' @examples
+#' # Fire-and-forget callback from 'JavaScript' (oobSend)
+#' cb <- js_function(ts_character(1))
+#'
+#' # Callback that returns a value to R (oobMessage)
+#' ask <- js_function(ts_integer(1), result = ts_logical(1))
 js_function <- function(..., result = NULL) {
     input <- list(...)
     types <- sapply(input, get_type, which = "input")
@@ -764,7 +694,6 @@ js_function <- function(..., result = NULL) {
                 paste(",", get_type(result, which = "input"))
             )
         ),
-        # TODO: it is possible to return a javascript function from R ...
         NULL
     )
 }

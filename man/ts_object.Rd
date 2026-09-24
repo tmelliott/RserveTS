@@ -5,7 +5,7 @@
 \alias{is_ts_object}
 \alias{get_type}
 \alias{check_type}
-\title{Typed object (internal use only)}
+\title{Typed object}
 \usage{
 ts_object(
   input_type = "any",
@@ -22,9 +22,9 @@ get_type(x, which = c("input", "return"))
 check_type(type, x)
 }
 \arguments{
-\item{input_type}{The type of the object that Typescript expect to send to R.}
+\item{input_type}{The type of the object that 'TypeScript' expects to send to R.}
 
-\item{return_type}{The type of the object that Typescript expects to recieve from R.}
+\item{return_type}{The type of the object that 'TypeScript' expects to receive from R.}
 
 \item{default}{The default value of the object.}
 
@@ -37,6 +37,12 @@ check_type(type, x)
 \item{which}{Which type to get, either "input" or "return"}
 
 \item{type}{A ts object}
+}
+\value{
+A \code{ts_object} environment with 'Zod' input/return schema strings and a
+\code{check()} helper. \code{is_ts_object()} returns a logical;
+\code{get_type()} returns a character schema string;
+\code{check_type()} returns \code{x} when valid (or errors).
 }
 \description{
 This is the base type for all typed objects, and can be used to define
@@ -51,3 +57,8 @@ custom types.
 \item \code{check_type()}: Check if an object has the correct type
 
 }}
+\examples{
+x <- ts_numeric(1)
+is_ts_object(x)
+get_type(x, "input")
+}

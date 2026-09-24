@@ -43,15 +43,15 @@ ts_result <- function(type, value) {
     stop("Expected a value of type ", type$type)
 }
 
-#' TS function definition
+#' Define a typed function
 #'
 #' @details
-#' Defining functions is the core of writing Rserve apps.
-#' Functions are referred to as *object capabilities* (ocaps),
-#' as they are 'objects' that allow Javascript to access capabilities
+#' Defining functions is the core of writing 'Rserve' apps.
+#' Functions are referred to as *object capabilities* (Ocaps),
+#' as they are 'objects' that allow 'JavaScript' to access capabilities
 #' of R with a restricted interface. Only arguments can be adjusted.
 #'
-#' TS functions can be defined using existing (named) or anonymous functions.
+#' `ts_function()` objects can be defined using existing (named) or anonymous functions.
 #' Anonymous functions are useful in that the arguments to the functions
 #' can explicitly be defined with their types as formal arguments:
 #'
@@ -62,11 +62,11 @@ ts_result <- function(type, value) {
 #' @param f an R function
 #' @param ... argument definitions (only required if f does not specify these in its formals)
 #' @param result return type (ignored if overloads are provided)
-#' @param export if `TRUE`, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to Rserve; otherwise it will need to be sent as the result of another ocap.
+#' @param export if `TRUE`, and defined in the global namespace of the app at compile time, the function will be part of the initial functions available to 'Rserve'; otherwise it will need to be sent as the result of another Ocap.
 #' @export
 #' @md
 #'
-#' @return a ts function object which has a `call` method that will call the function with the given arguments, which will be checked for type correctness.
+#' @return a `ts_function()` object which has a `call()` method that will call the function with the given arguments, which will be checked for type correctness.
 #'
 #' @examples
 #' f <- ts_function(function(x = ts_integer(1), y = ts_character(1)) {
@@ -75,12 +75,28 @@ ts_result <- function(type, value) {
 #' f$call(1, "hello")
 ts_function <- function(f, ..., result = ts_void(), export = FALSE) {
     args <- list(...)
-    if (!is.null(result) && !is_ts_object(result)) {
+    if (!is.null(result) && !is_ts_object(result) && !inherits(result, "ts_function")) {
         stop("Invalid return type")
     }
 
     if (length(args) == 0) {
         args <- lapply(formals(f), eval)
+    }
+
+    # Check if return type is void-like (ts_null, ts_void, ts_undefined)
+    # All of these have return_type = "Robj.null()"
+    is_void_like <- !is.null(result) &&
+        is_ts_object(result) &&
+        identical(result$return_type, "Robj.null()")
+
+    # If void-like, wrap the function body to automatically return invisible(NULL)
+    if (is_void_like && is.function(f)) {
+        original_body <- body(f)
+        # Wrap the body so it ends with invisible(NULL) if no explicit return
+        body(f) <- bquote({
+            .(original_body)
+            invisible(NULL)
+        })
     }
 
     e <- new.env()
@@ -121,13 +137,13 @@ print.ts_function <- function(x, ...) {
     cat(x$result$return_type)
 }
 
-#' Generate an Rserve app from a ts function
+#' Generate an 'Rserve' app from a `ts_function()`
 #'
 #' Anything that is not a function simply returns itself.
 #' However, functions are wrapped with `Rserve::ocap()`,
 #' and the result is subsequently wrapped with `ts_app()`.
 #'
-#' @param x A ts function object (`ts_function()`)
+#' @param x A `ts_function()` object
 #' @export
 #' @md
 #'
@@ -138,7 +154,7 @@ print.ts_function <- function(x, ...) {
 #'     x + nchar(y)
 #' }, result = ts_integer(1))
 #' app <- ts_app(f) # class of 'OCref'
-#' # this can now be used in an Rserve application, for example
+#' # this can now be used in an 'Rserve' application, for example
 ts_app <- function(x) UseMethod("ts_app")
 
 #' @export

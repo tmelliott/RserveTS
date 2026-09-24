@@ -24,10 +24,10 @@ create_child_connector(
 \item{widget_def}{The widget definition object}
 }
 \value{
-A TypeScript function constructor for the child widget
+A 'TypeScript' function constructor for the child widget
 }
 \description{
 Internal helper function to create connector functions for child widgets.
-Used by the \code{add_child} method of \code{tsWidget}.
+Used by the \code{add_child()} method of \code{tsWidget}.
 }
 \keyword{internal}

@@ -1,75 +1,196 @@
-#' Create a TypeScript-Compatible Widget
-#'
-#' Creates a reference class-based widget that can interact with TypeScript code.
-#' The widget supports reactive properties that can be observed from both R and
-#' TypeScript, with automatic state synchronization.
-#'
-#' Note that the object constructed takes a Javascript setter function as argument, so calling `obj$call()` will fail.
-#'
-#' @param name Character string specifying the name of the widget class
-#' @param properties Named list of typed properties for the widget. Each property
-#'   should be a TypeScript type object that defines the property's type
-#' @param initialize Optional initialization function that receives the widget
-#'   instance and sets up initial state
-#' @param methods Named list of methods to add to the widget class. Each method
-#'   should be a `ts_function` object
-#' @param auto_flush Logical, if `TRUE` (default), widget methods automatically
-#'   flush state changes to TypeScript after execution. If `FALSE`, manual
-#'   `updateState()` calls are required.
-#' @param .env Environment where the ref class should be created. Defaults to
-#'   `parent.frame()` which is the caller's environment (typically unlocked).
-#'   Can be overridden (e.g., to `.GlobalEnv`) if needed.
-#' @param ... Additional arguments passed to the TypeScript function constructor
-#'
-#' @return A TypeScript function constructor that creates widget instances with
-#'   reactive properties and methods for TypeScript interoperability
-#'
-#' @details
-#' The created widget includes built-in methods:
-#' \itemize{
-#'   \item \code{set(prop, value)}: Set a property value and mark it as changed
-#'   \item \code{get(prop)}: Get a property value
-#'   \item \code{addPropHandler(prop, fn)}: Register a handler for property changes
-#'   \item \code{updateState(all = FALSE)}: Synchronize changed properties to TypeScript
-#' }
-#'
-#' Each property automatically gets TypeScript-accessible methods:
-#' \itemize{
-#'   \item \code{register(fn)}: Register a callback for property changes
-#'   \item \code{get()}: Get the current property value
-#'   \item \code{set(x)}: Set the property value
-#' }
-#'
+#' @rdname createWidget
+#' @export
+widgetActions <- function(..., strict = "warn", enabled = TRUE) {
+    strict_levels <- c("off", "warn", "strict")
+    if (!(strict %in% strict_levels)) {
+        stop("'strict' must be one of: off, warn, strict")
+    }
+
+    defs <- list(...)
+    if (length(defs) == 0) {
+        stop("widgetActions requires at least one action")
+    }
+    action_names <- names(defs)
+    if (is.null(action_names) || any(action_names == "")) {
+        stop("All widgetActions entries must be named")
+    }
+    if (any(duplicated(action_names))) {
+        stop("widgetActions action names must be unique")
+    }
+    safe_pattern <- "^[A-Za-z_][A-Za-z0-9_]*$"
+    if (any(!grepl(safe_pattern, action_names))) {
+        stop(
+            "Action names must match ^[A-Za-z_][A-Za-z0-9_]*$: ",
+            paste(action_names[!grepl(safe_pattern, action_names)], collapse = ", ")
+        )
+    }
+    for (nm in action_names) {
+        if (!inherits(defs[[nm]], "ts_function")) {
+            stop("Action '", nm, "' must be a ts_function")
+        }
+        if (length(defs[[nm]]$args) != 1) {
+            stop("Action '", nm, "' must accept exactly one payload argument")
+        }
+    }
+
+    payload_types <- lapply(defs, \(fn) fn$args[[1]])
+    payload_arg_names <- lapply(defs, \(fn) names(fn$args)[1])
+
+    structure(
+        list(
+            enabled = isTRUE(enabled),
+            strict = strict,
+            types = action_names,
+            defs = defs,
+            payload_types = payload_types,
+            payload_arg_names = payload_arg_names
+        ),
+        class = "ts_widget_actions"
+    )
+}
+
+normalize_widget_actions <- function(actions) {
+    strict_levels <- c("off", "warn", "strict")
+
+    if (is.logical(actions) && length(actions) == 1) {
+        enabled <- isTRUE(actions)
+        return(list(
+            actions = list(
+                enabled = enabled,
+                types = character(),
+                strict = if (enabled) "warn" else "off"
+            ),
+            dispatch = NULL
+        ))
+    }
+
+    if (inherits(actions, "ts_widget_actions")) {
+        return(list(
+            actions = list(
+                enabled = isTRUE(actions$enabled),
+                types = actions$types,
+                strict = actions$strict
+            ),
+            dispatch = NULL
+        ))
+    }
+
+    if (!is.list(actions)) {
+        stop("'actions' must be logical, widgetActions(...), or a list")
+    }
+
+    enabled <- if (is.null(actions$enabled)) TRUE else isTRUE(actions$enabled)
+    types <- if (is.null(actions$types)) character() else as.character(actions$types)
+    strict <- if (is.null(actions$strict)) {
+        if (enabled) "warn" else "off"
+    } else {
+        as.character(actions$strict)[1]
+    }
+
+    if (!(strict %in% strict_levels)) {
+        stop("'actions$strict' must be one of: off, warn, strict")
+    }
+
+    list(
+        actions = list(
+            enabled = enabled,
+            types = types,
+            strict = strict
+        ),
+        dispatch = NULL
+    )
+}
+
 #' @import objectSignals
 #' @importFrom methods setRefClass new
 #' @importFrom objectProperties properties
+#' @rdname createWidget
 #' @export
-#'
-#' @examples
-#' # Create a simple counter widget
-#' \dontrun{
-#' createWidget(
-#'     name = "Counter",
-#'     properties = list(count = ts_integer(1)),
-#'     initialize = function(widget) {
-#'         widget$set("count", 0)
-#'     }
-#' )
-#' }
 createWidget <- function(
     name,
     properties = list(),
     initialize = NULL,
     methods = list(),
+    actions = FALSE,
     auto_flush = TRUE,
     .env = parent.frame(),
     ...) {
+    methods_list <- eval(substitute(methods), envir = parent.frame())
+    if (is.null(methods_list)) {
+        methods_list <- list()
+    }
+    if (!is.list(methods_list)) {
+        stop("'methods' must evaluate to a list")
+    }
+
+    capabilities <- normalize_widget_actions(actions)
+    if (inherits(actions, "ts_widget_actions")) {
+        if ("dispatchAction" %in% names(methods_list)) {
+            stop("dispatchAction cannot be defined in methods when using widgetActions")
+        }
+
+        object_shapes <- vapply(actions$types, function(nm) {
+            payload <- actions$payload_types[[nm]]
+            sprintf(
+                "z.object({ type: z.literal(%s), payload: %s })",
+                sprintf("\"%s\"", nm),
+                payload$input_type
+            )
+        }, character(1))
+        action_input_type <- if (length(object_shapes) == 1) {
+            object_shapes[[1]]
+        } else {
+            sprintf("z.union([%s])", paste(object_shapes, collapse = ", "))
+        }
+        action_types <- actions$types
+        payload_types <- actions$payload_types
+        action_handlers <- lapply(actions$defs, \(def) def$f)
+
+        action_input <- ts_object(
+            input_type = action_input_type,
+            return_type = "Robj.list()",
+            check = eval(bquote(function(x) {
+                action_types <- .(action_types)
+                payload_types <- .(payload_types)
+                if (!is.list(x) || is.null(x$type) || is.null(x$payload)) {
+                    stop("Action must be a list with 'type' and 'payload'")
+                }
+                action_type <- as.character(x$type)[1]
+                if (!(action_type %in% action_types)) {
+                    stop("Unknown action type: ", action_type)
+                }
+                check_type(payload_types[[action_type]], x$payload)
+                x
+            }))
+        )
+
+        dispatch_fn <- eval(bquote(function(action) {
+            action_types <- .(action_types)
+            handlers <- .(action_handlers)
+            action_type <- as.character(action$type)[1]
+            payload <- action$payload
+            if (!(action_type %in% action_types)) {
+                stop("Unknown action type: ", action_type)
+            }
+            handler <- handlers[[action_type]]
+            environment(handler) <- environment()
+            handler(payload)
+            invisible(NULL)
+        }))
+
+        methods_list$dispatchAction <- ts_function(
+            dispatch_fn,
+            action = action_input,
+            result = ts_null()
+        )
+    }
+
     # setRefClass with contains tries to register class metadata in the base class's
     # namespace. To work around locked namespace issues, we need to ensure the
     # class definition can be registered. The .env parameter allows specifying
     # where the new class should be created, but inheritance metadata may still
     # need to be registered in the package namespace.
-    method_info <- widgetMethods(substitute(methods), auto_flush = auto_flush)
+    method_info <- widgetMethods(methods_list, auto_flush = auto_flush)
 
     rc <- setRefClass(name,
         properties(
@@ -141,6 +262,13 @@ createWidget <- function(
             lapply(props, \(prop) do.call(ts_list, prop))
         ),
         children = do.call(ts_list, widget_props),
+        capabilities = ts_list(
+            actions = ts_list(
+                enabled = ts_logical(1L),
+                types = ts_character(0L),
+                strict = ts_character(1L)
+            )
+        ),
         methods = if (length(method_defs) > 0) {
             do.call(ts_list, method_defs)
         } else {
@@ -200,7 +328,8 @@ createWidget <- function(
                 init_params <- names(formals(initialize))
                 rts_log("Calling initialize for '", name,
                     "' (params: ", paste(init_params, collapse = ", "), ")",
-                    tag = "init")
+                    tag = "init"
+                )
                 if (length(init_params) > 0) {
                     initialize(widget)
                 } else {
@@ -219,6 +348,7 @@ createWidget <- function(
                 properties =
                     lapply(props, \(prop) lapply(prop, \(method) method$copy())),
                 children = widget$.child_connectors,
+                capabilities = capabilities,
                 methods = build_method_ocaps(widget, method_defs)
             )
         },
@@ -232,8 +362,10 @@ createWidget <- function(
     attr(w_ctor, ".__props") <- list(
         ts = props,
         widgets = widget_props,
-        ts_raw = ts_props
+        ts_raw = ts_props,
+        capabilities = capabilities
     )
+    attr(w_ctor, ".__capabilities") <- capabilities
     attr(w_ctor, ".__init") <- initialize
     attr(w_ctor, ".__methods") <- list(
         exported = method_info$exported,
@@ -271,30 +403,8 @@ widgetProps <- function(properties) {
     })]
 }
 
-#' Create an Observer for Reactive Methods
-#'
-#' Wraps a method so it reacts to property changes. Used inside the
-#' \code{methods} list of \code{createWidget()} to declare which properties
-#' trigger the method.
-#'
-#' @param props Character vector of property names to observe.
-#' @param fn The method body: a plain \code{function} (internal) or a
-#'   \code{ts_function} (exported to JS).
-#' @return A \code{ts_observer} object used by \code{createWidget()}.
+#' @rdname createWidget
 #' @export
-#' @md
-#'
-#' @examples
-#' \dontrun{
-#' createWidget("Example",
-#'     properties = list(x = ts_integer(1L, default = 0L)),
-#'     methods = list(
-#'         on_x = observer("x", function() {
-#'             cat("x changed to", .self$x, "\n")
-#'         })
-#'     )
-#' )
-#' }
 observer <- function(props, fn) {
     structure(
         list(props = props, fn = fn),
@@ -323,7 +433,13 @@ wrap_auto_flush <- function(fn) {
 #   $observers - named list: method_name -> character vector of watched props
 #   $exported  - character vector of method names wrapped in ts_function
 widgetMethods <- function(methods, auto_flush = TRUE) {
-    methods <- as.list(methods)[-1]
+    if (is.call(methods)) {
+        methods <- as.list(methods)[-1]
+    } else if (is.list(methods)) {
+        methods <- methods
+    } else {
+        stop("Invalid methods definition")
+    }
 
     method_fns <- list()
     observers <- list()
@@ -335,13 +451,20 @@ widgetMethods <- function(methods, auto_flush = TRUE) {
         obs_props <- NULL
 
         # Unwrap observer() to get inner fn + watched props
-        if (is.call(x) && identical(x[[1]], quote(observer))) {
+        if (inherits(x, "ts_observer")) {
+            obs_props <- x$props
+            x <- x$fn
+        } else if (is.call(x) && identical(x[[1]], quote(observer))) {
             obs_props <- eval(x[[2]])
             x <- x[[3]] # inner function or ts_function call
         }
 
         # Extract raw function and determine if exported
-        if (is.call(x) && identical(x[[1]], quote(ts_function))) {
+        if (inherits(x, "ts_function")) {
+            fn <- x$f
+            exported <- c(exported, nm)
+            exported_defs[[nm]] <- x
+        } else if (is.call(x) && identical(x[[1]], quote(ts_function))) {
             fn <- eval(x[[2]])
             exported <- c(exported, nm)
             exported_defs[[nm]] <- eval(x)
@@ -401,21 +524,26 @@ build_method_ocaps <- function(instance, method_defs) {
 #' Create Child Widget Connector
 #'
 #' Internal helper function to create connector functions for child widgets.
-#' Used by the \code{add_child} method of \code{tsWidget}.
+#' Used by the \code{add_child()} method of \code{tsWidget}.
 #'
 #' @param child_instance The child widget instance
 #' @param parent_instance The parent widget instance
 #' @param property_name Name of the property containing the child
 #' @param type_info Type information from the widget definition
 #' @param widget_def The widget definition object
-#' @return A TypeScript function constructor for the child widget
+#' @return A 'TypeScript' function constructor for the child widget
 #' @keywords internal
 #' @export
 create_child_connector <- function(child_instance, parent_instance, property_name, type_info, widget_def) {
     rts_log("Creating child connector for '", property_name, "'", tag = "child")
-    # Use raw TypeScript type definitions
+    # Use raw 'TypeScript' type definitions
     ts_raw <- type_info$ts_raw
     child_widget_props <- type_info$widgets
+    child_capabilities <- if (!is.null(type_info$capabilities)) {
+        type_info$capabilities
+    } else {
+        normalize_widget_actions(FALSE)
+    }
     child_method_meta <- attr(widget_def, ".__methods")
     child_method_defs <- if (!is.null(child_method_meta$exported_defs)) {
         child_method_meta$exported_defs
@@ -474,6 +602,13 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
         } else {
             ts_list()
         },
+        capabilities = ts_list(
+            actions = ts_list(
+                enabled = ts_logical(1L),
+                types = ts_character(0L),
+                strict = ts_character(1L)
+            )
+        ),
         methods = if (length(child_method_defs) > 0) {
             do.call(ts_list, child_method_defs)
         } else {
@@ -485,7 +620,8 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
         function(fn) {
             rts_log("JS connecting child '", property_name, "'",
                 " (fn is ", if (is.null(fn)) "NULL" else "set", ")",
-                tag = "child")
+                tag = "child"
+            )
             child_instance$register(fn = if (is.null(fn)) NULL else fn)
 
             # Wire change-tracking: direct assignment auto-adds to changed list
@@ -500,7 +636,7 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
                 })
             }
             # Defaults already applied in add_child (before parent methods run).
-            # Do NOT re-apply here — parent may have set values between
+            # Do NOT re-apply here <U+2014> parent may have set values between
             # add_child and JS connection.
 
             # Wire observer methods to property signals
@@ -526,7 +662,8 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
                 init_params <- names(formals(child_init))
                 rts_log("Calling child init for '", property_name,
                     "' (params: ", paste(init_params, collapse = ", "), ")",
-                    tag = "init")
+                    tag = "init"
+                )
                 if ("parent" %in% init_params) {
                     child_init(child_instance, parent_instance)
                 } else if (length(init_params) > 0) {
@@ -546,6 +683,7 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
             list(
                 properties = child_props,
                 children = child_instance$.child_connectors,
+                capabilities = child_capabilities,
                 methods = build_method_ocaps(child_instance, child_method_defs)
             )
         },
@@ -554,13 +692,13 @@ create_child_connector <- function(child_instance, parent_instance, property_nam
     )
 }
 
-#' Convert JavaScript Function to R Function
+#' Convert a 'JavaScript' Function to an R Function
 #'
-#' Converts a JavaScript function object to an R function that can be called
-#' to send messages via Rserve's out-of-band messaging.
+#' Converts a 'JavaScript' function object to an R function that can be called
+#' to send messages via 'Rserve' out-of-band messaging.
 #'
-#' @param x A JavaScript function object
-#' @return An R function that sends messages via Rserve
+#' @param x A 'JavaScript' function object
+#' @return An R function that sends messages via 'Rserve'
 #' @keywords internal
 #' @export
 jsfun <- function(x) {
@@ -570,12 +708,7 @@ jsfun <- function(x) {
     function(...) Rserve::self.oobMessage(list(x, ...))
 }
 
-#' Base Widget Class
-#'
-#' Base reference class for all widgets created with \code{createWidget}.
-#' This class provides the core functionality for reactive properties and
-#' state synchronization with TypeScript.
-#'
+#' @rdname createWidget
 #' @export
 tsWidget <- setRefClass("tsWidget",
     properties(
@@ -634,7 +767,9 @@ tsWidget <- setRefClass("tsWidget",
             }
 
             rts_log("updateState: [", paste(chg, collapse = ", "), "]",
-                if (all) " (all)" else "", tag = "state")
+                if (all) " (all)" else "",
+                tag = "state"
+            )
             x <- lapply(chg, \(p) .self$get(p))
             names(x) <- chg
 
@@ -645,7 +780,7 @@ tsWidget <- setRefClass("tsWidget",
             if (!is.null(.self$setState)) {
                 warning("Already registered")
             } else {
-                .self$setState <- jsfun(fn)
+                .self$setState <- if (is.null(fn)) NULL else jsfun(fn)
             }
         },
         batch = function(props, expr) {
@@ -712,6 +847,45 @@ tsWidget <- setRefClass("tsWidget",
             }
 
             invisible(child) # Return child instance for chaining
+        },
+        create_dynamic_child = function(widget_def, parent_as = ".parent") {
+            rts_log("Creating dynamic child widget", tag = "child")
+            child_rc <- attr(widget_def, ".__refclass")
+            child <- child_rc$new(NULL)
+
+            # Set parent reference
+            if (!is.null(parent_as)) {
+                child[[parent_as]] <- .self
+            }
+
+            # Get cached type info from widget definition
+            props <- attr(widget_def, ".__props")
+
+            # Store property names in child so updateState knows what to send
+            child$.property_names <- names(props$ts_raw)
+
+            # Apply property defaults
+            for (prop_name in names(props$ts_raw)) {
+                default_val <- props$ts_raw[[prop_name]]$default
+                if (!is.null(default_val)) {
+                    child[[prop_name]] <- default_val
+                }
+            }
+
+            # Create connector function that JS will call to connect
+            connector <- create_child_connector(
+                child_instance = child,
+                parent_instance = .self,
+                property_name = paste0("dynamic_", sample.int(1e6, 1)),
+                type_info = props,
+                widget_def = widget_def
+            )
+
+            list(instance = child, connector = connector)
+        },
+        destroy = function() {
+            rts_log("Destroying widget", tag = "widget")
+            .self$setState <- NULL
         }
     )
 )

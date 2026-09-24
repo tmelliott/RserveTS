@@ -10,7 +10,7 @@ rts_debug_enabled(tag = "general")
 \item{tag}{Character tag to check}
 }
 \value{
-Logical
+Logical scalar; \code{TRUE} when \code{RSERVETS_DEBUG} enables \code{tag}.
 }
 \description{
 Check if debug logging is enabled for a tag

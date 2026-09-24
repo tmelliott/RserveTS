@@ -11,6 +11,9 @@ rts_log(..., tag = "general")
 
 \item{tag}{Character tag for filtering}
 }
+\value{
+\code{invisible(NULL)}. Emits a \code{\link[=message]{message()}} when the tag is enabled.
+}
 \description{
 Log a debug message
 }

@@ -1,16 +1,88 @@
 #' Compile R functions
 #'
-#' Generates TypeScript schema for the given R function or file path. If a path, the R app is also generated.
+#' Generates 'TypeScript' schema for the given R function or file path. If a path, the R app is also generated.
 #'
-#' @param f A function or file path
-#' @param name The name of the function
-#' @param ... Additional arguments (passed to ts_deploy)
-#' @param filename The base file path to write the TypeScript schema and R app to (optional, uses `[path of f].rserve` by default). `.R` and `.ts` file extensions are appended automatically. If `""`, the output is printed to the standard output console (see `cat`).
-#' @return Character vector of TypeScript schema, or NULL if writing to file
+#' @param f A function or file path (length-one character string for file compilation).
+#' @param ... Additional arguments. For the **file path** method, named arguments passed to [ts_deploy()] (e.g. `init`, `port`, `run`). For `ts_function()` / `ts_widget` objects, `format` and `prettier_cmd` are supported (see details); other arguments are ignored.
+#' @return For a `ts_function()` / `ts_widget`, a character string of 'TypeScript'.
+#'   For a file path, writes `.ts` / `.R` beside `filename` and returns
+#'   the output base path invisibly.
+#' @details
+#' **`ts_function()` method:** `name` defaults to `deparse(substitute(f))` and sets the generated `export const` symbol.
+#'
+#' **Character (file) method:** `filename` is the base path for output; `.R` and `.ts`
+#' extensions are appended. When omitted, output goes under the default compile
+#' directory (see below) as `{basename(f)}.rserve`.
+#' Arguments `filename`, `format`, and `prettier_cmd` must be passed by name;
+#' they are not part of `...`.
+#'
+#' Default output directory (CRAN-safe; does not write beside the source by default):
+#' 1. option `RserveTS.compile_dir` if set to a non-empty path;
+#' 2. else environment variable `RSERVETS_COMPILE_DIR` if set;
+#' 3. else [tempdir()].
+#'
+#' For local development, set e.g. `options(RserveTS.compile_dir = ".")` or
+#' `RSERVETS_COMPILE_DIR=.` so `ts_compile("app.R")` writes `app.rserve.ts` /
+#' `app.rserve.R` in the working directory; or pass `filename` explicitly.
+#'
+#' * `format` -- If `TRUE`, run 'Prettier' (or a compatible CLI) on the generated 'TypeScript'
+#'   (returned string for functions; written `.ts` for files). Defaults to
+#'   `getOption("RserveTS.format", FALSE)` so you can enable it once for a session
+#'   (e.g. 'pkgdown' site builds) without changing call sites.
+#' * `prettier_cmd` -- Character vector argv (executable first). Defaults to
+#'   `getOption("RserveTS.prettier_cmd")` (`NULL` until you set it, e.g.
+#'   `options(RserveTS.prettier_cmd = c("prettier", "--parser", "typescript"))`).
+#'   When still `NULL`, falls back to environment variable `RserveTS_PRETTIER_CMD`
+#'   (space-separated tokens), then `prettier` or `npx prettier` on `PATH`.
+#'   A temporary `.ts` copy of the generated source is appended as the last
+#'   argument (as with `prettier --parser typescript path/to/file.ts`). Another
+#'   formatter (e.g. 'Biome') can be used if it accepts that invocation pattern.
+#'
 #' @md
 #' @export
-ts_compile <- function(f, ..., name, filename) {
-    o <- UseMethod("ts_compile")
+#' @examples
+#' # Compile a typed function to a 'TypeScript' schema string (no files written)
+#' f <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1))
+#' ts_compile(f)
+#'
+#' # File compilation writes under tempdir() by default (or RSERVETS_COMPILE_DIR)
+#' src <- tempfile(fileext = ".R")
+#' writeLines(
+#'     "add <- ts_function(function(x = ts_integer(1)) x + 1L, result = ts_integer(1), export = TRUE)",
+#'     src
+#' )
+#' out <- ts_compile(src)
+#' file.exists(paste0(out, ".ts"))
+#' file.exists(paste0(out, ".R"))
+ts_compile <- function(f, ...) {
+    UseMethod("ts_compile")
+}
+
+#' Resolve default directory for `ts_compile()` / `ts_deploy()` file output.
+#'
+#' Order: option `RserveTS.compile_dir`, then env `RSERVETS_COMPILE_DIR`,
+#' then [tempdir()].
+#' @noRd
+resolve_compile_dir <- function() {
+    opt <- getOption("RserveTS.compile_dir", NULL)
+    if (!is.null(opt)) {
+        opt <- as.character(opt)
+        if (length(opt) == 1L && nzchar(opt)) {
+            return(opt)
+        }
+    }
+    env <- Sys.getenv("RSERVETS_COMPILE_DIR", "")
+    if (nzchar(env)) {
+        return(env)
+    }
+    tempdir()
+}
+
+#' Default output base path for compiling a source file.
+#' @noRd
+default_compile_filename <- function(f) {
+    base <- paste0(tools::file_path_sans_ext(basename(f)), ".rserve")
+    file.path(resolve_compile_dir(), base)
 }
 
 compile_fn <- function(f) {
@@ -19,29 +91,62 @@ compile_fn <- function(f) {
 
     inputs <- sapply(inputs, \(x) x$input_type)
     fn_args <- paste(paste(inputs), collapse = ", ")
+    # Use get_type dispatch so ts_function/ts_widget results compile correctly
+    # (e.g., a method returning a widget connector produces nested Robj.ocap)
+    ret_type <- get_type(result, "return")
     sprintf(
         "Robj.ocap([%s], %s)",
         fn_args,
-        result$return_type
+        ret_type
     )
 }
 
-#' @export
-ts_compile.ts_function <- function(f, ..., name = deparse(substitute(f))) {
-    ocap_str <- compile_fn(f)
+#' Wrap compiled 'TypeScript' so it prints with real newlines (not `\n` escapes).
+#' @noRd
+as_ts_source <- function(x) {
+    structure(paste(x, collapse = "\n"), class = c("ts_source", "character"))
+}
 
-    sprintf(
-        "export const %s = %s;", name, ocap_str
+#' @export
+print.ts_source <- function(x, ...) {
+    # Split on embedded newlines so help/'pkgdown' examples render as code,
+    # not as a length-1 character with escaped `\n`.
+    writeLines(strsplit(as.character(x), "\n", fixed = TRUE)[[1L]])
+    invisible(x)
+}
+
+#' @export
+ts_compile.ts_function <- function(
+    f,
+    ...,
+    name = deparse(substitute(f)),
+    format = getOption("RserveTS.format", FALSE),
+    prettier_cmd = getOption("RserveTS.prettier_cmd")) {
+    out <- sprintf(
+        "export const %s = %s;", name, compile_fn(f)
     )
+    if (isTRUE(format)) {
+        out <- paste(format_ts_source(out, prettier_cmd = prettier_cmd), collapse = "\n")
+    }
+    as_ts_source(out)
 }
 
 #' @export
 ts_compile.character <- function(
     f,
     ...,
-    filename = sprintf("%s.rserve", tools::file_path_sans_ext(f))) {
-    if (length(f) > 1) {
-        return(sapply(f, ts_compile))
+    filename = NULL,
+    format = getOption("RserveTS.format", FALSE),
+    prettier_cmd = getOption("RserveTS.prettier_cmd")) {
+    if (length(f) > 1L) {
+        for (path in f) {
+            ts_compile.character(path, ..., format = format, prettier_cmd = prettier_cmd)
+        }
+        return(invisible(NULL))
+    }
+
+    if (is.null(filename)) {
+        filename <- default_compile_filename(f)
     }
 
     if (!file.exists(f)) {
@@ -59,45 +164,258 @@ ts_compile.character <- function(
     candidates <- unique(c(ls(e), new_globals))
     # Look up each candidate from e first, then globalenv
     lookup <- function(name) {
-        if (exists(name, envir = e, inherits = FALSE)) e[[name]]
-        else if (exists(name, envir = globalenv(), inherits = FALSE)) get(name, envir = globalenv())
-        else NULL
+        if (exists(name, envir = e, inherits = FALSE)) {
+            e[[name]]
+        } else if (exists(name, envir = globalenv(), inherits = FALSE)) {
+            get(name, envir = globalenv())
+        } else {
+            NULL
+        }
     }
-    is_exported <- sapply(candidates, \(z) {
+    is_exported <- vapply(candidates, \(z) {
         obj <- lookup(z)
         inherits(obj, "ts_function") && isTRUE(obj$export)
-    })
+    }, logical(1))
     exports <- candidates[is_exported]
 
     # Separate top-level app exports from child-only widget definitions.
     # A widget is "child-only" if its definition object is used as a child
-    # property of another exported widget.
+    # property of another exported widget, or as the return type of a method.
     child_defs <- list()
     for (z in exports) {
         obj <- lookup(z)
         if (inherits(obj, "ts_widget")) {
             wp <- attr(obj, ".__props")$widgets
             child_defs <- c(child_defs, unname(wp))
+            # Also check method return types for widget references
+            method_defs <- attr(obj, ".__methods")$exported_defs
+            for (m in method_defs) {
+                if (inherits(m$result, "ts_widget")) {
+                    child_defs <- c(child_defs, list(m$result))
+                }
+            }
         }
     }
-    is_child_only <- sapply(exports, \(z) {
+    is_child_only <- vapply(exports, \(z) {
         obj <- lookup(z)
         any(vapply(child_defs, identical, logical(1), obj))
-    })
+    }, logical(1))
     app_exports <- exports[!is_child_only]
     widget_exports <- exports[is_child_only]
 
-    exportFns <- sapply(
-        exports,
-        \(z) ts_compile(lookup(z), filename = "", name = z)
+    capitalize_first <- function(x) {
+        paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
+    }
+
+    safe_js_id <- function(nm) {
+        is.character(nm) && length(nm) == 1L &&
+            grepl("^[A-Za-z_][A-Za-z0-9_]*$", nm)
+    }
+
+    recursive_widget_children <- function(w) {
+        if (!inherits(w, "ts_widget")) {
+            return(list())
+        }
+        out <- list()
+        wp <- attr(w, ".__props")$widgets
+        if (length(wp)) {
+            for (v in unname(wp)) {
+                out <- c(out, list(v), recursive_widget_children(v))
+            }
+        }
+        out
+    }
+
+    dedupe_widgets_first <- function(lst) {
+        out <- list()
+        for (x in lst) {
+            if (!inherits(x, "ts_widget")) {
+                next
+            }
+            if (any(vapply(out, identical, logical(1), x))) {
+                next
+            }
+            out <- c(out, list(x))
+        }
+        out
+    }
+
+    collect_hoist_widgets <- function() {
+        out <- list()
+        for (z in exports) {
+            obj <- lookup(z)
+            if (inherits(obj, "ts_widget")) {
+                out <- c(out, recursive_widget_children(obj))
+                mdefs <- attr(obj, ".__methods")$exported_defs
+                for (m in mdefs) {
+                    if (inherits(m$result, "ts_widget")) {
+                        r <- m$result
+                        out <- c(out, list(r), recursive_widget_children(r))
+                    }
+                }
+            }
+        }
+        dedupe_widgets_first(out)
+    }
+
+    topo_emit_order <- function(unique_widgets) {
+        out <- list()
+        walk <- function(w) {
+            if (!inherits(w, "ts_widget")) {
+                return()
+            }
+            if (any(vapply(out, identical, logical(1), w))) {
+                return()
+            }
+            wp <- attr(w, ".__props")$widgets
+            for (v in unname(wp)) {
+                walk(v)
+            }
+            out <<- c(out, list(w))
+        }
+        for (w in unique_widgets) {
+            walk(w)
+        }
+        out
+    }
+
+    resolve_hoist_id <- function(widget, taken) {
+        for (nm in candidates) {
+            obj <- lookup(nm)
+            if (is.null(obj) || !identical(obj, widget)) {
+                next
+            }
+            if (!safe_js_id(nm)) {
+                next
+            }
+            if (nm %in% taken) {
+                next
+            }
+            return(nm)
+        }
+        i <- 1L
+        repeat {
+            nm <- if (i == 1L) "hoistedChild" else sprintf("hoistedChild%d", i)
+            if (!nm %in% taken) {
+                return(nm)
+            }
+            i <- i + 1L
+        }
+    }
+
+    hoist_widgets <- collect_hoist_widgets()
+    hoist_topo <- topo_emit_order(hoist_widgets)
+
+    clear_widget_schema_refs <- function() {
+        for (w in hoist_topo) {
+            attr(w, ".__ts_schema_ref") <- NULL
+        }
+        for (nm in exports) {
+            obj <- lookup(nm)
+            if (inherits(obj, "ts_widget")) {
+                attr(obj, ".__ts_schema_ref") <- NULL
+            }
+        }
+    }
+    on.exit(clear_widget_schema_refs(), add = TRUE)
+
+    taken <- exports
+    hoist_const_lines <- character()
+    hoist_type_lines <- character()
+
+    for (w in hoist_topo) {
+        ex_name <- NULL
+        for (nm in exports) {
+            if (identical(lookup(nm), w)) {
+                ex_name <- nm
+                break
+            }
+        }
+        if (!is.null(ex_name)) {
+            next
+        }
+        id <- resolve_hoist_id(w, taken)
+        taken <- c(taken, id)
+        attr(w, ".__ts_schema_ref") <- NULL
+        hoist_const_lines <- c(
+            hoist_const_lines,
+            ts_compile(w, filename = "", name = id)
+        )
+        attr(w, ".__ts_schema_ref") <- id
+        hoist_type_lines <- c(
+            hoist_type_lines,
+            sprintf(
+                "export type T%s = z.infer<typeof %s>;",
+                capitalize_first(id),
+                id
+            )
+        )
+    }
+
+    exp_ws <- exports[vapply(exports, \(z) inherits(lookup(z), "ts_widget"), logical(1))]
+    exp_ws_ord <- if (length(exp_ws)) {
+        ord <- topo_emit_order(lapply(exp_ws, lookup))
+        mapped <- vapply(ord, \(w) {
+            hit <- exp_ws[vapply(exp_ws, \(nm) identical(lookup(nm), w), logical(1))]
+            if (length(hit) == 1L) {
+                return(hit[[1L]])
+            }
+            if (length(hit) > 1L) {
+                stop("internal: ambiguous export name for widget")
+            }
+            NA_character_
+        }, character(1))
+        mapped <- mapped[!is.na(mapped)]
+        unique(mapped, fromLast = FALSE)
+    } else {
+        character()
+    }
+    exports_emit_order <- c(exp_ws_ord, exports[!exports %in% exp_ws_ord])
+
+    exportFns <- vapply(
+        exports_emit_order,
+        \(z) {
+            obj <- lookup(z)
+            if (inherits(obj, "ts_widget")) {
+                attr(obj, ".__ts_schema_ref") <- NULL
+                line <- ts_compile(obj, filename = "", name = z)
+                attr(obj, ".__ts_schema_ref") <- z
+                line
+            } else {
+                ts_compile(obj, filename = "", name = z)
+            }
+        },
+        character(1)
     )
 
-    # Generate type aliases for each export
-    # Capitalize first letter: iNZDocument -> TINZDocument
-    capitalize_first <- function(x) paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
-    type_aliases <- sapply(
-        exports,
-        \(z) sprintf("export type T%s = z.infer<typeof %s>;", capitalize_first(z), z)
+    type_aliases <- vapply(
+        exports_emit_order,
+        \(z) sprintf("export type T%s = z.infer<typeof %s>;", capitalize_first(z), z),
+        character(1)
+    )
+
+    base_name <- tools::file_path_sans_ext(basename(f))
+    schema_id <- gsub("[^a-zA-Z0-9_]", "_", base_name)
+    if (schema_id == "" || grepl("^[0-9]", schema_id)) {
+        schema_id <- "app"
+    }
+    cap_base <- paste0(toupper(substr(schema_id, 1, 1)), substr(schema_id, 2, nchar(schema_id)))
+    schema_const <- sprintf("%sAppSchema", schema_id)
+    type_app <- sprintf("T%sApp", cap_base)
+    app_schema_block <- c(
+        sprintf(
+            "export const %s = {\n  %s\n} satisfies z.ZodRawShape;",
+            schema_const,
+            paste(app_exports, collapse = ",\n  ")
+        ),
+        "",
+        sprintf(
+            "export type %s = z.infer<z.ZodObject<typeof %s, \"strip\">>;",
+            type_app,
+            schema_const
+        ),
+        "",
+        sprintf("export default %s;", schema_const)
     )
 
     src <- c(
@@ -107,25 +425,32 @@ ts_compile.character <- function(
         "import { Robj } from 'rserve-ts';",
         "import { z } from 'zod';",
         "\n",
+        hoist_const_lines,
         exportFns,
         "\n",
+        hoist_type_lines,
         type_aliases,
         "\n",
-        sprintf(
-            "export default {\n  %s\n};",
-            paste(app_exports, collapse = ",\n  ")
-        )
+        app_schema_block
     )
 
-    cat(src, file = sprintf("%s.ts", filename), sep = "\n")
+    ts_out <- sprintf("%s.ts", filename)
+    out_dir <- dirname(filename)
+    if (!dir.exists(out_dir)) {
+        dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+    }
+    if (isTRUE(format)) {
+        src <- format_ts_source(src, prettier_cmd = prettier_cmd)
+    }
+    cat(src, file = ts_out, sep = "\n")
 
     # R file
     ts_deploy(f, file = sprintf("%s.R", filename), silent = TRUE, ...)
 
-    invisible()
+    invisible(filename)
 }
 
 #' @export
 ts_compile.default <- function(f, ...) {
-    warning("Not supported")
+    stop("Not supported")
 }

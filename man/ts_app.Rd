@@ -2,12 +2,12 @@
 % Please edit documentation in R/function.R
 \name{ts_app}
 \alias{ts_app}
-\title{Generate an Rserve app from a ts function}
+\title{Generate an 'Rserve' app from a \code{ts_function()}}
 \usage{
 ts_app(x)
 }
 \arguments{
-\item{x}{A ts function object (\code{ts_function()})}
+\item{x}{A \code{ts_function()} object}
 }
 \value{
 An object of class 'OCref', see \code{\link[Rserve:ocap]{Rserve::ocap()}}
@@ -22,5 +22,5 @@ f <- ts_function(function(x = ts_integer(1), y = ts_character(1)) {
     x + nchar(y)
 }, result = ts_integer(1))
 app <- ts_app(f) # class of 'OCref'
-# this can now be used in an Rserve application, for example
+# this can now be used in an 'Rserve' application, for example
 }
