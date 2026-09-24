@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
 # RserveTS: Deploy Rserve Applications Supporting TypeScript
 
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/RserveTS)](https://CRAN.R-project.org/package=RserveTS)
 [![R-CMD-check](https://github.com/tmelliott/RserveTS/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tmelliott/RserveTS/actions/workflows/R-CMD-check.yaml)
 [![Demo](https://github.com/tmelliott/RserveTS/actions/workflows/check-demo.yaml/badge.svg)](https://github.com/tmelliott/RserveTS/actions/workflows/check-demo.yaml)
 <!-- badges: end -->
@@ -23,6 +24,10 @@ knitr::opts_chunk$set(
 The **RserveTS** package makes it easy for users to write functions that can be used in [**rserve-ts**](https://www.npmjs.com/package/rserve-ts) applications.
 
 ## Installation
+
+```r
+install.packages("RserveTS")
+```
 
 You can install the development version of `RserveTS` from [GitHub](https://github.com/) with:
 

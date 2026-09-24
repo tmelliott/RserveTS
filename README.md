@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![CRAN
+status](https://www.r-pkg.org/badges/version/RserveTS)](https://CRAN.R-project.org/package=RserveTS)
 [![R-CMD-check](https://github.com/tmelliott/RserveTS/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tmelliott/RserveTS/actions/workflows/R-CMD-check.yaml)
 [![Demo](https://github.com/tmelliott/RserveTS/actions/workflows/check-demo.yaml/badge.svg)](https://github.com/tmelliott/RserveTS/actions/workflows/check-demo.yaml)
 <!-- badges: end -->
@@ -14,6 +16,10 @@ can be used in [**rserve-ts**](https://www.npmjs.com/package/rserve-ts)
 applications.
 
 ## Installation
+
+``` r
+install.packages("RserveTS")
+```
 
 You can install the development version of `RserveTS` from
 [GitHub](https://github.com/) with:
@@ -93,26 +99,21 @@ from that directory:
 npm install --save-dev prettier
 ```
 
-With `prettier` or `npx` on your `PATH`, enable formatting for a session
-(or pass `format = TRUE` per call):
+With `prettier` or `npx` on your `PATH`, pass `format = TRUE` when
+compiling a file:
 
 ``` r
-options(RserveTS.format = TRUE)
-options(RserveTS.prettier_cmd = c("prettier", "--parser", "typescript"))
-# or: options(RserveTS.prettier_cmd = c("npx", "--yes", "prettier", "--parser", "typescript"))
-ts_compile(f) # returns a multi-line string
-ts_compile("app.R", filename = "app.rserve") # writes a formatted .ts file
+ts_compile("app.R", filename = "app.rserve", format = TRUE)
 ```
 
-`make site` turns on `RserveTS.format` so reference examples render prettily.
-You can still override the CLI with `RserveTS_PRETTIER_CMD` (space-separated
-tokens) or `options(RserveTS.prettier_cmd = ...)`. When neither is set, the
-package looks for `prettier` / `npx prettier` on `PATH`.
-
-The package writes generated source to a temporary `.ts` file and runs your
-command with that path as the **last** argument, as Prettier does for
-`prettier file.ts`. Another CLI (e.g. [Biome](https://biomejs.dev)) can be
-used if it supports the same “format this file path” pattern.
+You can point to a specific formatter with `prettier_cmd` (full argv,
+executable first), the R option `RserveTS.prettier_cmd`, or the
+environment variable `RserveTS_PRETTIER_CMD` (space-separated tokens).
+The package writes the generated source to a temporary `.ts` file and
+runs your command with that path as the **last** argument, as Prettier
+does for `prettier file.ts`. Another CLI
+(e.g. [Biome](https://biomejs.dev)) can be used if it supports the same
+“format this file path” pattern.
 
 It is also possible to generate a sourceable file to deploy an Rserve
 instance with your app code using `ts_deploy()`:
