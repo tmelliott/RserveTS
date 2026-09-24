@@ -1,6 +1,6 @@
 Package: RserveTS
 Title: Typed Application Contracts for 'Rserve'
-Version: 0.8.3
+Version: 0.8.3.9000
 Authors@R: c(
     person("Tom", "Elliott", , "tom@inzight.co.nz",
            role = c("aut", "cre"),
